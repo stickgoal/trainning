@@ -1,8 +1,6 @@
 package me.maiz.training;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import com.google.common.base.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -101,6 +99,16 @@ public class GuavaDemo {
 
         //使用给定的字符填满指定的长度，填充尾部
         System.out.println(Strings.padEnd("xxx", 10, '*'));
+
+        //字符串拼接
+        Joiner joiner = Joiner.on(",").skipNulls();
+        String joined = joiner.join("Harry", null, "Ron", "Hermione");
+        System.out.println(joined);
+
+        //字符串拆分
+        Iterable<String> splitted = Splitter.on(",").trimResults().omitEmptyStrings().split("foo,bar,,   qux");
+        System.out.println(splitted);
+
     }
 
 }
