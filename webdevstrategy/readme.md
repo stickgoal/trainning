@@ -94,3 +94,8 @@ web的基础技术由三大部分组成
 vue 读音与view相同，可见他的重点在于构建页面，但是实际上包含了一个前端框架该有的各个部分。这篇[浅谈vuejs](http://www.cnblogs.com/luozhihao/p/5329440.html) 也可以参考。
 
 参考官网做的一些[例子](frameworks\vue\),可以参考
+
+
+
+
+
