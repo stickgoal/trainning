@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>vue 组件化</title>
+	<script type="text/javascript" src="js/vue.js"></script>
+</head>
+<body>
+
+<div id="app-7">
+  <ol>
+    <!--
+      现在我们为每个 todo-item 提供 todo 对象
+      todo 对象是变量，即其内容可以是动态的。
+      我们也需要为每个组件提供一个“key”，晚些时候我们会做个解释。
+    -->
+    <todo-item
+      v-for="item in groceryList"
+      v-bind:todo="item"
+      v-bind:key="item.id">
+    </todo-item>
+  </ol>
+</div>
+
+
+<script type="text/javascript">
+	/*这里创建了一个todo-item的组件，类似于一个html的标签，该组件有个属性叫todo，todo是个js对象
+	<todo-item todo="{text:'hello'}"></todo-item>
+	vue会根据这个规则将todo的属性渲染成html也就是最后会变成<li>hello</li>
+	为什么要绕个圈子呢？因为这样就把todo-item和整个页面隔成了两个部分，todo-item可以用于不同的页面，而且自成一体的发展
+	*/
+
+	Vue.component('todo-item', {
+	  // todo-item 组件现在接受一个
+	  // "prop"，类似于一个自定义属性
+	  // 这个属性名为 todo。
+	  props: ['todo'],
+	  template: '<li>{{ todo.text }}</li>'
+	});
+	var app7 = new Vue({
+	  el: '#app-7',
+	  data: {
+	    groceryList: [
+	      { id: 0, text: '蔬菜' }, 
+	      { id: 1, text: '奶酪' },
+	      { id: 2, text: '随便其他什么人吃的东西' }
+	    ]
+	  }
+	});
+
+</script>
+</body>
+</html>

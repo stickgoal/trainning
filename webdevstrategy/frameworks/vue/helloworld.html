@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>hello vue</title>
+	<script src="js/vue.js"></script>
+	
+</head>
+<body>
+<div id="app">
+  {{ username }},{{greeting}}
+  <!-- v-bind 属性被称为指令。 指令以v-开头-->
+   <span v-bind:title="message">
+    鼠标悬停几秒钟查看此处动态绑定的提示信息！
+  </span>
+<!-- if绑定 -->
+  <div>
+  	<p v-if="seen">看不看得见？</p>
+
+  </div>
+
+</div>
+<!-- for绑定 -->
+<div id="app-4">
+  <ol>
+    <li v-for="todo in todos">
+      {{ todo.text }}
+    </li>
+  </ol>
+</div>
+<!-- 事件绑定 -->
+<div id="app-5">
+  <p>{{ message }}</p>
+  <button v-on:click="reverseMessage">逆转消息</button>
+</div>
+
+<!-- 模型绑定 -->
+<div id="app-6">
+  <p>{{ message }}</p>
+  <input v-model="message">
+</div>
+
+<script type="text/javascript">
+	/*声明式渲染*/
+	var app = new Vue({
+	  el: '#app',
+	  data: {
+	    username: 'Vue!',
+	    greeting: new Date().getHours() >12?'下午好':'上午好',
+	    message:'页面加载于 ' + new Date().toLocaleString(),
+	    seen:true
+	  },
+
+	});
+
+	var appFor  = new Vue({
+		el:'#app-4',
+		data:{
+			todos:[{ text: '学习 JavaScript' },
+      { text: '学习 Vue' },
+      { text: '整个牛项目' }]
+		}
+	});
+
+	var appEvent = new Vue({
+		el:'#app-5',
+		data:{
+			message:'Hello Vue.js'
+		},
+		methods:{
+			reverseMessage:function () {
+     			 this.message = this.message.split('').reverse().join('')
+			}
+		}
+
+	});
+
+var appBiDirectBind  = new Vue({
+	el:"#app-6",
+	data:{
+		message:'Hello '
+	}
+});
+
+</script>
+</body>
+</html>

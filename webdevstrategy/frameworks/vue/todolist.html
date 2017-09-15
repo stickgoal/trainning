@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>TODO-List App</title>
+	<script type="text/javascript" src="js/vue.js"></script>
+</head>
+<body>
+<div id="app">
+	<h1>自定义菜单</h1>
+	<ul>
+		<todo-item v-for="item in todos" :todo='item' :key='item.id'></todo-item>
+	</ul>
+	<div id="footer">
+		<button @click="add">+</button>
+		<button @click="remove">-</button>
+	</div>
+
+</div>
+<script type="text/javascript">
+	Vue.component('todo-item',{
+		props:['todo'],
+		template:"<li> <input type='checkbox'/>  {{todo.text}}  <button v-on:click='up'>↑</button> <button  v-on:click='down'>↓</button>  </li>",
+		methods:{
+			up:function(event){
+				console.log(event);
+				console.log();
+				if(event){
+					console.log(this.todos);
+				}
+			},
+			down:function(){
+
+			}
+		}
+	});
+
+
+	var vm = new Vue({
+		el:'#app',
+		data:{
+			todos:[{'id':1,'text':'番茄炒鸡蛋'}]
+		},
+		methods:{
+			add:function(){
+				this.todos.push({'id':Math.random(),'text':'炒鸡'+Math.random()});
+			},
+			remove:function(){
+				this.todos.pop();
+			}
+			
+		}
+	});
+
+
+</script>
+</body>
+</html>

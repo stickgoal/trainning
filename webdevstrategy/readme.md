@@ -65,4 +65,32 @@ web的基础技术由三大部分组成
 
 [从草根到英雄系列](http://www.jianshu.com/p/8e639ae10dfe)
 
-待续...
+
+
+###3.浏览器兼容性处理预备建议 
+
+这个问题的出现是因为各浏览器对web标准支持不一致导致的，但现在现代浏览器已经趋于统一。所以基本上可以熟悉下常见的浏览器兼容性问题，弄懂其中至少一个css一个js问题，对这类问题有个概念。
+
+至于实际的处理，建议参考知乎的回答，把浏览器分成遗留浏览器和现代浏览器，考虑现代浏览器再考虑fallback到遗留浏览器
+
+[也谈兼容性——通用hack方法/CSS兼容方案/js兼容方案全推送](https://zhuanlan.zhihu.com/p/25123086?refer=dreawer)
+
+[常见浏览器兼容性问题与解决方案](http://blog.csdn.net/chuyuqing/article/details/37561313/)
+
+[Javascript 多浏览器兼容性问题及解决方案](http://www.jb51.net/article/21483.htm)
+
+[ 知乎：怎样可以很好地保证网页的浏览器兼容性？](https://www.zhihu.com/question/19736007)
+
+
+
+### 4.流行框架入门及学习建议
+
+前端框架的层出不穷让人汗颜，jquery已经早已是过去式，甚至angularjs的风头也要被react\vue替代。这个部分需要掌握react/vue中的一个，了解下angular和node都有好处。
+
+#### vue.js
+
+个人认为学习入门最好是看官方文档。vue的官方文档是比较齐全的，看一遍就可以掌握基础了。
+
+vue 读音与view相同，可见他的重点在于构建页面，但是实际上包含了一个前端框架该有的各个部分。这篇[浅谈vuejs](http://www.cnblogs.com/luozhihao/p/5329440.html) 也可以参考。
+
+参考官网做的一些[例子](frameworks\vue\),可以参考
