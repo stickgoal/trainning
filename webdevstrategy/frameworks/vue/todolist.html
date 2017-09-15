@@ -8,7 +8,7 @@
 <div id="app">
 	<h1>自定义菜单</h1>
 	<ul>
-		<todo-item v-for="item in todos" :todo='item' :key='item.id'></todo-item>
+		<todo-item v-for="item in todos" :todo='item' :key='item.id' :list="todos"></todo-item>
 	</ul>
 	<div id="footer">
 		<button @click="add">+</button>
@@ -17,28 +17,49 @@
 
 </div>
 <script type="text/javascript">
+	/*注册组件*/
 	Vue.component('todo-item',{
-		props:['todo'],
-		template:"<li> <input type='checkbox'/>  {{todo.text}}  <button v-on:click='up'>↑</button> <button  v-on:click='down'>↓</button>  </li>",
+		props:['todo','list'],
+		template:"<li> <input type='checkbox'/>  {{todo.text}}  <button v-on:click='up(todo.text,list)'>↑</button> <button  v-on:click='down(todo.text,list)'>↓</button>  </li>",
 		methods:{
-			up:function(event){
-				//向上移动，暂未实现
+			getIdx:function(text,list){
+				for (var i = list.length - 1; i >= 0; i--) {
+					if(list[i].text==text){
+						return i;
+					}
+				}
 			},
-			down:function(){
-				//向下移动，暂未实现
+			/*将idx1与idx2互换*/
+			swap:function(arr,idx1,idx2){
+ 				arr[idx1] = arr.splice(idx2, 1, arr[idx1])[0];
+			},
+			up:function(text,list){
+				var idx = this.getIdx(text,list);
+				if(idx>0){
+					this.swap(list,idx,idx-1);
+				}
+			},
+			down:function(text,list){
+				var idx = this.getIdx(text,list);
+				if(idx<list.length-1){
+						this.swap(list,idx,idx+1);
+				}
 			}
+			
+
 		}
 	});
 
-
+	/*创建vue实例*/
 	var vm = new Vue({
 		el:'#app',
 		data:{
-			todos:[{'id':1,'text':'番茄炒鸡蛋'}]
+			todos:[{'id':1,'text':'番茄炒鸡蛋'}],
 		},
 		methods:{
 			add:function(){
-				this.todos.push({'id':Math.random(),'text':'炒鸡'+Math.random()});
+				var key = Math.floor(Math.random()*1000);
+				this.todos.push({'id':key,'text':'炒鸡'+key});
 			},
 			remove:function(){
 				this.todos.pop();
