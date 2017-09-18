@@ -242,7 +242,7 @@ new Vue({
 
 #### node.js
 
-node.js不是一个js库，而是一个运行时环境，就是让js脱离浏览器运行，那么js就变成了一门可以使用在任何场景的编程语言。文件读写这类本来不可以做的事情现在都可以做了。js变成了完整的服务端语言。
+node.js不是一个js库，而是一个运行时环境，就是让js脱离浏览器运行，那么js就变成了一门可以使用在任何场景的编程语言。接收网络请求，读写文件，处理二进制内容这类本来不可以做的事情现在都可以做了。js变成了完整的服务端语言。正因为nodejs是一个运行时环境，js本身的语法是可以直接用的。
 
 > Node.js 是一个基于 Chrome V8 引擎的 JavaScript 运行环境。 
 > Node.js 使用了一个事件驱动、非阻塞式 I/O 的模型，使其轻量又高效。 
@@ -250,7 +250,15 @@ node.js不是一个js库，而是一个运行时环境，就是让js脱离浏览
 >
 > 引自[node中文网](http://nodejs.cn/)
 
-这篇[介绍](https://www.liaoxuefeng.com/wiki/001434446689867b27157e896e74d51a89c25cc8b43bdb3000/001434501245426ad4b91f2b880464ba876a8e3043fc8ef000)更加体系和直观。
+建议学习廖雪峰老师的[教程](https://www.liaoxuefeng.com/wiki/001434446689867b27157e896e74d51a89c25cc8b43bdb3000/001434501245426ad4b91f2b880464ba876a8e3043fc8ef000) 或者阮一峰的[教程](http://javascript.ruanyifeng.com/nodejs/basic.html#toc4) （虽然并未公开）或者[node入门](https://www.nodebeginner.org/index-zh-cn.html) 电子书
+
+##### 安装教程
+
+简单来说就是去官网下载，并且逐步安装。参考[安装教程](http://www.runoob.com/nodejs/nodejs-install-setup.html) 。执行命令`node -v` 或者`npm -v` 出现版本号就是胜利。
+
+##### 简单示例
 
 创建一个webserver的[helloworld](tech/node/helloworld.js),但请用`node helloworld.js`运行之。
+
+##### 文件操作
 
