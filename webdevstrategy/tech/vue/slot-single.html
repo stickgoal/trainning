@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>slot API</title>
+	<script type="text/javascript" src="js/vue.js"></script>
+</head>
+<body>
+
+<div id="app">
+	<app></app>
+</div>
+
+<script type="text/javascript">
+	Vue.component('my-component',{
+		template:"<div>\
+					<h2>子组件调用开始...</h2>\
+					<slot>\
+						父组件调用时可以插入内容到此插槽\
+					</slot>	\
+					<h2>子组件调用结束...</h2>\
+				</div>"
+
+	})
+
+
+	Vue.component('app',{
+		template:"<div>\
+		  <h1>我是父组件的标题</h1>\
+		  <my-component>\
+		    <p>父组件插入的内容</p>\
+		    <p>父组件插入的内容</p>\
+		  </my-component>\
+		</div>"
+
+	});
+
+	new Vue({
+		el:"#app"
+	})
+</script>
+
+</body>
+</html>

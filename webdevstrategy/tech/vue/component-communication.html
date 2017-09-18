@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>父子组件间通信</title>
+	<!-- 遵循原则 props down,event up  -->
+	<!-- 通过父组件通过给子组件定义的props赋值来向其传值 -->
+	<!-- 单向数据流，子组件触发事件，父组件监听该事件来得到子组件的信息 -->
+	<script type="text/javascript" src="./js/vue.js"></script>
+</head>
+<body>
+<div id="app">
+	<span>{{total}}</span>
+	<div>
+		<!-- 父组件利用v-on监听子组件触发的increment事件并交给incrementTotal来处理 -->
+		<!-- v-bind为子组件的属性start赋值，oddStart和evenStart是父组件的data -->
+		<counter  v-on:increment="incrementTotal" v-bind:start="oddStart" ></counter>
+		<counter v-on:increment="incrementTotal" v-bind:start="evenStart" ></counter>
+	</div>
+
+</div>
+
+
+<script type="text/javascript">
+	/*定义子组件*/
+	Vue.component('counter',{
+		//子组件的click事件绑定到increment方法处理
+		template:'<button @click="increment" >{{num}}</button>',
+		//指定子组件有start属性，父组件通过给该属性赋值而传值给子组件
+		props:['start'],
+		data:function () {
+			return {
+				//start就是传入的属性
+				num:this.start?this.start:0
+			}
+		},
+		methods:{
+			increment:function(){
+				this.num++;
+				// 触发increment事件，给父组件使用
+				this.$emit('increment');
+			}
+		}
+	});
+
+	// 创建vue实例
+	new Vue({
+		el:"#app",
+		data:{
+			oddStart:1,
+			evenStart:2,
+			total:3
+		},
+		methods:{
+			incrementTotal:function(){
+				this.total++;
+			}
+		}
+	});
+	
+
+</script>
+</body>
+</html>

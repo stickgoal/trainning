@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>索引页</title>
+	<script type="text/javascript" src="js/vue.js"></script>
+</head>
+<body>
+<ul id="app">
+	<indexer v-for="p in pages"  v-bind:p="p" key="{}"></indexer>
+</ul>
+<script type="text/javascript">
+	Vue.component('indexer',{
+		template:'<li> <a v-bind:href="p">{{p}}</a></li>',
+		props:["p"]
+	});
+	new Vue({
+		el:"#app",
+		data:{
+			pages:['helloworld.html','component.html','todolist.html','component-communication.html','slot-single.html','slot-named.html']
+		}
+	});
+
+</script>
+</body>
+</html>
