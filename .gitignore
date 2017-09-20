@@ -219,3 +219,6 @@ pip-log.txt
 .idea
 *.iml
 target
+
+#node
+node_modules

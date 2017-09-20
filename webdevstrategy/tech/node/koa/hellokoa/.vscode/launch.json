@@ -1,0 +1,28 @@
+{
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "type": "node",
+                "request": "launch",
+                "name": "npm",
+                "runtimeExecutable": "npm",
+                "runtimeArgs": [
+                    "run-script",
+                    "debug"
+                ],
+                "port": 5858
+            },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "运行app.js",
+            "program": "${workspaceRoot}/app.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "运行router",
+            "program": "${workspaceRoot}/app-with-router.js"
+        }
+        ]
+    }

@@ -1,0 +1,20 @@
+{
+  "name": "koaapp",
+  "version": "1.0.0",
+  "description": "learning koa2 ",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "koa",
+    "aysnc"
+  ],
+  "dependencies": {
+    "koa": "2.0.0",
+    "koa-router": "7.0.0",
+    "nunjucks": "2.4.2"
+  },
+  "author": "Lucas",
+  "license": "Apache-2.0"
+}
