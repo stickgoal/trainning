@@ -1,0 +1,19 @@
+{
+  "name": "wepackdemo",
+  "version": "1.0.0",
+  "description": "webpack simple demo,http://www.cnblogs.com/vajoy/p/4650467.html",
+  "main": "./scr/js/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack --config webpack.config.js"
+  },
+  "keywords": [
+    "wepack",
+    "demo"
+  ],
+  "author": "Lucas",
+  "license": "MIT",
+  "devDependencies": {
+    "webpack": "^3.6.0"
+  }
+}
