@@ -8,7 +8,7 @@
 - [Web基础技术概览及预备建议](1-basis.md)
 - [浏览器兼容性处理预备建议](2-compatibility.md)
 - 流行框架入门及学习建议([web](3.1-popular_tech.md)、[服务端和桌面端](3.2-popular_tech.md))
-  - [vue.js](3.1-popular_tech.md)
+  - [vue.js](3.1-popular_tech.md#vuejs)
   - [angular.js](3.1-popular_tech.md)
   - [react.js](3.1-popular_tech.md)
   - [node.js](3.2-popular_tech.md)
