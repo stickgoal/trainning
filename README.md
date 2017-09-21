@@ -6,5 +6,5 @@
 - demo [各种常用类库的demo]
 - webdevstrategy [前端面试知识准备策略]
 - misc [各类杂事]
-  - ​
+  - [微信小程序](misc/weixin_mini_program.md)
 

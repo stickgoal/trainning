@@ -19,7 +19,9 @@
 - 功能扩展
 
   - js方面是微信开放的API，参见[文档](https://mp.weixin.qq.com/debug/wxadoc/dev/api/)
+
   - 页面展示方面，微信提供了一些组件可以使用，参见[文档](https://mp.weixin.qq.com/debug/wxadoc/dev/component/)
-  - ​
+
+    ​
 
   ​
