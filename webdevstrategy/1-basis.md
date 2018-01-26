@@ -10,7 +10,7 @@ web的基础技术由三大部分组成
 
 1. 跟着[w3school的教程](http://www.w3school.com.cn/html/index.asp)把HTML学一遍，HTML是最简单的，不需要过多说明。
 2. 先可以跟着[ 菜鸟教程的CSS教程](http://www.runoob.com/css/css-tutorial.html)学习下CSS，[学习布局知识](http://zh.learnlayout.com/)。推荐[ 李炎恢老师的视频](http://study.163.com/course/introduction/1003005.htm)
-3. JS基础考虑[菜鸟](http://www.runoob.com/js/js-tutorial.html) 或者[MDN的教程](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript) ，进阶可以考虑廖雪峰的[js教程](https://www.liaoxuefeng.com/wiki/001434446689867b27157e896e74d51a89c25cc8b43bdb3000) 或者阮一峰的[js标准教程](http://javascript.ruanyifeng.com/)  ，实在不行再
+3. JS基础考虑[菜鸟](http://www.runoob.com/js/js-tutorial.html) 或者[MDN的教程](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript) ，进阶可以考虑廖雪峰的[js教程](https://www.liaoxuefeng.com/wiki/001434446689867b27157e896e74d51a89c25cc8b43bdb3000) 或者阮一峰的[js标准教程](http://javascript.ruanyifeng.com/)  
 
 如果有同学已经学过了，那么给出复习建议：
 
