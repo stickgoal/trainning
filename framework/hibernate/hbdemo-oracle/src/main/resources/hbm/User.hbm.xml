@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ Hibernate映射配置文件
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="com.chinasofti.framework.dao.entity">
+
+    <class name="User" table="PO_USER">
+        <id column="id" name="id">
+            <generator class="sequence">
+                <param name="sequence">SQ_TMP_EMP</param>
+            </generator>
+
+        </id>
+        <property name="userId" />
+        <property name="age" />
+        <property name="birthday" type="timestamp" />
+    </class>
+
+</hibernate-mapping>

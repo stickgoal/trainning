@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+  ~ Hibernate配置文件
+  -->
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+
+    <session-factory>
+
+        <!-- 数据库配置 -->
+        <property name="connection.driver_class">oracle.jdbc.driver.OracleDriver</property>
+        <property name="connection.url">jdbc:oracle:thin:@localhost:1521:ORCL</property>
+        <property name="connection.username">scott</property>
+        <property name="connection.password">tiger</property>
+
+        <!-- 内建的数据库连接池配置,不建议用在生产环境 -->
+        <property name="connection.pool_size">5</property>
+
+        <!-- SQL 方言 -->
+        <property name="dialect">org.hibernate.dialect.Oracle10gDialect</property>
+
+
+        <!-- 控制台输出所有的sql语句，用于调试-->
+        <property name="show_sql">true</property>
+
+        <!-- 默认根据对象生成数据库
+            none 无
+            No action will be performed.
+
+            create-only 仅创建
+            Database creation will be generated.
+
+            drop 仅删除
+            Database dropping will be generated.
+
+            create 创建表结构
+            Database dropping will be generated followed by database creation.
+
+            create-drop 每次先删除再创建表结构
+            Drop the schema and recreate it on SessionFactory startup. Additionally, drop the schema on SessionFactory shutdown.
+
+            validate 验证数据库结构与映射对象是否一致
+            Validate the database schema
+
+            update 更新数据库结构
+            Update the database schema
+
+         -->
+        <property name="hbm2ddl.auto">create-drop</property>
+
+        <!-- 映射文件资源地址 -->
+        <mapping resource="hbm/User.hbm.xml"/>
+        <mapping class="com.chinasofti.framework.dao.entity.Book"/>
+
+    </session-factory>
+
+</hibernate-configuration>
