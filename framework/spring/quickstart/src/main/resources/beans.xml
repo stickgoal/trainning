@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd ">
+
+    <!--基本使用-->
+    <bean id="userDAO" class="me.maiz.trainning.framework.spring.xml.impl.UserDAOImpl">
+        <property name="username" value="wanger" />
+    </bean>
+
+    <bean id="userService" scope="prototype"  class="me.maiz.trainning.framework.spring.xml.impl.UserServiceImpl">
+        <property name="userDAO" ref="userDAO"/>
+    </bean>
+    <bean id="userService1" scope="prototype" class="me.maiz.trainning.framework.spring.xml.impl.UserServiceImpl">
+        <property name="userDAO" ref="userDAO"/>
+    </bean>
+
+    <!--factory-method创建实例-->
+    <bean id="factoryUserServiceImpl" class="me.maiz.trainning.framework.spring.xml.impl.FactoryMadeUserServiceImpl" factory-method="makeOne"/>
+    <!--factory-bean的使用-->
+    <bean id="userServiceFactory" class="me.maiz.trainning.framework.spring.xml.impl.UserServiceFactory"></bean>
+
+    <bean id="factoryUserServiceImpl2" factory-bean="userServiceFactory" factory-method="makeUserService"></bean>
+
+
+</beans>

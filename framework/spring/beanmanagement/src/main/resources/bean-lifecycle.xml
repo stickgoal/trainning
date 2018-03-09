@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd" default-init-method="initial" default-destroy-method="finish">
+
+    <!--init-method和destroy-method的使用-->
+    <bean id="simpleBean" class="me.maiz.trainning.framework.spring.lifecycle.SimpleBean" init-method="start" destroy-method="end"></bean>
+    <!--initializingBean 和disposebean-->
+    <bean id="mrBean" class="me.maiz.trainning.framework.spring.lifecycle.MrBean"></bean>
+    <!--default-->
+    <bean id="missBean" class="me.maiz.trainning.framework.spring.lifecycle.MissBean"></bean>
+
+
+
+</beans>

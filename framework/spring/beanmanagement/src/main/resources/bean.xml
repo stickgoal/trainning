@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+    <!--setter注入-->
+    <bean name="userService" class="me.maiz.trainning.framework.spring.injection.service.impl.UserServiceImpl">
+        <property name="userDAO" ref="userDAO"></property>
+    </bean>
+    <!--构造器注入-->
+    <bean name="userService2" class="me.maiz.trainning.framework.spring.injection.service.impl.UserServiceImpl2">
+       <constructor-arg name="userDAO" ref="userDAO"></constructor-arg>
+    </bean>
+    <!--工厂方法注入-->
+    <bean name="userService3" class="me.maiz.trainning.framework.spring.injection.service.impl.UserServiceImpl3" factory-method="make">
+        <constructor-arg name="ua" ref="userDAO"></constructor-arg>
+    </bean>
+
+
+    <bean name="userDAO" class="me.maiz.trainning.framework.spring.injection.dal.impl.UserDAOImpl"></bean>
+
+
+</beans>
