@@ -11,7 +11,7 @@ public class App
 {
     public static void main( String[] args )
     {
-    	ApplicationContext ctx = new ClassPathXmlApplicationContext("beans.xml");
+    	ApplicationContext ctx = new ClassPathXmlApplicationContext("bean-instantiation.xml");
     	Object car = ctx.getBean("car");
     	System.out.println(">>>"+car);
     	
