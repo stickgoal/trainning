@@ -15,9 +15,5 @@ public class App
         ApplicationContext ac = new ClassPathXmlApplicationContext("bean.xml");
         UserService userService= ac.getBean("userService", UserService.class);
         userService.findByName("xxxx");
-
-
-
-
     }
 }

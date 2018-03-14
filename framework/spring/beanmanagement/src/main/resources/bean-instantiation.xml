@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+
+    <!-- 工厂方法 -->
+    <!--  <bean id="car" class="me.maiz.trainning.framework.spring.instantiation.Car" factory-method="make" />
+     -->
+    <!-- 工厂Bean -->
+    <!-- carFactoryBean负责制造car -->
+    <bean id="carFactory" class="me.maiz.trainning.framework.spring.instantiation.CarFactory"></bean>
+
+    <!-- car Bean，指定由carFactory来实例化 -->
+    <bean id="car" class="me.maiz.trainning.framework.spring.instantiation.Car" factory-bean="carFactory" factory-method="makeCar"/>
+
+    <!--spring默认的FactoryBean方式，通过getObject得到返回的实例-->
+    <bean id="car2" class="me.maiz.trainning.framework.spring.instantiation.CarFactory2"></bean>
+
+</beans>
