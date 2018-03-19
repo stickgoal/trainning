@@ -11,9 +11,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <title></title>
 </head>
 <body>
-哈哈哈
-
-${x }
-${now }
+出错了吧....
+${ERROR_MSG}
 </body>
 </html>

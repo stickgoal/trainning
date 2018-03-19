@@ -8,12 +8,15 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
  %>
 <base href="<%=basePath%>">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title></title>
+<title>显示参数页</title>
 </head>
 <body>
 哈哈哈
 
-${x }
-${now }
+name : ${name }  age : ${age }
+
+regForm: ${regForm}
+
+date: ${date }
 </body>
 </html>

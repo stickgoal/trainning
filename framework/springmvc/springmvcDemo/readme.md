@@ -1,202 +1,84 @@
-1.生成项目
+ # springmvc 知识点
 
-mvn archetype:generate -DarchetypeCatalog=internal -DgroupId=com.chinasofti.framework.springmvc -DartifactId=springmvcDemo
+ - SpringMVC
+     - 核心概念
+         - 中心控制器模式
+         	 - 处理流程
+         	 - MVC组件
+         		 - View
+         		 - ViewResolver
+         		 - ModelAndView
+         		 - Controller
+         		 - HandlerMapping
+          - 用法
+             - 配置
 
-2. 导入eclipse
-3. 添加依赖
+              - @Controller @RequestMapping
 
-```xml
-	<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.chinasofti.framework.springmvc</groupId>
-	<artifactId>springmvcDemo</artifactId>
-	<packaging>war</packaging>
-	<version>1.0-SNAPSHOT</version>
-	<name>springmvcDemo Maven Webapp</name>
-	<url>http://maven.apache.org</url>
+                   - modelMap的使用
+                  - GET / POST  method
+                  - @PathVariable
 
-	<properties>
-		<spring.version>4.3.4.RELEASE</spring.version>
-		<jackson.version>1.9.13</jackson.version>
-	</properties>
+              - 路径分级 ContextLevelController
 
+              - 页面跳转 RedirectingController
 
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
-			<scope>test</scope>
-		</dependency>
+              - 数据绑定及验证  DataBindingConversionController
 
-		<!-- servlet API支持 -->
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<version>3.1.0</version>
-		</dependency>
+              - 数据类型转换及自定义 DataBindingConversionController
 
-		<!-- jstl支持 -->
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>jstl</artifactId>
-			<version>1.1.2</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>taglibs</groupId>
-			<artifactId>standard</artifactId>
-			<version>1.1.2</version>
-			<type>jar</type>
-		</dependency>
+              - 静态资源处理
 
-		<!-- spring -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-aop</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
+                  ```xml
+                  <!-- 静态资源处理 -->
+                  	<mvc:resources location="/WEB-INF/js/" mapping="/js/**" />
+                  	<mvc:resources location="/WEB-INF/css/" mapping="/css/**" />
+                  	<mvc:resources location="/WEB-INF/img/" mapping="/img/**" />
+                  	<mvc:resources location="/WEB-INF/html/" mapping="/html/**" />
+                  ```
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-core</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
+              - 异常处理   GlobalExceptionHandler
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context-support</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
+              - 文件上传支持 UploadController(添加commons依赖)
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-beans</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
+                  ```xml
+                  <!-- 文件上传 -->
+                  	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+                  		<property name="maxUploadSize" value="2097152"/>
+                  	</bean>
+                  ```
 
+              - JSON转换  JSONController、RestfulController
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
+                   - @ResponseBody  @RestController
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-orm</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
+              - 与spring集成
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-web</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
+                   - 使用默认配置文件名称
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-webmvc</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
+                        - 默认使用DispatcherServlet的servlet-name,再加上-servlet.xml作为配置文件，如springmvc-servlet
+                        - springmvc的父容器，是一个spring容器，默认使用application-context.xml作为配置文件名，可以通过设置名为contextConfigLocation的context-param标签来修改
 
-		<!-- aspectj -->
-		<dependency>
-			<groupId>org.aspectj</groupId>
-			<artifactId>aspectjrt</artifactId>
-			<version>1.8.9</version>
-		</dependency>
+                   - component-scan的处理
 
-		<dependency>
-			<groupId>org.aspectj</groupId>
-			<artifactId>aspectjweaver</artifactId>
-			<version>1.8.9</version>
-		</dependency>
+                        - applicationContext.xml配置中：
 
-		<!-- Jackson JSON Mapper -->
-		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-mapper-asl</artifactId>
-			<version>${jackson.version}</version>
-		</dependency>
+                            ```xml
+                            <!-- 包扫描 -->
+                            	<context:component-scan base-package="our.package.name">
+                            		<context:exclude-filter type="annotation"
+                            			expression="org.springframework.stereotype.Controller" />
+                            	</context:component-scan>
+                            ```
 
-		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-validator -->
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-validator</artifactId>
-			<version>5.3.4.Final</version>
-		</dependency>
+                            ​
 
+                        - ​
 
-	</dependencies>
-	<build>
-		<finalName>springmvcDemo</finalName>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.0</version>
-				<configuration>
-					<source>8</source>
-					<target>8</target>
-					<encoding>UTF-8</encoding>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>copy-dependencies</id>
-						<goals>
-							<goal>copy-dependencies</goal>
-						</goals>
-						<configuration>
-							<excludeArtifactIds>servlet-api,jsp-api</excludeArtifactIds>
-							<outputDirectory>web/WEB-INF/lib</outputDirectory>
-							<overWriteReleases>false</overWriteReleases>
-							<overWriteSnapshots>true</overWriteSnapshots>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
-</project>
+                  ​
 
-```
+                  ​
 
-3. 用资源管理器打开项目的根目录中的.setting文件夹，修改其中的org.eclipse.wst.common.project.facet.core.xml文件，改为：
+                  ​
 
-```xml
-
-
-<?xml version="1.0" encoding="UTF-8"?>
-<faceted-project>
-  <fixed facet="wst.jsdt.web"/>
-  <installed facet="java" version="1.8"/>
-  <installed facet="jst.web" version="3.1"/>
-  <installed facet="wst.jsdt.web" version="1.0"/>
-</faceted-project>
-
-```
-
-修改/springmvcDemo/src/main/webapp/WEB-INF目录下的web.xml的文件头为：
-
-```
-<?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns="http://xmlns.jcp.org/xml/ns/javaee"
-	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
-	version="3.1">
-
-
-</web-app>
-
-```
-
-此时项目即设置为servlet3.1的web项目。maven > update project
-
-4. 添加java源码文件夹在/src/main/目录下建立java文件夹，maven > update project
-5. ​
+                  ​	

@@ -11,9 +11,10 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <title></title>
 </head>
 <body>
-哈哈哈
-
-${x }
-${now }
+新增页面
+<form action="add" method="post">
+	<input name="username" placeholder="用户名"/>
+	<button>提交</button>
+</form>
 </body>
 </html>

@@ -11,9 +11,10 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <title></title>
 </head>
 <body>
-哈哈哈
-
-${x }
-${now }
+<form action="upload" method="post" enctype="multipart/form-data">
+	<input name="myFile" type="file" />
+	<input name="username" type="text"  placeholder="请输入用户名" />
+	<button>上传</button>
+</form>
 </body>
 </html>
