@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="quickstart.mappers.user">
+
+    <select id="findByUserId" resultType="me.maiz.trainning.framework.mybatis.dal.model.User">
+        select * from tjs_user where user_id = #{userId}
+    </select>
+
+    <insert id="insertUser"  parameterType="me.maiz.trainning.framework.mybatis.dal.model.User">
+      insert into tjs_user(user_id,username,password,age) values(
+      #{userId},#{username},#{password},#{age}
+      )
+    </insert>
+
+
+    <update id="updateUser" parameterType="me.maiz.trainning.framework.mybatis.dal.model.User">
+        update tjs_user
+        SET
+        username=#{username},
+        age=#{age}
+        where user_id=#{userId}
+    </update>
+
+    <delete id="deleteUser">
+        delete from tjs_user where user_id=#{userId}
+    </delete>
+
+    <select id="findAll" resultType="me.maiz.trainning.framework.mybatis.dal.model.User">
+        select * from tjs_user
+    </select>
+
+
+</mapper>

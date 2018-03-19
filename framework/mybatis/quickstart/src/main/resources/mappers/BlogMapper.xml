@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="me.maiz.trainning.framework.mybatis.dal.mapper.BlogMapper">
+    <!--resultMap标签可以手动指定映射关系-->
+    <resultMap id="blogMap" type="blog">
+        <id property="blogId" column="blog_id"></id>
+        <id property="authorName" column="author_name"></id>
+    </resultMap>
+
+
+    <select id="findActiveBlogWithTitleLike"  resultMap="blogMap">
+        SELECT * FROM BLOG
+        WHERE state = 'ACTIVE'
+        <if test="title != null">
+            AND title like '%'||#{title}||'%'
+        </if>
+    </select>
+
+    <select id="findActiveBlogLike"
+            resultType="Blog">
+        SELECT * FROM BLOG WHERE state = 'ACTIVE'
+        <if test="title != null">
+            AND title like '%'||#{title}||'%'
+        </if>
+        <if test="authorName != null">
+            AND author_name like #{authorName}
+        </if>
+    </select>
+
+    <select id="findActiveBlogLikeOr"
+            resultType="Blog">
+        SELECT * FROM BLOG WHERE state = 'ACTIVE'
+        <choose>
+            <when test="title != null">
+                AND title like '%'||#{title}||'%'
+            </when>
+            <when test="authorName != null">
+                AND author_name like #{authorName}
+            </when>
+            <otherwise>
+                AND featured = 1
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findActiveBlogLikeWhere"
+            resultType="Blog">
+        SELECT * FROM BLOG
+        <where>
+            <if test="title != null">
+                AND title like #{title}
+            </if>
+            <if test="authorName != null">
+                AND author_name like #{authorName}
+            </if>
+        </where>
+    </select>
+
+    <select id="findActiveBlogLikeWhere2"
+            resultType="Blog">
+        SELECT * FROM BLOG
+        <trim prefix="WHERE" prefixOverrides="AND |OR ">
+          <if test="title != null">
+                AND title like #{title}
+            </if>
+            <if test="authorName != null">
+                AND author_name like #{authorName}
+            </if>
+        </trim>
+    </select>
+
+    <update id="updateBlogIfNecessary">
+        update blog
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="title != null">title=#{title},</if>
+            <if test="authorName != null">author_name =#{authorName},</if>
+            <if test="state != null">state=#{state}</if>
+        </trim>
+        where blog_id=#{blogId}
+    </update>
+
+</mapper>

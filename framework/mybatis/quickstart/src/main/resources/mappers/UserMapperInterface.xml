@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="me.maiz.trainning.framework.mybatis.dal.mapper.UserMapper">
+    <!--resultMap标签可以手动指定映射关系-->
+    <resultMap id="userMap" type="user">
+        <id property="userId" column="user_id"></id>
+    </resultMap>
+    
+    <!--简单的增删改查-->
+    <select id="findByUserId" resultType="me.maiz.trainning.framework.mybatis.dal.model.User">
+        select * from tjs_user where user_id = #{userId}
+    </select>
+
+    <insert id="insertUser"  parameterType="me.maiz.trainning.framework.mybatis.dal.model.User">
+      insert into tjs_user(user_id,username,password,age) values(
+      #{userId},#{username},#{password},#{age}
+      )
+    </insert>
+
+
+    <update id="updateUser" parameterType="me.maiz.trainning.framework.mybatis.dal.model.User">
+        update tjs_user
+        SET
+        username=#{username},
+        age=#{age}
+        where user_id=#{userId}
+    </update>
+
+    <delete id="deleteUser">
+        delete from tjs_user where user_id=#{userId}
+    </delete>
+
+    <select id="findAll" resultType="me.maiz.trainning.framework.mybatis.dal.model.User">
+        select * from tjs_user
+    </select>
+
+
+    <!--其他方式-->
+    <!--用map传参，可用于非实体传参，非常灵活-->
+    <select id="findByMap" parameterType="map" resultMap="userMap">
+        select * from tjs_user where username = #{username} or user_id=#{userId}
+    </select>
+    <!--结果是个map，非实体，可用于统计-->
+    <select id="findResultMap" resultType="map">
+        select sum(age) as totalAge from tjs_user
+    </select>
+
+    <!--sql标签的使用-->
+    <sql id="setCause">
+        username=#{username},
+        age=#{age},
+        password=#{password}
+    </sql>
+
+    <update id="updateUserById" parameterType="me.maiz.trainning.framework.mybatis.dal.model.User">
+        update tjs_user
+        SET
+        <include refid="setCause"/>
+        where user_id=#{userId}
+    </update>
+
+    <update id="updateUserByUsername" parameterType="me.maiz.trainning.framework.mybatis.dal.model.User">
+        update tjs_user
+        SET
+        <include refid="setCause"/>
+        where username=#{username}
+    </update>
+
+    <!--动态sql-->
+
+    <select id="findUserWithUsernameLike" resultMap="userMap">
+        select * from tjs_user
+        <trim prefix="where" prefixOverrides="AND | OR ">
+          <if test="username != null">
+              username like '%'||'${username}'||'%'
+          </if>
+        </trim>
+    </select>
+    
+</mapper>
