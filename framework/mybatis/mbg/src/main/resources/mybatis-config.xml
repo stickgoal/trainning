@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <!--打印日志，方便看输出SQL-->
+    <settings>
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+    </settings>
+
+    <!--类型别名，少写点字-->
+    <typeAliases>
+        <package name="me.maiz.trainning.framework.mybatis.dal.model"/>
+    </typeAliases>
+
+    <!--环境配置-->
+    <environments default="dev">
+        <environment id="dev">
+            <transactionManager type="JDBC"></transactionManager>
+            <dataSource type="POOLED">
+                <property name="driver" value="oracle.jdbc.driver.OracleDriver"/>
+                <property name="url" value="jdbc:oracle:thin:@localhost:1521:ORCL"/>
+                <property name="username" value="scott"/>
+                <property name="password" value="tiger"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+
+    <!--配置文件所在地-->
+    <mappers>
+        <mapper resource="mappers/UserMapper.xml"/>
+        <mapper resource="mappers/UserMapperInterface.xml"/>
+        <mapper resource="mappers/BlogMapper.xml"/>
+    </mappers>
+
+
+</configuration>
