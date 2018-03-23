@@ -11,7 +11,7 @@
 
     <!--类型别名，少写点字-->
     <typeAliases>
-        <package name="me.maiz.trainning.framework.mybatis.dal.model"/>
+        <package name="me.maiz.trainning.framework.mybatis.dal.entity"/>
     </typeAliases>
 
     <!--环境配置-->
@@ -31,8 +31,8 @@
     <!--配置文件所在地-->
     <mappers>
         <mapper resource="mappers/UserMapper.xml"/>
-        <mapper resource="mappers/UserMapperInterface.xml"/>
         <mapper resource="mappers/BlogMapper.xml"/>
+        <mapper resource="mappers/RoadMapper.xml"/>
     </mappers>
 
 

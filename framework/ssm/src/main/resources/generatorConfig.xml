@@ -20,7 +20,7 @@
         </javaTypeResolver>
 
         <!--java实体类所在包配置-->
-        <javaModelGenerator targetPackage="me.maiz.trainning.framework.mybatis.dal.entity" targetProject="src/main/java">
+        <javaModelGenerator targetPackage="me.maiz.trainning.framework.ssm.dal.model" targetProject="src/main/java">
             <property name="enableSubPackages" value="true" />
             <property name="trimStrings" value="true" />
         </javaModelGenerator>
@@ -31,17 +31,10 @@
         </sqlMapGenerator>
 
         <!--Mapper接口所在位置-->
-        <javaClientGenerator type="XMLMAPPER" targetPackage="me.maiz.trainning.framework.mybatis.dal.mapper"  targetProject="src/main/java">
+        <javaClientGenerator type="XMLMAPPER" targetPackage="me.maiz.trainning.framework.ssm.dal.mapper"  targetProject="src/main/java">
             <property name="enableSubPackages" value="true" />
         </javaClientGenerator>
         <!--要生成的表名-->
-        <table tableName="tjs_user" domainObjectName="User" >
-            <columnOverride column="user_Id" property="userId" />
-        </table>
-        <table tableName="blog" domainObjectName="Blog">
-            <columnOverride column="blog_id" property="blogId"/>
-            <columnOverride column="author_name" property="authorName"/>
-        </table>
         <table tableName="tjs_road" domainObjectName="Road">
             <columnOverride column="road_id" property="roadId"/>
             <columnOverride column="road_name" property="roadName"/>
