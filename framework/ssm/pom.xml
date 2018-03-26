@@ -25,7 +25,7 @@
 			<version>${spring.version}</version>
 		</dependency>
 
-		<!--mybatis-->
+		<!--mybatis -->
 		<dependency>
 			<groupId>org.mybatis</groupId>
 			<artifactId>mybatis</artifactId>
@@ -43,7 +43,7 @@
 			<artifactId>ojdbc6</artifactId>
 			<version>11.2.0.3</version>
 		</dependency>
-		
+
 		<!-- web相关 -->
 		<!-- servlet API支持 -->
 		<dependency>
@@ -126,6 +126,9 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<overwrite>true</overwrite>
+				</configuration>
 			</plugin>
 
 		</plugins>
