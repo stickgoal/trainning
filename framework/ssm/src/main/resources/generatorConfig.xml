@@ -36,8 +36,12 @@
         </javaClientGenerator>
         <!--要生成的表名-->
         <table tableName="tjs_road" domainObjectName="Road">
+            <generatedKey  type="pre"  column="road_id" sqlStatement="select id_seq.nextval from dual"></generatedKey>
             <columnOverride column="road_id" property="roadId"/>
             <columnOverride column="road_name" property="roadName"/>
+        </table>
+        <table tableName="blog" domainObjectName="Blog">
+            <generatedKey type="pre"  column="blog_id" sqlStatement="select id_seq.nextval from dual"></generatedKey>
         </table>
 
 
