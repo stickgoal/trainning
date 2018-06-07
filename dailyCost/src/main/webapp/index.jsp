@@ -35,7 +35,7 @@
 <div class="container">
 
     <div id="loginBox" class="col-md-6 col-md-offset-3">
-        <form action="keep.html" class="form-horizontal">
+        <form action="/login" method="post" class="form-horizontal">
 
             <h1  class="text-center">每日记账</h1>
             <div class="form-group">

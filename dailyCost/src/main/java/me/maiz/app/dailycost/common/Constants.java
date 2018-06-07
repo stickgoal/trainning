@@ -6,7 +6,7 @@ package me.maiz.app.dailycost.common;
  */
 public interface Constants {
 
-    String USER_SESSION_KEY="USER_SESSION_KEY";
+    String USER_SESSION_KEY="SK_USER";
 
     String MSG_KEY="MSG";
 

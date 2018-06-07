@@ -11,10 +11,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * Created by Lucas on 2017-03-13.
  */
 @Controller
-@RequestMapping("account")
 public class CostController extends BaseController {
 
-    @RequestMapping(value = "/",method = RequestMethod.GET)
+    @RequestMapping("account")
     public String toAccount(ModelMap modelMap) {
         modelMap.put("categoryList", CategoryEnum.getAllEnums());
         return "account";

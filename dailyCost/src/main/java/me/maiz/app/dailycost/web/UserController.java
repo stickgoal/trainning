@@ -75,6 +75,17 @@ public class UserController extends BaseController {
 
         return "redirect:account";
     }
+/*
+
+    @RequestMapping(value = "account")
+    public  String toAccount(){
+
+        //TODO 加载分类
+
+
+        return "account";
+    }
+*/
 
 
 

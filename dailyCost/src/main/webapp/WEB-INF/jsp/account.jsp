@@ -7,190 +7,173 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<html>
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-    <jsp:include page="layout/head.jsp"/>
-    <title>我的账户</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title>记账</title>
 
+    <!-- Bootstrap -->
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 shim 和 Respond.js 是为了让 IE8 支持 HTML5 元素和媒体查询（media queries）功能 -->
+    <!-- 警告：通过 file:// 协议（就是直接将 html 页面拖拽到浏览器中）访问页面时 Respond.js 不起作用 -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
     <style>
-        .dc_category li {
-            width: 10px;
-            height: 10px;
-            float: left;
-            padding-left: 4px;
+        body{
+            background: #eee;
+        }
+        .navbar-brand img{
+            width: 30px;
+            height: 30px;
         }
     </style>
 </head>
 <body>
-<jsp:include page="layout/header.jsp"/>
-<jsp:include page="layout/left.jsp"/>
-
-<div id="main" role="main">
-    <jsp:include page="layout/main_ribbon.jsp">
-        <jsp:param name="breadcrumb" value="我的账户"/>
-    </jsp:include>
-    <!-- MAIN CONTENT -->
-    <div id="content">
-        <div class="jarviswidget jarviswidget-sortable" id="wid-id-0" data-widget-colorbutton="false"
-             data-widget-editbutton="false" role="widget" style="">
-            <!-- widget options:
-            usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
-
-            data-widget-colorbutton="false"
-            data-widget-editbutton="false"
-            data-widget-togglebutton="false"
-            data-widget-deletebutton="false"
-            data-widget-fullscreenbutton="false"
-            data-widget-custombutton="false"
-            data-widget-collapsed="true"
-            data-widget-sortable="false"
-
-            -->
-            <header role="heading">
-                <div class="jarviswidget-ctrls" role="menu"><a href="#" class="button-icon jarviswidget-toggle-btn"
-                                                               rel="tooltip" title="" data-placement="bottom"
-                                                               data-original-title="Collapse"><i
-                        class="fa fa-minus "></i></a> <a href="javascript:void(0);"
-                                                         class="button-icon jarviswidget-fullscreen-btn" rel="tooltip"
-                                                         title="" data-placement="bottom"
-                                                         data-original-title="Fullscreen"><i
-                        class="fa fa-resize-full "></i></a> <a href="javascript:void(0);"
-                                                               class="button-icon jarviswidget-delete-btn" rel="tooltip"
-                                                               title="" data-placement="bottom"
-                                                               data-original-title="Delete"><i class="fa fa-times"></i></a>
-                </div>
-                <span class="widget-icon"> <i class="fa fa-eye"></i> </span>
-                <h2>Default Elements</h2>
-
-                <span class="jarviswidget-loader"><i class="fa fa-refresh fa-spin"></i></span></header>
-
-            <!-- widget div-->
-            <div role="content">
-
-                <!-- widget edit box -->
-                <div class="jarviswidget-editbox">
-                    <!-- This area used as dropdown edit box -->
-
-                </div>
-                <!-- end widget edit box -->
-
-                <!-- widget content -->
-                <div class="widget-body">
-
-                    <form class="form-horizontal">
-
-                        <fieldset>
-                            <legend>开始记账吧</legend>
-
-                            <div class="form-group">
-                                <label class="col-md-2 control-label">金额</label>
-                                <div class="col-md-3">
-                                    <input class="form-control " name="amount" id="spinner-decimal" name="spinner-decimal"
-                                           value="0.00">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="col-md-2 control-label" for="multiselect1">类别</label>
-                                <div class="col-md-3">
-                                    <select multiple="multiple" id="multiselect1" name="category" class="form-control custom-scroll"
-                                            title="选择您的花费分类">
-                                    <c:forEach items="categoryList" var="c">
-                                        <option value="${c.code}">${c.message}</option>
-                                    </c:forEach>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="col-md-2 control-label">备注</label>
-                                <div class="col-md-3">
-                                    <textarea class="form-control" name="memo" placeholder="备注" rows="4"></textarea>
-                                </div>
-                            </div>
-
-                        </fieldset>
-
-                        <div class="form-actions">
-                            <div class="row">
-                                <div class="col-md-5">
-                                    <button class="btn btn-default" type="submit">
-                                        Cancel
-                                    </button>
-                                    <button class="btn btn-primary" type="submit">
-                                        <i class="fa fa-save"></i>
-                                        Submit
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                    </form>
-
-                </div>
-                <!-- end widget content -->
+<div class="container-fluid">
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">
+                    <img src="img/moneybook.svg" alt="">
+                </a>
+                <p class="navbar-text">每日记账</p>
 
             </div>
-            <!-- end widget div -->
 
-        </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav ">
+                    <li class="active"><a href="keep.html">记账</a></li>
+                    <li><a href="query.html">账单</a></li>
+                    <li><a href="stat.html">统计</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">${SK_USER.username} <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="passoword/modify">修改密码</a></li>
+                        </ul>
+                    </li>
+                    <li><button href="logout" class="btn btn-default navbar-btn">退出</button></li>
+                </ul>
+            </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+    </nav>
 
+    <div class="container">
+        <form action="keep.html" class="form-horizontal">
+            <input type="hidden" name="category" />
+            <div class="form-group">
+                <div class="col-md-6 col-md-offset-2">
+                    <div class="btn-group btn-group-justified type" role="group" aria-label="...">
+                        <a href="#" class="btn btn-default active" id="income">收入</a>
+                        <a href="#" class="btn btn-default" id="outcome">支出</a>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">分类</label>
+                <div class="col-sm-6" id="income_category">
+                    <button class="btn btn-info btn-sm" category="transport">交通</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button> <button class="btn btn-info btn-sm" category="transport">交通</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button> <button class="btn btn-info btn-sm" category="transport">交通</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                </div>
+                <div class="col-sm-6" id="outcome_category">
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                    <button class="btn btn-danger btn-sm" category="food">食品</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="amount" class="col-sm-2 control-label">金额</label>
+                <div class="col-sm-6">
+                    <input type="number" class="form-control" name="amount" id="amount" value="0.00" step="1.00" placeholder="请输入金额">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">备注</label>
+                <div class="col-sm-6">
+                    <textarea class="form-control" name="memo" id="memo" cols="60" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-6 col-md-offset-4">
+                    <button type="submit" class="col-md-4 btn btn-success">记一笔</button>
+                </div>
+            </div>
+
+
+        </form>
 
     </div>
-    <!-- END MAIN CONTENT -->
-
-    <jsp:include page="layout/footer.jsp"/>
 
 
-    <!-- Demo purpose only -->
-    <script src="js/demo.js"></script>
-
-    <!-- MAIN APP JS FILE -->
-    <script src="js/app.js"></script>
-
-    <!-- PAGE RELATED PLUGIN(S)
-    <script src="..."></script>-->
-    <script src="js/plugin/maxlength/bootstrap-maxlength.min.js"></script>
-    <script src="js/plugin/bootstrap-timepicker/bootstrap-timepicker.min.js"></script>
-    <script src="js/plugin/bootstrap-tags/bootstrap-tagsinput.min.js"></script>
-    <script src="js/plugin/noUiSlider/jquery.nouislider.min.js"></script>
-    <script src="js/plugin/ion-slider/ion.rangeSlider.min.js"></script>
-    <script src="js/plugin/colorpicker/bootstrap-colorpicker.min.js"></script>
-    <script src="js/plugin/knob/jquery.knob.min.js"></script>
-    <script src="js/plugin/x-editable/moment.min.js"></script>
-    <script src="js/plugin/x-editable/jquery.mockjax.min.js"></script>
-    <script src="js/plugin/x-editable/x-editable.min.js"></script>
-    <script src="js/plugin/typeahead/typeahead.min.js"></script>
-    <script src="js/plugin/typeahead/typeaheadjs.min.js"></script>
 
 
-    <script type="text/javascript">
-
-        // DO NOT REMOVE : GLOBAL FUNCTIONS!
-
-        $(document).ready(function () {
-
-            pageSetUp();
-
-            $("#spinner").spinner();
-            $("#spinner-decimal").spinner({
-                step: 0.01,
-                numberFormat: "n"
-            });
-
-            $("#spinner-currency").spinner({
-                min: 5,
-                max: 2500,
-                step: 25,
-                start: 1000,
-                numberFormat: "C"
-            });
-
-
-        })
-
-    </script>
 
 </div>
+
+<!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+<script src="./js/jquery-1.12.2.min.js"></script>
+<!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+<script src="./js/bootstrap.min.js"></script>
+
+<script>
+    $(function(){
+        $("#outcome_category").hide();
+        $("[category]").click(function(e){
+            e.preventDefault();
+            $("[name=category]").val($(this).attr("category"));
+        });
+        $("#income").click(function(){
+            $(".type .btn").removeClass("active");
+            $(this).addClass("active");
+            $("#income_category").show();
+            $("#outcome_category").hide();
+        });
+        $("#outcome").click(function () {
+            $(".type .btn").removeClass("active");
+            $(this).addClass("active");
+            $("#income_category").hide();
+            $("#outcome_category").show();
+        })
+    });
+</script>
 </body>
 </html>
