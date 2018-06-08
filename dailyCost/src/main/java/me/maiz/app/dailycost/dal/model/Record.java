@@ -18,6 +18,8 @@ public class Record {
 
     private Date keepTime;
 
+    private Date occurTime;
+
     private double amount;
 
     private String direction;
@@ -82,12 +84,21 @@ public class Record {
         this.memo = memo;
     }
 
+    public Date getOccurTime() {
+        return occurTime;
+    }
+
+    public void setOccurTime(Date occurTime) {
+        this.occurTime = occurTime;
+    }
+
     @Override
     public String toString() {
         return "Record{" +
                 "recordId=" + recordId +
                 ", userId=" + userId +
                 ", keepTime=" + keepTime +
+                ", occurTime=" + occurTime +
                 ", amount=" + amount +
                 ", direction='" + direction + '\'' +
                 ", category='" + category + '\'' +

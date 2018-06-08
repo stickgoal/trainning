@@ -1,26 +1,31 @@
 package me.maiz.app.dailycost.web;
 
 import me.maiz.app.dailycost.common.Constants;
+import me.maiz.app.dailycost.dal.model.Record;
 import me.maiz.app.dailycost.dal.model.User;
-import me.maiz.app.dailycost.enums.CategoryEnum;
 import me.maiz.app.dailycost.service.CategoryService;
-import me.maiz.app.dailycost.web.form.CostForm;
+import me.maiz.app.dailycost.service.RecordService;
+import me.maiz.app.dailycost.web.form.RecordForm;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.servlet.http.HttpSession;
+import java.util.Date;
 
 /**
  * Created by Lucas on 2017-03-13.
  */
 @Controller
-public class CostController extends BaseController {
+public class RecordController extends BaseController {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private RecordService recordService;
 
     @RequestMapping("account")
     public String toAccount(ModelMap modelMap, HttpSession session) {
@@ -30,10 +35,15 @@ public class CostController extends BaseController {
     }
 
     @RequestMapping("keep")
-    public String keepAccount(CostForm form){
+    public String keepAccount(RecordForm form,HttpSession session){
 
+        Record r = new Record();
+        BeanUtils.copyProperties(form,r);
+        r.setKeepTime(new Date());
+        r.setUserId(getUserId(session));
+        recordService.save(r);
 
-        return "";
+        return "redirect:account";
     }
 
 

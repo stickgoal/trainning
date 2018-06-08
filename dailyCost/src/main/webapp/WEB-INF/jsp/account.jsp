@@ -75,8 +75,9 @@
     </nav>
 
     <div class="container">
-        <form action="keep.html" class="form-horizontal">
-            <input type="hidden" name="category" />
+        <form action="keep" class="form-horizontal">
+            <input type="hidden" name="category" value="食物"/>
+            <input type="hidden" name="direction" value="IN" />
             <div class="form-group">
                 <div class="col-md-6 col-md-offset-2">
                     <div class="btn-group btn-group-justified type" role="group" aria-label="...">
@@ -166,12 +167,15 @@
             $(this).addClass("active");
             $("#income_category").show();
             $("#outcome_category").hide();
+            $("[name=direction]").val("IN");
         });
         $("#outcome").click(function () {
             $(".type .btn").removeClass("active");
             $(this).addClass("active");
             $("#income_category").hide();
             $("#outcome_category").show();
+            $("[name=direction]").val("OUT");
+
         })
     });
 </script>
