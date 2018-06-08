@@ -12,32 +12,35 @@ import java.util.List;
  */
 public enum CategoryEnum implements Messageable {
 
-    TRANSPORTATION("TRANSPORTATION","交通"),
-    EATING_OUT("EATING_OUT","外出用餐"),
-    COMMODITY("COMMODITY","日用品"),
-    RENT("RENT","房租"),
-    OTHER("OTHER","其他")
-
+    TRANSPORTATION("TRANSPORTATION","OUT","交通"),
+    EATING_OUT("EATING_OUT","OUT","外出用餐"),
+    COMMODITY("COMMODITY","OUT","日用品"),
+    RENT("RENT","OUT","房租"),
+    OTHER("OTHER","OUT","其他"),
+    SALARY("SALARY","IN","工资")
     ;
 
     private String code;
 
+    private String direction;
+
     private String message;
 
-    CategoryEnum(String code,String message){
+    CategoryEnum(String code,String direction,String message){
         this.code=code;
+        this.direction=direction;
         this.message=message;
     }
 
 
     @Override
     public String getCode() {
-        return null;
+        return code;
     }
 
     @Override
     public String getMessage() {
-        return null;
+        return message;
     }
 
     public static List<CategoryEnum> getAllEnums(){

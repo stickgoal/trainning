@@ -16,7 +16,7 @@ public class CostForm extends BaseForm {
     private BigDecimal account;
 
     @NotBlank
-    private CategoryEnum category;
+    private String category;
 
     private String memo;
 
@@ -28,11 +28,11 @@ public class CostForm extends BaseForm {
         this.account = account;
     }
 
-    public CategoryEnum getCategory() {
+    public String getCategory() {
         return category;
     }
 
-    public void setCategory(CategoryEnum category) {
+    public void setCategory(String category) {
         this.category = category;
     }
 
