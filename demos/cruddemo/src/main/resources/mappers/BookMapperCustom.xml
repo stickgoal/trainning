@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="me.maiz.trainning.dal.mapper.BookMapperCustom" >
+
+    <sql id="queryCondition">
+        <where>
+            <if test="bookName!=null">
+                and  book_name like concat('%','${bookName}','%')
+            </if>
+            <if test="priceMax!=null">
+                and  price &lt; #{priceMax}
+            </if>
+            <if test="priceMin!=null">
+                and  price &gt; #{priceMin}
+            </if>
+            <if test="upTimeHigh!=null">
+                and  up_time &lt; #{upTimeHigh}
+            </if>
+            <if test="upTimeLow!=null">
+                and  up_time &gt; #{upTimeLow}
+            </if>
+        </where>
+    </sql>
+
+    <select id="querySelective" parameterType="map" resultType="me.maiz.trainning.dal.model.Book">
+        select * from book
+        <include refid="queryCondition"/>
+        order by create_date desc
+        limit #{start},#{pageSize}
+    </select>
+
+    <select id="countSelective" parameterType="map" resultType="int">
+        select count(*) from book
+        <include refid="queryCondition"/>
+    </select>
+
+
+</mapper>
