@@ -5,6 +5,6 @@ import org.springframework.stereotype.Service;
 public interface MailService{
 
 
-    void sendResetPasswordMail(String to);
+    void sendResetPasswordMail(String to,String code);
 
 }

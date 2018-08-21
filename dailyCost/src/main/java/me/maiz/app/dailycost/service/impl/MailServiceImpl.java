@@ -45,9 +45,9 @@ public class MailServiceImpl implements MailService
 
 
     @Override
-    public void sendResetPasswordMail(String to) {
+    public void sendResetPasswordMail(String to,String code) {
         resetPasswordMailContent = resetPasswordMailContent.replace("username",to);
-        resetPasswordMailContent = resetPasswordMailContent.replace("captchaCode",to);
+        resetPasswordMailContent = resetPasswordMailContent.replace("captchaCode",code);
         try {
             MailUtil.send(to,"您正在申请重置乐记密码",resetPasswordMailContent);
         } catch (MessagingException e) {

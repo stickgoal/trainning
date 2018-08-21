@@ -11,9 +11,9 @@ import java.util.Properties;
 
 public class MailUtil {
 
-    private static final String OWNER_NAME = "TODO";
+    private static final String OWNER_NAME = "YOUR_EMAIL";
 
-    private static final String PASSWORD = "TODO";
+    private static final String PASSWORD = "YOUR_PASSWORD";
 
     private static final String MAIL_HOST = "smtp.163.com";
 
