@@ -22,4 +22,6 @@
               - 文件上传支持
               - JSON转换 @ResponseBody  @RestController
               - 与spring集成
-
+- 文件上传解决方案
+     - 上传到本地目录
+     - 用Nginx做静态文件服务器处理，参考nginx.conf
