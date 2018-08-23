@@ -14,10 +14,13 @@ public class MessageSender {
 
         private final Logger logger = LoggerFactory.getLogger(getClass());
         // 用户账号
+        private String name="YOUR_ACCOUNT";
         // 发送内容的模板
         private String contentTemplate;
         // 密码
+        private String pwd="YOUR_PASSWORD";
         // 签名
+        private String sign="YOUR_SIGN";
         // 发送请求的url地址
         private String url="http://web.duanxinwang.cc/asmx/smsservice.aspx";
         // 短信类型
