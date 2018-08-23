@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .active{
+            color:red;
+        }
+        .even{
+            background: #ededed;
+        }
+    </style>
+</head>
+<body>
+<p th:text="${user.name}">您好,游客</p>
+<a th:href="@{${user.blogAddress}}">example.myblog.com</a>
+<table>
+    <tr>
+        <th>编号</th>
+        <th>名字</th>
+        <th>博客</th>
+    </tr>
+    <!--
+    第二参数是遍历参数:
+    index:当前迭代对象的index（从0开始计算）
+    count: 当前迭代对象的index(从1开始计算)
+    size:被迭代对象的大小
+    current:当前迭代变量
+    even/odd:布尔值，当前循环是否是偶数/奇数（从0开始计算）
+    first:布尔值，当前循环是否是第一个
+    last:布尔值，当前循环是否是最后一个
+    -->
+    <!-- th:class 不能有两个,必须用th:classappend-->
+    <tr th:each="u,i : ${list}" th:class="${u.name=='A'}?'active':''" th:classappend="${i.even==true}?'even':''">
+        <td th:text="${i.count}" >编号</td>
+        <td th:text="${u.name}" >名字1</td>
+        <td th:text="${u.blogAddress}">博客地址</td>
+    </tr>
+</table>
+</body>
+</html>
