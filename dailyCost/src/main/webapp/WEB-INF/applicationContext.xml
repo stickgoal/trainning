@@ -55,4 +55,27 @@
     <!--支持注解式使用-->
     <tx:annotation-driven transaction-manager="transactionManager"/>
 
+
+    <!-- 调用短信网关Web Service的REST客户端配置 -->
+    <bean id="restTemplate" class="org.springframework.web.client.RestTemplate">
+        <property name="messageConverters">
+            <list>
+                <bean class="org.springframework.http.converter.FormHttpMessageConverter"/>
+                <!-- <bean class="org.springframework.http.converter.xml.MarshallingHttpMessageConverter"/> -->
+                <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"/>
+                <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                    <property name="supportedMediaTypes">
+                        <list>
+                            <value>text/plain;charset=UTF-8</value>
+                        </list>
+                    </property>
+                </bean>
+                <!-- 添加普通字符串能力 -->
+                <bean
+                        class="org.springframework.http.converter.StringHttpMessageConverter">
+                    <property name="writeAcceptCharset" value="true" />
+                </bean>
+            </list>
+        </property>
+    </bean>
 </beans>
