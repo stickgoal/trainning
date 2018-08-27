@@ -2,7 +2,11 @@
 
 - [thymeleaf 模板引擎](docs/thymeleaf.md)
 - lambok 简化代码
+    - @Data
+    - @Slf4j
 - [quartz定时任务](docs/quartz.md)
-- spring-cache(with redis)注解驱动
+- [spring-cache注解驱动](docs/cache.md)
+    
 - spring-retry 重试功能
+- elasticsearch 文本搜索
 - Guava Eventbus异步事件分发

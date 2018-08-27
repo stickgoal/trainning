@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:fragment="defaultImportAssets(title)">
+        <title>${title}</title>
+        <meta charset="UTF-8">
+
+        <!-- Bootstrap -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="css/app/init.css">
+
+        <!-- HTML5 shim 和 Respond.js 是为了让 IE8 支持 HTML5 元素和媒体查询（media queries）功能 -->
+        <!-- 警告：通过 file:// 协议（就是直接将 html 页面拖拽到浏览器中）访问页面时 Respond.js 不起作用 -->
+        <!--[if lt IE 9]>
+        <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+        <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+    </th:block>
+</head>
+<body >
+<!-- Fixed navbar -->
+<nav class="navbar navbar-default navbar-fixed-top" th:fragment="navbar">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed"
+                    data-toggle="collapse" data-target="#navbar" aria-expanded="false"
+                    aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span> <span
+                    class="icon-bar"></span> <span class="icon-bar"></span> <span
+                    class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#"> <img alt="Brand"
+                                                   src="holder.js/60x20?text=心灵书店">
+            </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">主页</a></li>
+                <li><a  href="cart.html">购物车</a></li>
+                <li><a href="order.html">订单</a></li>
+                <li><a href="collection.html">收藏</a></li>
+
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown"><a href="#" class="dropdown-toggle"
+                                        data-toggle="dropdown" role="button" aria-haspopup="true"
+                                        aria-expanded="false"> <span class="glyphicon glyphicon-user"></span> <span th:text="${user?.name}">用户信息</span><span
+                        class="badge" th:text="${messageCount}">4</span> <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">站内消息 <span class="badge" th:text="${messageCount}">4</span></a></li>
+                        <li><a href="#">充值(余额￥<span th:text="${user?.balance}">15.00</span>) </a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="#">修改密码</a></li>
+                    </ul>
+                </li>
+                <li></li>
+            </ul>
+        </div>
+        <!--/.nav-collapse -->
+    </div>
+</nav>
+</body>
+</html>
