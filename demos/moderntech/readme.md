@@ -6,4 +6,4 @@
 - [spring-cache注解驱动](docs/cache.md)
 - spring-retry 重试功能
 - elasticsearch 文本搜索
-- Guava Eventbus异步事件分发
+- Guava EventBus异步事件分发

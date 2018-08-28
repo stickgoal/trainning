@@ -19,5 +19,4 @@ public class Order {
     private String memo;
 
 
-
 }
