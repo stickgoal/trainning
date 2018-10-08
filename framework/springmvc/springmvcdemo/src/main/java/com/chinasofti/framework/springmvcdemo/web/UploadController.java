@@ -25,6 +25,7 @@ public class UploadController extends ControllerBase {
 	@RequestMapping(value = "upload", method = RequestMethod.POST)
 	public String upload(String username, MultipartFile myFile) {
 		System.out.println("username ： " + username + " file:" + myFile.getOriginalFilename());
+		
 		fileService.save(myFile, "test");
 		return "upload";
 	}

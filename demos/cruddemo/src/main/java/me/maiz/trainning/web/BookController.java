@@ -89,6 +89,4 @@ public class BookController extends  BaseController{
         return "redirect:list";
     }
 
-
-
 }
