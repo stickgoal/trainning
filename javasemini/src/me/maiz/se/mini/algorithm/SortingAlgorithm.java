@@ -2,6 +2,9 @@ package me.maiz.se.mini.algorithm;
 
 import java.util.Arrays;
 
+/**
+ * 动画演示：http://www.webhek.com/post/comparison-sort.html
+ */
 public class SortingAlgorithm {
 
     public static void main(String[] args) {
