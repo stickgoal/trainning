@@ -17,7 +17,7 @@ public class ProductController {
 
     @RequestMapping("add")
     public ESProduct add(String id,String name ,String shortDesc,String desc){
-       return productESRepository.save(new ESProduct(id,name,shortDesc,desc));
+       return productESRepository.save(new ESProduct());
     }
 
     @RequestMapping("search")

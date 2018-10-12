@@ -8,11 +8,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 @EnableCaching
-public class ModernTechApplication {
+public class ModerntechApplication {
 
     public static void main(String[] args) {
 
-        SpringApplication.run(ModernTechApplication.class, args);
+        SpringApplication.run(ModerntechApplication.class, args);
 
     }
 }

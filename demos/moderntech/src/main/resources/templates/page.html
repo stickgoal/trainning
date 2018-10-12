@@ -43,6 +43,7 @@
 
 
             <div th:if="${not #lists.isEmpty(books)}" th:each="b :${books}" class="col-sm-3 col-md-3">
+                <span th:text="${b}">sss</span>
                 <div class="thumbnail">
                     <a th:href="@{detail?bookId=${b.bookId }}"><img
                             th:src="${b.mainImg }" alt="..."></a>

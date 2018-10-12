@@ -9,14 +9,14 @@ spring官方支持的后端模板引擎,应该值得投资.
     
     - home.html是简单使用
     - page.html是一个简单的分页
-     
+
 操作方法:
 - 引入starter
 - 后台加入数据
 - 页面在HTML标签中加入`xmlns:th="http://www.thymeleaf.org"`, 就可以加入th属性了
 
 - 取值方式 
-    - ${user} 用于取值及运算,比如字符串的运算${|你是${user.role}|}
+    - ${user} 用于取值及运算,比如字符串的运算|你是${user.role}|
     - \#{user} 用于国际化
     - \*{user} 用于在某个上下文中取值(比如循环中)
     - @{link}用于 显示连接
