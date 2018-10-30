@@ -6,7 +6,7 @@ public class CharacterTest {
         System.out.println(Character.isLowerCase('A'));
         System.out.println(Character.isLowerCase('a'));
         System.out.println(Character.isLowerCase('3'));
-        System.out.println(Character.isLowerCase('国'));
+//        System.out.println(Character.isLowerCase('国'));
 
         int x = 3,y = 3;
         System.out.println("x==y "+(x==y));
