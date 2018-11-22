@@ -13,6 +13,10 @@ public class Animal {
         this.age=age;
     }
 
+    public static void staticMethodA(){
+        System.out.println("父静态方法");
+    }
+
     public void goHome(){
         this.move();
     }

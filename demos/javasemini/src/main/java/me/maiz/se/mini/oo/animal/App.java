@@ -8,5 +8,7 @@ public class App {
         d.move();
 
         Bird b = new Bird();
+        Animal animal = new Bird();
+        animal.staticMethodA();
     }
 }

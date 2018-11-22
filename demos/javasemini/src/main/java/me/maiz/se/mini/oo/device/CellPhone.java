@@ -4,6 +4,8 @@ package me.maiz.se.mini.oo.device;
  * 手机
  */
 public class CellPhone extends Device {
+
+    public int powerIn;
     /*
      * 相机像素
      */

@@ -1,4 +1,4 @@
-package me.maiz.se.mini.deignpattern;
+package me.maiz.se.mini.deignpattern.singleton;
 
 /**
  * 懒汉式单例，需要时创建单例（线程安全版本,使用了双重检查锁DCL机制）

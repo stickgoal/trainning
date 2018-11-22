@@ -1,4 +1,4 @@
-package me.maiz.se.mini.deignpattern;
+package me.maiz.se.mini.deignpattern.singleton;
 
 /**
  * 饿汉式单例，创建类时创建单例，线程也不安全

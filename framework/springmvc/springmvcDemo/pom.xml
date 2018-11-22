@@ -49,8 +49,7 @@
 			<artifactId>spring-webmvc</artifactId>
 			<version>${spring.version}</version>
 		</dependency>
-	
-		
+			
 		<!-- aspectj -->
 		<dependency>
 			<groupId>org.aspectj</groupId>

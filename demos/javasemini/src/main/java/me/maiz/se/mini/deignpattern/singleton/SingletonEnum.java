@@ -1,4 +1,4 @@
-package me.maiz.se.mini.deignpattern;
+package me.maiz.se.mini.deignpattern.singleton;
 
 /**
  * 枚举式单例，枚举的创建由JVM保证，因此不会出现并发问题，构造器自动私有，外部不能创建，只能引用
