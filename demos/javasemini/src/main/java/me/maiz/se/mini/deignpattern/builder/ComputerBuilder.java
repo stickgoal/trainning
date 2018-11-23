@@ -1,8 +1,8 @@
-package me.maiz.se.mini.deignpattern.Builder;
+package me.maiz.se.mini.deignpattern.builder;
 
-import me.maiz.se.mini.deignpattern.Builder.component.CPU;
-import me.maiz.se.mini.deignpattern.Builder.component.HardDisk;
-import me.maiz.se.mini.deignpattern.Builder.component.Screen;
+import me.maiz.se.mini.deignpattern.builder.component.CPU;
+import me.maiz.se.mini.deignpattern.builder.component.HardDisk;
+import me.maiz.se.mini.deignpattern.builder.component.Screen;
 
 public class ComputerBuilder {
 

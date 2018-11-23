@@ -1,4 +1,4 @@
-package me.maiz.se.mini.deignpattern.Builder.component;
+package me.maiz.se.mini.deignpattern.builder.component;
 
 public class Screen implements Component {
 
