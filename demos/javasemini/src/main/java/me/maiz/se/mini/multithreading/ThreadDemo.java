@@ -4,6 +4,9 @@ package me.maiz.se.mini.multithreading;
 public class ThreadDemo extends Thread {
     @Override
     public void run() {
-        System.out.println("在独立线程中运行的代码 "+System.currentTimeMillis());
+        String name = Thread.currentThread().getName();
+        for (int i = 0; i < 10; i++) {
+            System.out.println(name + "在独立线程中运行的代码 "+i);
+        }
     }
 }
