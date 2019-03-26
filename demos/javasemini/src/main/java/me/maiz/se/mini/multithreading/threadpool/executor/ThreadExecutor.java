@@ -16,6 +16,12 @@ public class ThreadExecutor {
 
     private List<WorkThread> workThreads = Collections.synchronizedList(new ArrayList<WorkThread>());
 
+    /*
+     * 协调任务执行的信号量，与线程池大小相等。
+     * 利用semaphore机制，每次调用工作线程处理任务前acquire,结束后release<br/>
+     * 没有进程可用时，SupervisorThread等待，减少性能消耗;<br/>
+     * 当有线程执行完任务后SupervisorThread继续执行
+     */
     private Semaphore semaphore;
 
     /**
@@ -51,21 +57,16 @@ public class ThreadExecutor {
 
         taskQueue.add(runnable);
         System.out.println("taskQueue.size() :"+taskQueue.size());
+        //通知Supervisor线程处理
         synchronized (taskQueue){
             taskQueue.notify();
         }
-//忙等待处理
-//        while(!taskQueue.isEmpty()) {
-//            for (WorkThread t : workThreads) {
-//                if(!t.isRunning()) {
-//                    t.submit(taskQueue.poll());
-//                    break;
-//                }
-//            }
-//        }
 
     }
 
+    /**
+     * 监控线程，用于将任务队列中的任务提交给工作线程处理
+     */
     private static class SupervisorThread extends Thread {
 
         private BlockingQueue<Runnable> taskQueue;
@@ -97,7 +98,7 @@ public class ThreadExecutor {
                         }
                     }
                 }else{
-                    System.out.println("等待任务出现");
+                    System.out.println("监控线程：等待任务出现");
                     synchronized (taskQueue){
                         try {
                             taskQueue.wait();
