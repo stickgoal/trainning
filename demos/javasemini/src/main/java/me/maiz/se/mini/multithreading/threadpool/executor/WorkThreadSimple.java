@@ -12,12 +12,10 @@ public class WorkThreadSimple extends Thread {
      * 标志是否运行
      */
     private volatile boolean running;
-
     /**
      * 任务
      */
     private Runnable target;
-
 
     public boolean isRunning() {
         return running;
