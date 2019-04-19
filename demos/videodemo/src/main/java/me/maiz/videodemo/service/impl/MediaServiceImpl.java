@@ -4,6 +4,7 @@ import me.maiz.videodemo.service.MediaService;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,14 +28,14 @@ public class MediaServiceImpl implements MediaService {
 
         ProcessBuilder builder = new ProcessBuilder();
         Map<String,String> meta = new HashMap<>();
-
+        BufferedReader br = null;
         try {
             builder.command(convert);
             // 如果此属性为 true，则任何由通过此对象的 start() 方法启动的后续子进程生成的错误输出都将与标准输出合并，
             //因此两者均可使用 Process.getInputStream() 方法读取。这使得关联错误消息和相应的输出变得更容易
             builder.redirectErrorStream(true);
            Process process =  builder.start();
-            BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            br = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line = null;
             while ((line = br.readLine())!=null){
                 if(line.contains(": ")){
@@ -46,13 +47,19 @@ public class MediaServiceImpl implements MediaService {
             }
         } catch (Exception e) {
             throw new RuntimeException("转码失败",e);
+        }finally{
+            try {
+                br.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return meta;
     }
 
     @Override
     public void convert(String videoPath, String fileName) {
-        String newFileName = fileName.replace("mp4","flv");
+        String newFileName = fileName.replace(fileName.substring(fileName.indexOf(".")+1),"flv");
         // 创建一个List集合来保存转换视频文件为flv格式的命令
         List<String> convert = new ArrayList<String>();
         convert.add(FFMPEG_INSTALLATION_PATH); // 添加转换工具路径
@@ -94,7 +101,7 @@ public class MediaServiceImpl implements MediaService {
         cutpic.add(videoPath); // 同上（指定的文件即可以是转换为flv格式之前的文件，也可以是转换的flv文件）
         cutpic.add("-y");
         cutpic.add("-f");
-        cutpic.add("4cif");
+        cutpic.add("image2");
         cutpic.add("-ss"); // 添加参数＂-ss＂，该参数指定截取的起始时间
         cutpic.add("17"); // 添加起始时间为第17秒
         cutpic.add("-t"); // 添加参数＂-t＂，该参数指定持续时间
@@ -104,15 +111,28 @@ public class MediaServiceImpl implements MediaService {
         cutpic.add(PIC_CUTTED_PATH+fileName+".jpg"); // 添加截取的图片的保存路径,包含文件名
 
         ProcessBuilder builder = new ProcessBuilder();
+        BufferedReader br = null;
         try {
             builder.command(cutpic);
             // 如果此属性为 true，则任何由通过此对象的 start() 方法启动的后续子进程生成的错误输出都将与标准输出合并，
             //因此两者均可使用 Process.getInputStream() 方法读取。这使得关联错误消息和相应的输出变得更容易
             builder.redirectErrorStream(true);
-            builder.start();
+            Process p = builder.start();
+            br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line = null;
+            while ((line = br.readLine())!=null){
+                System.out.println(line);
+            }
+
 
         } catch (Exception e) {
             throw new RuntimeException("提取关键帧失败",e);
+        }finally{
+            try {
+                br.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
 
