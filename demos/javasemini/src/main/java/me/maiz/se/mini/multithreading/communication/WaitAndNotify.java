@@ -6,7 +6,7 @@ public class WaitAndNotify {
 
     private boolean parcelArrived=false;
 
-    private final Object lock=new Object();
+    private final Object obj =new Object();
 
     public Thread postMan = new Thread(()->{
 
@@ -14,30 +14,29 @@ public class WaitAndNotify {
             sleep(3);
             System.out.println("邮递员：包裹已经送到");
             parcelArrived=true;
-            synchronized (lock){
-                lock.notify();
+            synchronized (obj){
+                obj.notify();
             }
         }
 
     });
 
-    public Thread client = new Thread(()->{
-        while(true){
-            if(parcelArrived){
-                System.out.println("客户：包裹已取");
-                parcelArrived=false;
-            }else{
-                System.out.println("客户：我的快递啥时候到啊");
-                synchronized (lock){
-                    try {
-                        lock.wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+    public Thread client = new Thread(() -> {
+    while(true){
+        if(parcelArrived){
+            System.out.println("客户：包裹已取");
+            parcelArrived=false;
+        }else{
+            System.out.println("客户：我的快递啥时候到啊");
+            synchronized (obj){
+                try {
+                    obj.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
-
         }
+    }
     });
 
     private void sleep(long s) {
