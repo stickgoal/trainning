@@ -16,7 +16,7 @@ import java.util.Arrays;
 @Aspect
 public class LogAspectAnno {
 
-    @Pointcut("execution(* com.chinasofti.framework.spring.aop.services.*.*(..))")
+    @Pointcut("execution(* me.maiz.trainning.framework.spring.aop.services.*.*(..))")
     public void servicePointcut(){}
 
     @Before("servicePointcut()")

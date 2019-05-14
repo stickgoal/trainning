@@ -10,5 +10,6 @@
     <context:component-scan base-package="me.maiz.trainning.framework.spring.aop"/>
 
     <!--<bean id="userService" class="com.chinasofti.framework.spring.aop.services.UserServiceImpl"/>-->
+    <aop:aspectj-autoproxy/>
 
 </beans>

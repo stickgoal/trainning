@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>Document</title>
+    <script type="text/javascript" src="./jquerymin.js"></script>
+    <script type="text/javascript" src="./jquery.barrager.js"></script>
+    <script type="text/javascript">
+
+
+        $(function(){
+            $('canvas').barrager([{"msg":"看着不错。。。。"},{"msg":"哈哈哈。。。。"},{"msg":"不错不错。。"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"看着不错。。。。"},{"msg":"哈哈哈。。。。"},{"msg":"不错不错。。"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"看着不错。。。。"},{"msg":"哈哈哈。。。。"},{"msg":"不错不错。。"},{"msg":"这是我发的。。。"},{"msg":"这个插件真不错"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"}]);
+            $('#qc').click(function(){
+               $('canvas').barrager("clear");
+            });
+            $('#tj').click(function(){
+                $('canvas').barrager([{"msg":"看着不错。。。。"},{"msg":"哈哈哈。。。。"},{"msg":"不错不错。。"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"看着不错。。。。"},{"msg":"哈哈哈。。。。"},{"msg":"不错不错。。"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"看着不错。。。。"},{"msg":"哈哈哈。。。。"},{"msg":"不错不错。。"},{"msg":"这是我发的。。。"},{"msg":"这个插件真不错"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"}]);
+            });
+           setInterval(function(){
+                $('canvas').barrager([{"msg":"看着不错。。。。"},{"msg":"哈哈哈。。。。"},{"msg":"不错不错。。"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"看着不错。。。。"},{"msg":"哈哈哈。。。。"},{"msg":"不错不错。。"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"看着不错。。。。"},{"msg":"哈哈哈。。。。"},{"msg":"不错不错。。"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"}]);
+            },2000);
+        })
+    </script>
+
+</head>
+<body>
+<button id="qc" type="button" style="width: 100px;height: 50px;font-size: 30px;">清除</button>
+<button id="tj" type="button" style="width: 100px;height: 50px;font-size: 30px;">添加</button><br>
+<canvas style="width: 1280px;height: 720px;background-color: rgba(0,0,0,0.2)">你的浏览器不支持canvas</canvas>
+
+
+</body>
+</html>
