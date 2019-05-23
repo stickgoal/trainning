@@ -1,15 +1,17 @@
 package me.maiz.trainning.framework.mybatis;
 
-import me.maiz.trainning.framework.mybatis.dal.entity.User;
-import me.maiz.trainning.framework.mybatis.dal.entity.UserExample;
-import me.maiz.trainning.framework.mybatis.dal.mapper.UserMapper;
+import me.maiz.trainning.framework.mybatis.dal.entity.Movie;
+import me.maiz.trainning.framework.mybatis.dal.entity.MovieExample;
+import me.maiz.trainning.framework.mybatis.dal.mapper.MovieMapper;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Hello world!
@@ -29,21 +31,49 @@ public class App
 
             SqlSession sqlSession = sqlSessionFactory.openSession();
 
-            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+            MovieMapper mapper = sqlSession.getMapper(MovieMapper.class);
+            Movie m = new Movie();
+            m.setDirect("吴京");
+            m.setLanguage("中文");
+            m.setMovieName("战狼2");
+            m.setProtagonist("吴京、赵海洋");
+            m.setReleaseDate(new Date());
+            mapper.insertSelective(m);
+            sqlSession.commit();
+            System.out.println(m);
 
-            User user = new User();
-            user.setUserId(4L);
-            user.setPassword("xasdf");
-            user.setUsername("asdfadsf");
-            user.setAge(123l);
-            user.setBirthday(new Date());
-            mapper.insert(user);
+            mapper.deleteByPrimaryKey(1);
+            sqlSession.commit();
+            System.out.println(mapper.selectByPrimaryKey(1));
 
-            mapper.deleteByPrimaryKey(4l);
+            Movie upMoive = new Movie();
+            upMoive.setMovieId(5);
+            upMoive.setMovieName("战狼3");
+            mapper.updateByPrimaryKeySelective(upMoive);
+            sqlSession.commit();
 
-            UserExample example = new UserExample();
-            example.createCriteria().andAgeBetween(10l, 30l).andUsernameLike("王").andPasswordIsNotNull();
-            mapper.selectByExample(example);
+            MovieExample movieExample = new MovieExample();
+            MovieExample.Criteria criteria = movieExample.createCriteria();
+            Date date = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse("2018-01-01 00:00:00");
+            criteria.andProtagonistLike("吴%")
+                    .andReleaseDateGreaterThan(date);
+            //or
+            MovieExample.Criteria criteria1 = movieExample.createCriteria();
+            criteria1.andDirectIsNull();
+            movieExample.or(criteria1);
+            //order by
+            movieExample.setOrderByClause(" release_date desc");
+            //distinct
+//            movieExample.isDistinct();
+
+
+            List<Movie> movies = mapper.selectByExample(movieExample);
+            System.out.println(movies);
+
+            Movie upMovie1 = new Movie();
+            upMovie1.setProtagonist("吴京");
+            mapper.updateByExampleSelective(upMovie1,movieExample);
+            sqlSession.commit();
             sqlSession.commit();
             sqlSession.close();
 
