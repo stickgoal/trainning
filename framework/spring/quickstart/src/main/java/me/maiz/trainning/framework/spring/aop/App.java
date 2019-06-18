@@ -22,6 +22,16 @@ public class App
 
         System.out.println(userService.findById(1));
         productService.insertProduct(1);
+
+
+        ApplicationContext context2 =
+                new ClassPathXmlApplicationContext("beans-aop2.xml");
+
+        UserService userService2 = (UserService) context2.getBean("userService");
+        ProductService productService2 = (ProductService) context2.getBean("productService");
+
+        System.out.println(userService2.findById(1));
+        productService2.insertProduct(1);
     }
 
 

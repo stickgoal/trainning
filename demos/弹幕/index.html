@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	 <link href="video-js.css" rel="stylesheet">
+
+  <!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->
+  <script src="videojs-ie8.min.js"></script>
+  <style type="text/css">
+  	#container{
+  		background-color: black;
+  		width: 1080px;
+  		height: 518px;
+  		position: relative;
+  		margin:0 auto;
+  	}
+    #danmu-layer{
+      background-color: rgba(0,0,0,0);
+    }
+  </style>
+</head>
+<body>
+	<div id="container" >
+<video id='my-video' class='video-js' controls preload='auto' autoplay="true"  width='1080' height='518'
+  poster='https://cs.vmovier.com/Uploads/avatar/2019/04/19/cp.jpg@960w_540h_1e_1c.jpg' data-setup='{}'>
+    <source src='https://qiniu-video9.vmoviercdn.com/5cb934cb3b0d2.mp4' >
+    <p class='vjs-no-js'>
+      To view this video please enable JavaScript, and consider upgrading to a web browser that
+      <a href='https://videojs.com/html5-video-support/' target='_blank'>supports HTML5 video</a>
+    </p>
+  </video>
+  <canvas id="danmu-layer" z-index="-1"></canvas>
+    <input type="text" name="danmu"><button id="send" >发送</button> 
+</div>
+
+<script src='video.js'></script>
+<script type="text/javascript" src="jquery-1.11.1.min.js"></script>
+<!-- http://www.rainx.org/2016/12/22/html5-canvas%E5%AE%9E%E7%8E%B0%E9%AB%98%E5%B9%B6%E5%8F%91%E8%A7%86%E9%A2%91%E5%BC%B9%E5%B9%95%E5%8A%9F%E8%83%BD/ -->
+<!-- https://github.com/Sailiy/JBarrager -->
+<script type="text/javascript" src="jquery.barrager.js"></script>
+<script type="text/javascript">
+$(function(){
+   
+
+  //设置弹幕的canvas位置与视频重叠
+  var right = $("#my-video").css("right");
+  var top = $("#my-video").css("top");
+
+  $("#danmu-layer").css({
+    position:"absolute",
+    right:right,
+    top:top,
+    width:1080,//与div和canvas同样宽
+    height:490//留出播放控制条的高度，以免canvas遮挡
+  });
+
+  $("#send").click(function(){
+    var danmuText = $("[name=danmu]").val();
+     $("#danmu-layer").barrager([{"msg":danmuText}]);
+  });
+
+   var myPlayer = videojs('my-video');
+    myPlayer.ready(function(){
+        this.play();
+  $("#danmu-layer").barrager([{"msg":"看着不错。。。。"},{"msg":"哈哈哈。。。。"},{"msg":"不错不错。。"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"看着不错。。。。"},{"msg":"哈哈哈。。。。"},{"msg":"不错不错。。"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"看着不错。。。。"},{"msg":"哈哈哈。。。。"},{"msg":"不错不错。。"},{"msg":"这是我发的。。。"},{"msg":"这个插件真不错"},{"msg":"nihao"},{"msg":"nihao"},{"msg":"nihao"}]);
+      
+    });
+    // http://www.jq22.com/jquery-info404
+    //暂停时清理弹幕
+    myPlayer.on('pause',function(){
+         $("#danmu-layer").barrager("clear");
+
+    })
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chinasofti.framework.ssm.dao.MovieDAO">
+
+    <select id="search" resultType="movie">
+        select * from movie
+        <where>
+            <if test="director!=null">
+                direct=#{director}
+            </if>
+            <if test="protagonist!=null">
+               and protagonist like concat('%',#{protagonist},'%')
+            </if>
+            <if test="releaseDateBegin!=null">
+               and release_date &gt;= #{releaseDateBegin}
+            </if>
+            <if test="releaseDateEnd!=null">
+               and release_date &lt; #{releaseDateEnd}
+            </if>
+        </where>
+        order by movie_id desc
+    </select>
+
+
+</mapper>

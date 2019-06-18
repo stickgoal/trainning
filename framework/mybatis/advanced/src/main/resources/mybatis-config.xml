@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <!--打印日志，方便看输出SQL-->
+    <settings>
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+    </settings>
+
+    <!--类型别名，少写点字-->
+    <typeAliases>
+        <package name="me.maiz.trainning.framework.mybatis.dal.entity"/>
+    </typeAliases>
+
+    <plugins>
+        <plugin interceptor="me.maiz.trainning.framework.mybatis.component.MybatisSqlPerformancePlugin"></plugin>
+    </plugins>
+
+    <!--环境配置-->
+    <environments default="dev">
+        <environment id="dev">
+            <transactionManager type="JDBC"></transactionManager>
+            <dataSource type="POOLED">
+               <!-- <property name="driver" value="oracle.jdbc.driver.OracleDriver"/>
+                <property name="url" value="jdbc:oracle:thin:@localhost:1521:ORCL"/>
+                <property name="username" value="scott"/>
+                <property name="password" value="tiger"/>-->
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/mbtest"/>
+                <property name="username" value="root"/>
+                <property name="password" value="root123"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+
+    <!--配置文件所在地-->
+    <mappers>
+        <mapper resource="mappers/MovieMapper.xml"/>
+    </mappers>
+    
+
+
+
+</configuration>

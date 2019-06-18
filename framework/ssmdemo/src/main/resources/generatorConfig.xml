@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+
+    <!--生成器上下文-->
+    <context id="mysqlTables" targetRuntime="MyBatis3">
+        <!--http://www.mybatis.org/generator/reference/plugins.html 所有可用的plugin列表-->
+        <!--为model类生成toString   -->
+        <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
+
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/mbtest"
+                        userId="root"
+                        password="root123">
+        </jdbcConnection>
+        <javaTypeResolver >
+            <!--是否把浮点数映射成bigdecimal-->
+            <property name="forceBigDecimals" value="false" />
+        </javaTypeResolver>
+
+        <!--生成模型类-->
+        <javaModelGenerator targetPackage="com.chinasofti.framework.ssm.dao.model" targetProject="src/main/java">
+            <property name="enableSubPackages" value="true" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+        <!--单表的xml配置 sqlMap-->
+        <sqlMapGenerator targetPackage="resources.mappers"  targetProject="src/main">
+            <property name="enableSubPackages" value="true" />
+        </sqlMapGenerator>
+        <!--Mapper接口-->
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.chinasofti.framework.ssm.dao"  targetProject="src/main/java">
+            <property name="enableSubPackages" value="true" />
+        </javaClientGenerator>
+
+        <!--各个表的配置-->
+        <table schema="mbtest" tableName="movie" domainObjectName="Movie" >
+            <!--使得自增ID被返回-->
+            <generatedKey column="movie_id" sqlStatement="select last_insert_id()" identity="true"/>
+            <!--<property name="useActualColumnNames" value="true"/>
+             />
+            <columnOverride column="movie_name" property="movieName" />
+            <ignoreColumn column="FRED" />
+            <columnOverride column="LONG_VARCHAR_FIELD" jdbcType="VARCHAR" />-->
+        </table>
+
+    </context>
+</generatorConfiguration>

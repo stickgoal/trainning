@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<h2 th:text="${title}">标题</h2>
+<div class="movie">
+    <div class="title" th:text="${movie.movieName}">电影标题</div>
+    <div class="title" th:text="${movie.direct}">导演</div>
+    <div class="title" th:text="${movie.protagonist}">主演</div>
+</div>
+</body>
+</html>

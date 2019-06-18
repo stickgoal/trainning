@@ -19,10 +19,14 @@
         <environment id="dev">
             <transactionManager type="JDBC"></transactionManager>
             <dataSource type="POOLED">
-                <property name="driver" value="oracle.jdbc.driver.OracleDriver"/>
+               <!-- <property name="driver" value="oracle.jdbc.driver.OracleDriver"/>
                 <property name="url" value="jdbc:oracle:thin:@localhost:1521:ORCL"/>
                 <property name="username" value="scott"/>
-                <property name="password" value="tiger"/>
+                <property name="password" value="tiger"/>-->
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/mbtest"/>
+                <property name="username" value="root"/>
+                <property name="password" value="root123"/>
             </dataSource>
         </environment>
     </environments>
@@ -30,9 +34,7 @@
 
     <!--配置文件所在地-->
     <mappers>
-        <mapper resource="mappers/UserMapper.xml"/>
-        <mapper resource="mappers/BlogMapper.xml"/>
-        <mapper resource="mappers/RoadMapper.xml"/>
+        <mapper resource="mappers/MovieMapper.xml"/>
     </mappers>
 
 

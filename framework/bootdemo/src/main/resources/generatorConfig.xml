@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+
+    <context id="tables" targetRuntime="MyBatis3">
+        <!--model类生成toString-->
+        <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
+
+        <!--JDBC配置-->
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/mbtest"
+                        userId="root"
+                        password="root123">
+        </jdbcConnection>
+
+        <javaTypeResolver >
+            <property name="forceBigDecimals" value="false" />
+        </javaTypeResolver>
+
+        <!--java实体类所在包配置-->
+        <javaModelGenerator targetPackage="me.maiz.framework.springboot.bootdemo.dao.model" targetProject="src/main/java">
+            <property name="enableSubPackages" value="true" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+
+        <!--sqlMap配置文件所在位置-->
+        <sqlMapGenerator targetPackage="resources.mappers"  targetProject="src/main/">
+            <property name="enableSubPackages" value="true" />
+        </sqlMapGenerator>
+
+        <!--Mapper接口所在位置-->
+        <javaClientGenerator type="MIXEDMAPPER" targetPackage="me.maiz.framework.springboot.bootdemo.dao"  targetProject="src/main/java">
+            <property name="enableSubPackages" value="true" />
+        </javaClientGenerator>
+        <!--要生成的表名-->
+        <!--各个表的配置-->
+        <table schema="mbtest" tableName="movie" domainObjectName="Movie" >
+            <!--使得自增ID被返回-->
+            <generatedKey column="movie_id" sqlStatement="select last_insert_id()" identity="true"/>
+            <!--<property name="useActualColumnNames" value="true"/>
+             />
+            <columnOverride column="movie_name" property="movieName" />
+            <ignoreColumn column="FRED" />
+            <columnOverride column="LONG_VARCHAR_FIELD" jdbcType="VARCHAR" />-->
+        </table>
+
+
+
+    </context>
+</generatorConfiguration>
