@@ -67,4 +67,28 @@ public class UserServiceImpl implements UserService {
             }
         });
     }
+
+    @Transactional
+    public void propagationRequired(User user) {
+        userDAO.save(user);
+        doSth1();
+    }
+
+    @Transactional
+    public void doSth1(){
+        throw new RuntimeException("required");
+    }
+
+    public void propagationRequiredNew(User user) {
+
+    }
+
+    public void propagationSupport(User user) {
+
+    }
+
+    public void propagationRequiredMandatory(User user) {
+
+    }
+
 }

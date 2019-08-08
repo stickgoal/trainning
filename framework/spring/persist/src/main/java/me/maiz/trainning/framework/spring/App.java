@@ -21,10 +21,16 @@ public class App
         user.setUserId(new Date().getTime()+"");
         user.setName("声明式");
         userService.registerDeclaration(user);*/
+//        User user1 = new User();
+//        user1.setUserId(new Date().getTime()+"");
+//        user1.setName("编程式");
+//        userService.registerProgrammatic(user1);
+
         User user1 = new User();
         user1.setUserId(new Date().getTime()+"");
-        user1.setName("编程式");
-        userService.registerProgrammatic(user1);
+        user1.setName("required");
+
+        userService.propagationRequired(user1);
 
     }
 }

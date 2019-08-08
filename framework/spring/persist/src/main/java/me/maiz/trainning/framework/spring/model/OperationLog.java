@@ -8,8 +8,8 @@ import java.util.Date;
 /**
  * Created by Lucas on 2018-03-09.
  */
-@Entity
-@Table(name="pesist_op_log")
+//@Entity
+//@Table(name="pesist_op_log")
 public class OperationLog {
 
     @Id

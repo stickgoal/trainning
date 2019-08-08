@@ -18,7 +18,7 @@ import java.util.Date;
 /**
  * Created by Lucas on 2018-03-09.
  */
-@Service("HbUserService")
+//@Service("HbUserService")
 public class HbUserServiceImpl implements UserService {
 
     @Autowired
@@ -66,4 +66,21 @@ public class HbUserServiceImpl implements UserService {
             }
         });
     }
+
+    public void propagationRequired(User user) {
+
+    }
+
+    public void propagationRequiredNew(User user) {
+
+    }
+
+    public void propagationSupport(User user) {
+
+    }
+
+    public void propagationRequiredMandatory(User user) {
+
+    }
+
 }
