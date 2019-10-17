@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+
+    <!--JDBC Driver所在文件夹位置-->
+    <classPathEntry location="D:\share\apps\64bit\lib\ojdbc6.jar" />
+
+    <context id="tables" targetRuntime="MyBatis3">
+
+        <plugin type="org.mybatis.generator.plugins.SerializablePlugin"></plugin>
+        <plugin type="org.mybatis.generator.plugins.ToStringPlugin"></plugin>
+
+        <!--JDBC配置-->
+        <jdbcConnection driverClass="oracle.jdbc.driver.OracleDriver"
+                        connectionURL="jdbc:oracle:thin:@localhost:1521:ORCL"
+                        userId="scott"
+                        password="tiger">
+        </jdbcConnection>
+
+        <javaTypeResolver >
+            <property name="forceBigDecimals" value="false" />
+        </javaTypeResolver>
+
+        <!--java实体类所在包配置-->
+        <javaModelGenerator targetPackage="me.maiz.trainning.framework.ssm.dal.model" targetProject="src/main/java">
+            <property name="enableSubPackages" value="true" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+
+        <!--sqlMap配置文件所在位置-->
+        <sqlMapGenerator targetPackage="resources.mappers"  targetProject="src/main/">
+            <property name="enableSubPackages" value="true" />
+        </sqlMapGenerator>
+
+        <!--Mapper接口所在位置-->
+        <javaClientGenerator type="XMLMAPPER" targetPackage="me.maiz.trainning.framework.ssm.dal.mapper"  targetProject="src/main/java">
+            <property name="enableSubPackages" value="true" />
+        </javaClientGenerator>
+        <!--要生成的表名-->
+        <table tableName="tjs_road" domainObjectName="Road">
+            <generatedKey  type="pre"  column="road_id" sqlStatement="select id_seq.nextval from dual"></generatedKey>
+            <columnOverride column="road_id" property="roadId"/>
+            <columnOverride column="road_name" property="roadName"/>
+        </table>
+        <table tableName="blog" domainObjectName="Blog">
+            <generatedKey type="pre"  column="blog_id" sqlStatement="select id_seq.nextval from dual"></generatedKey>
+        </table>
+
+
+    </context>
+</generatorConfiguration>
