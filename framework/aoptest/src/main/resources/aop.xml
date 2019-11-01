@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean name="userService" class="me.maiz.spring.service.impl.UserServiceImpl"></bean>
+
+    <bean name="beforeAdvisor" class="me.maiz.spring.component.BeforeAdvisor"/>
+
+    <bean name="pointcut" class="org.springframework.aop.support.JdkRegexpMethodPointcut">
+        <property name="pattern" value="me.maiz.spring.service.impl.UserServiceImpl.addUser"/>
+    </bean>
+
+    <bean name="aspect" class="org.springframework.aop.support.DefaultPointcutAdvisor">
+        <property name="advice" ref="beforeAdvisor"></property>
+        <property name="pointcut" ref="pointcut"/>
+    </bean>
+   <!-- <bean name="proxy" class="org.springframework.aop.framework.ProxyFactoryBean">
+        <property name="target" ref="userService"/>
+        <property name="interceptorNames" value="aspect"/>
+        <property name="proxyInterfaces" value="me.maiz.spring.service.UserService"/>
+    </bean>-->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>
+</beans>

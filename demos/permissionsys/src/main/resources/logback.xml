@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration
+        debug="false" scan="true" scanPeriod="30 second">
+
+    <property name="PROJECT" value="permissionsys" />
+    <property name="ROOT" value="logs/${PROJECT}/" />
+    <property name="FILESIZE" value="50MB" />
+    <property name="MAXHISTORY" value="100" />
+    <timestamp key="DATETIME" datePattern="HH:mm:ss" />
+    <!-- 控制台打印 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{${DATETIME}}[%-5level][%thread] %logger{36} - %m%n
+            </pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+
+    <!-- SQL相关日志输出-->
+    <logger name="org.apache.ibatis" level="DEBUG" additivity="false" />
+    <logger name="org.mybatis.spring" level="DEBUG" additivity="false" />
+    <logger name="org.springframework" level="DEBUG" additivity="false" />
+    <logger name="org.apache.shiro" level="DEBUG" additivity="false" />
+
+    <!-- Logger 根目录 -->
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
+       <!-- <appender-ref ref="DEBUG" />
+        <appender-ref ref="ERROR" />
+        <appender-ref ref="WARN" />
+        <appender-ref ref="INFO" />
+        <appender-ref ref="TRACE" />-->
+    </root>
+</configuration>
