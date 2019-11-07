@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+
+    <context id="mysqltables" targetRuntime="MyBatis3">
+
+        <!--model类生成toString-->
+        <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
+
+        <!--数据库驱动配置-->
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/class26"
+                        userId="root"
+                        password="root123">
+        </jdbcConnection>
+
+        <!--java类型转换配置-->
+        <javaTypeResolver >
+            <!--不把浮点数转换为BigDecimal-->
+            <property name="forceBigDecimals" value="false" />
+        </javaTypeResolver>
+
+        <!-- java的模型类 -->
+        <!-- targetPackage: 生成的类放在哪个包-->
+        <!-- targetProject: 包所在的位置-->
+        <javaModelGenerator targetPackage="me.maiz.trainning.framework.ssmjavaconfig.entity" targetProject="src/main/java">
+            <property name="enableSubPackages" value="true" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+        <!--mapper.xml-->
+        <sqlMapGenerator targetPackage="mapper"  targetProject="src/main/resources">
+            <property name="enableSubPackages" value="true" />
+        </sqlMapGenerator>
+        <!--mapper接口-->
+        <javaClientGenerator type="XMLMAPPER" targetPackage="me.maiz.trainning.framework.ssmjavaconfig.dao"  targetProject="src/main/java">
+            <property name="enableSubPackages" value="true" />
+        </javaClientGenerator>
+        <!--schema:数据库  tableName：表名  domainObjectName:模型类名-->
+       <table schema="class26" tableName="user" domainObjectName="User" >
+           <!--使得自增ID被返回-->
+           <generatedKey column="user_id" sqlStatement="select last_insert_id()" identity="true"/>
+       </table>
+        <table schema="class26" tableName="product" domainObjectName="Product" >
+        </table>
+
+
+    </context>
+</generatorConfiguration>

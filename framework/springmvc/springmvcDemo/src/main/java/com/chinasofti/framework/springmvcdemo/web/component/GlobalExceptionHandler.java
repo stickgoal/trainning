@@ -1,4 +1,4 @@
-package com.chinasofti.framework.springmvcdemo.web.advice;
+package com.chinasofti.framework.springmvcdemo.web.component;
 
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;

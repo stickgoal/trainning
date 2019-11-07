@@ -18,7 +18,7 @@ public class DataBindingConversionController extends ControllerBase {
 
 
     //普通参数类型绑定
-    //http://localhost:8080/springmvcdemo/param/common?name=Lucas&age=12
+    //http://localhost:8080/springmvcdemo/common?name=Lucas&age=12
     @RequestMapping("common")
     public String common(String name, int age, ModelMap modelMap) {
         modelMap.put("name", name);

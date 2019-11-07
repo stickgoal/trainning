@@ -46,5 +46,12 @@
 		<property name="maxUploadSize" value="2097152"/>
 	</bean>
 
-
+	<!--拦截器-->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<mvc:exclude-mapping path="/hi"/>
+			<bean class="com.chinasofti.framework.springmvcdemo.web.component.LoginInterceptor"/>
+		</mvc:interceptor>
+	</mvc:interceptors>
 </beans>
