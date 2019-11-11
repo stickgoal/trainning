@@ -1,5 +1,8 @@
 package me.maiz.framework.boot.ssmboot.entity;
 
+import com.baomidou.mybatisplus.annotation.TableId;
+
+
 public class User {
     /**
      *
@@ -8,6 +11,7 @@ public class User {
      *
      * @mbg.generated Fri Nov 08 12:05:12 CST 2019
      */
+    @TableId
     private Integer userId;
 
     /**

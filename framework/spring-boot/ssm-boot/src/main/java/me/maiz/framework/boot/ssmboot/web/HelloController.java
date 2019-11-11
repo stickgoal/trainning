@@ -13,9 +13,9 @@ public class HelloController {
     @Autowired
     private UserMapper userMapper;
 
-    @RequestMapping("getData")
+    @RequestMapping("getUser")
     public User getData(int userId){
-       return userMapper.selectByPrimaryKey(userId);
+       return userMapper.selectById(userId);
     }
 
 }
