@@ -1,8 +1,11 @@
 package me.maiz.framework.boot.ssmboot.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
-
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
     /**
      *
