@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h2>登录</h2>
+
+<div class="warning" th:if="${msg!=null}" th:text="${msg}">
+    一些错误信息
+</div>
+
+<form action="/login" method="post">
+    <input type="text" name="username"> <br/>
+    <input type="password" name="password"> <br/>
+    <input type="submit"/>
+</form>
+</body>
+</html>

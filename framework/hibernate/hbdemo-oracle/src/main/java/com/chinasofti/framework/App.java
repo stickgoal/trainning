@@ -37,13 +37,14 @@ public class App
         user.setAge(12);
         user.setBirthday(new Date());
         user.setUserId("201608071201821");
+        session.save(user);
 
         Book b = new Book();
         b.setBookName("海底两万里");
         b.setIsbn("xxxx-xxx-xx");
         b.setPubTime(new Date());
-               session.save(user);
         session.save(b);
+        
         session.getTransaction().commit();
     }
 }
