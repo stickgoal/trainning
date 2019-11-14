@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"  xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -9,6 +9,9 @@
 
 <div class="warning" th:if="${msg!=null}" th:text="${msg}">
     一些错误信息
+</div>
+<div shiro:notAuthenticated>
+请登录
 </div>
 
 <form action="/login" method="post">

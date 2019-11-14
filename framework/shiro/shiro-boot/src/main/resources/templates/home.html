@@ -1,10 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"  xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
 <body>
+<div shiro:hasRole="hr_mgr">
+    您是经理
+</div>
+<div shiro:hasRole="littlebrother">
+    您是小弟
+</div>
+<div shiro:hasPermission=":salary:raise">
+    <a href="/salary/raise">涨薪</a>
+</div>
 home
+
 </body>
 </html>

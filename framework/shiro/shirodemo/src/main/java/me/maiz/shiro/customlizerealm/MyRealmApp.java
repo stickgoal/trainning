@@ -28,5 +28,9 @@ public class MyRealmApp {
         }
         Object principal = currUser.getPrincipal();
         System.out.println(principal);
+
+        System.out.println(currUser.hasRole("manager"));
+        System.out.println(currUser.isPermitted("fire"));
+        System.out.println(currUser.isPermitted("raise"));
     }
 }
