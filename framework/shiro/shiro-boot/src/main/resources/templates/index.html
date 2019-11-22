@@ -5,19 +5,6 @@
     <title>Title</title>
 </head>
 <body>
-<h2>登录</h2>
-
-<div class="warning" th:if="${msg!=null}" th:text="${msg}">
-    一些错误信息
-</div>
-<div shiro:notAuthenticated>
-请登录
-</div>
-
-<form action="/login" method="post">
-    <input type="text" name="username"> <br/>
-    <input type="password" name="password"> <br/>
-    <input type="submit"/>
-</form>
+<h2>index</h2>
 </body>
 </html>

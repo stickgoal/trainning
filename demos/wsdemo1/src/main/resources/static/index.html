@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<button id="connect">连接</button>
+<button id="disconnect">断开连接</button>
+<div id="notification"></div>
+
+<script src="https://cdn.bootcss.com/stomp.js/2.3.3/stomp.min.js"></script>
+<!--sockjs是模拟websocket，在不支持websocket的浏览器上使用-->
+<script src="https://cdn.bootcss.com/sockjs-client/1.4.0/sockjs.min.js"></script>
+<script>
+
+    function connect() {
+        //连接到notify端点
+        socket = new SockJS('notify');
+        ws = Stomp.over(socket);//ws没有用var声明是个全局变量
+        //连接
+        ws.connect({}, function (frame) {
+            //订阅/queue/notification 队列，接收该队列的消息
+            ws.subscribe("/queue/notification", function (message) {
+                document.getElementById("notification").innerText += message.body;
+            });
+        }, function (error) {
+            alert("STOMP error " + error);
+        });
+    }
+
+    function disconnect() {
+        if (socket != null) {
+            socket.close();
+        }
+        console.log("已断开");
+    }
+
+    document.querySelector("#connect").onclick = connect;
+    document.querySelector("#disconnect").onclick = disconnect;
+
+</script>
+</body>
+</html>

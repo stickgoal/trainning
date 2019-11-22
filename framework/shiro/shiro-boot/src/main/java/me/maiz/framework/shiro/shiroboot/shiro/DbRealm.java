@@ -12,6 +12,7 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.util.ByteSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,15 +23,16 @@ import java.util.stream.Collectors;
 
 public class DbRealm extends AuthorizingRealm {
     private Logger logger = LoggerFactory.getLogger(DbRealm.class);
-
+    @Autowired
     private UserRepository userRepository;
-
+    @Autowired
     private RoleRepo roleRepo;
-
+    @Autowired
     private PermRepo permRepo;
 
     /**
      * 授权
+     *
      * @param principals
      * @return
      */
@@ -42,12 +44,12 @@ public class DbRealm extends AuthorizingRealm {
         Set<Role> roleSet = roleRepo.findByUserId(user.getUserId());
         Set<String> stringRoles = roleSet.stream().map(Role::getRoleValue).collect(Collectors.toSet());
         authzInfo.setRoles(stringRoles);
-        logger.info("提取角色信息，{}",roleSet);
+        logger.info("提取角色信息，{}", roleSet);
 
 
         Set<Permission> permissionSet = permRepo.findByUserId(user.getUserId());
         Set<String> stringPermissions = permissionSet.stream().map(Permission::getPermValue).collect(Collectors.toSet());
-        logger.info("提取权限信息，{}",stringPermissions);
+        logger.info("提取权限信息，{}", stringPermissions);
 
         authzInfo.setStringPermissions(stringPermissions);
         return authzInfo;
@@ -55,6 +57,7 @@ public class DbRealm extends AuthorizingRealm {
 
     /**
      * 验证
+     *
      * @param token
      * @return
      * @throws AuthenticationException
@@ -66,10 +69,14 @@ public class DbRealm extends AuthorizingRealm {
 //        User user = new User();
 //        user.setUsername("wanger");
 //        user.setPassword("123");
-        if(user==null){
+        if (user == null) {
             throw new UnknownAccountException();
         }
-        SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(user,user.getPassword(),getName());
+        System.out.println(user);
+        SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(
+                user,
+                user.getPassword().toCharArray(),
+                getName());
 
         return simpleAuthenticationInfo;
     }

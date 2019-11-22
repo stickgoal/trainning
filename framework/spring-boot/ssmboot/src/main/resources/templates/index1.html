@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>首页</title>
+    <style>
+        .hot {
+            color: red;
+            background-color: yellow;
+        }
+    </style>
+</head>
+<body>
+<!--取值-->
+<div>欢迎您，<span th:class="${usernameClass}" th:text="${username}">张三</span></div>
+<div>欢迎您，<span th:text="${user.username}">张三</span></div>
+
+<a th:href="@{${downloadUrl}}">下载地址</a>
+
+<!--判断-->
+<div th:if="${age>18}">
+    成年人
+</div>
+
+<div th:unless="${age>18}">
+    小朋友
+</div>
+
+<!--字符串拼接-->
+<a th:href="@{${downloadUrl}+'?userId='+${user.userId}}">链接</a>
+
+<!--遍历-->
+<ul th:each="d:${dishes}">
+    <li th:text="${d}">
+        溜肥肠
+    </li>
+</ul>
+
+<div>
+    <div th:text="${userForm.username}">张三</div>
+</div>
+随便加几个字
+
+<table>
+    <tr>
+        <td>ID</td>
+        <td>用户名</td>
+        <td>密码</td>
+        <td>操作</td>
+    </tr>
+    <th:block th:each="u1:${users}">
+        <tr>
+            <td th:text="${u1.userId}">1</td>
+            <td th:text="${u1.username}">张三</td>
+            <td th:text="${u1.password}">*****</td>
+        </tr>
+    </th:block>
+</table>
+
+<div th:text="${#dates.format(myDate,'yyyy-MM-dd HH:mm:ss')}">
+
+</div>
+</body>
+</html>

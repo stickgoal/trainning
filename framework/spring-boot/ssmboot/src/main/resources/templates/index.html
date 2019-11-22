@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh"  xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>首页</title>
+    <style>
+        .hot {
+            color: red;
+            background-color: yellow;
+        }
+    </style>
+</head>
+<body>
+<nav>
+    <ul>
+        <li shiro shiro:authenticated>欢迎您<span th:text="${session.user.username}">王二</span></li>
+        <li shiro:guest>欢迎您，游客</li>
+    </ul>
+</nav>
+<div th:if="${msg!=null}" th:text="${msg}">报错信息</div>
+
+<form action="/login" method="post">
+    <input type="text" name="username" placeholder="请输入用户名"><br>
+    <input type="password" name="password" id="" placeholder="请输入密码"/><br>
+    <input type="checkbox" name="rememberMe" value="Y" >记住我<br>
+    <input type="submit" value="登录">
+</form>
+</body>
+</html>

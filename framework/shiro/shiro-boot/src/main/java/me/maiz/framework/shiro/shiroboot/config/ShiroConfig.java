@@ -1,6 +1,7 @@
 package me.maiz.framework.shiro.shiroboot.config;
 
 import at.pollux.thymeleaf.shiro.dialect.ShiroDialect;
+import me.maiz.framework.shiro.shiroboot.common.EncryptUtil;
 import me.maiz.framework.shiro.shiroboot.dao.PermRepo;
 import me.maiz.framework.shiro.shiroboot.dao.RoleRepo;
 import me.maiz.framework.shiro.shiroboot.dao.UserRepository;
@@ -25,16 +26,18 @@ public class ShiroConfig {
      * @return
      */
     @Bean
-    public Realm realm(UserRepository userRepository, RoleRepo roleRepo, PermRepo permRepo) {
+    public Realm realm() {
         DbRealm loginRealm = new DbRealm();
-//        HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher();
-//        credentialsMatcher.setHashIterations(3);
-//        credentialsMatcher.setHashAlgorithmName("md5");
-//        loginRealm.setCredentialsMatcher(credentialsMatcher);
-        loginRealm.setUserRepository(userRepository);
-        loginRealm.setRoleRepo(roleRepo);
-        loginRealm.setPermRepo(permRepo);
+        loginRealm.setCredentialsMatcher(hashedCredentialsMatcher());
         return loginRealm;
+    }
+
+    @Bean
+    public HashedCredentialsMatcher hashedCredentialsMatcher(){
+        HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher();
+        credentialsMatcher.setHashIterations(EncryptUtil.HASH_ITERATIONS);
+        credentialsMatcher.setHashAlgorithmName(EncryptUtil.ALGORITHM_NAME);
+        return credentialsMatcher;
     }
 
     @Bean
@@ -43,7 +46,7 @@ public class ShiroConfig {
         shiroFilterChainDefinition.addPathDefinition("/lib/**", "anon");
         shiroFilterChainDefinition.addPathDefinition("/static/**", "anon");
         shiroFilterChainDefinition.addPathDefinition("/logout", "logout");
-        shiroFilterChainDefinition.addPathDefinition("/login", "authc");
+        shiroFilterChainDefinition.addPathDefinition("/login", "anon");
         shiroFilterChainDefinition.addPathDefinition("/**", "user");
         return shiroFilterChainDefinition;
     }

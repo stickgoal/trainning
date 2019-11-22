@@ -2,7 +2,6 @@ package me.maiz.framework.shiro.shiroboot.controller;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.ShiroException;
-import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,7 @@ public class LoginController {
 
     @GetMapping("login")
     public String login() {
-        return "index";
+        return "loginPage";
     }
 
     @PostMapping("login")
@@ -40,7 +39,7 @@ public class LoginController {
             }
 
             modelMap.put("msg", message);
-            return "index";
+            return "loginPage";
         } catch (Exception e) {
             logger.error("登录报错", e);
             return "error";
@@ -51,22 +50,9 @@ public class LoginController {
     @RequestMapping("logout")
     public String logout() {
         SecurityUtils.getSubject().logout();
-        return "index";
+        return "loginPage";
     }
 
-    @RequestMapping("home")
-    public String home() {
-        return "home";
-    }
-
-    /**
-     * 解决shiro登录成功跳转页面不正常的问题
-     * @return
-     */
-    @RequestMapping("/")
-    public String index() {
-        return SecurityUtils.getSubject().isAuthenticated()?"home":"index";
-    }
 
     @RequestMapping("unauthorized")
     public String unauthorized() {
