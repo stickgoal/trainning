@@ -1,5 +1,7 @@
 package me.maiz.demos.wsdemo.config;
 
+import me.maiz.demos.wsdemo.notification.NotificationController;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.*;
