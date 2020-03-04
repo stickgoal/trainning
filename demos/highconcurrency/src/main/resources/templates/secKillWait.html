@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<input type="hidden" name="productId" th:value="${productId}">
+<div id="content">
+    查询中... <img width="100px" height="100px" id="loading" src="/images/loading.gif" alt="查询中...">
+</div>
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+
+<script>
+    $(function () {
+        var productId = $("[name=productId]").val();
+
+        //定时确认状态及替换url
+        var timer = setInterval(function(){
+
+            $.ajax({
+                url:"/secKillResult?productId="+productId,
+                dataType:"json",
+                success:function(result){
+                    if(result.success){
+                        clearInterval(timer);
+                        $("#content").empty();
+                        $("<h3>").text(result.data).appendTo("#content");
+
+                    }
+                }
+            })
+        },10000);
+    });
+
+</script>
+
+</body>
+</html>

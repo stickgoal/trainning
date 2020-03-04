@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class OrderCreateListener {
+
     @RabbitListener(queues = RabbitConfig.QUEUE_NAME)
     public void orderCreateOperation(String orderMessage){
 

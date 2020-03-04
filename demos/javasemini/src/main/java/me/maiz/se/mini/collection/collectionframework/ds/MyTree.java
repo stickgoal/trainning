@@ -114,7 +114,7 @@ public class MyTree {
             try {
                 System.out.println(mt.getValue(8));
             } catch (Exception e) {
-                // TODO: handle exception
+                // TODO: wash exception
                 e.printStackTrace();
             }
         }
