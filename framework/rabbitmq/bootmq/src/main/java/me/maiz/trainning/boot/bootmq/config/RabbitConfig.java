@@ -1,6 +1,5 @@
 package me.maiz.trainning.boot.bootmq.config;
 
-import me.maiz.trainning.boot.bootmq.components.Receiver;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
@@ -36,17 +35,21 @@ public class RabbitConfig {
     public TopicExchange exchange(){
         return new TopicExchange(EXCHANGE_NAME);
     }
+/*
 
-    /**
+    */
+/**
      * 声明一个绑定，将队列绑定到一个交换器上，routingKey用于路由数据
      * @param queue
      * @param exchange
      * @return
-     */
+     *//*
+ */
     @Bean
     public Binding binding(Queue queue,TopicExchange exchange){
         return BindingBuilder.bind(queue).to(exchange).with("order.delivery.queue");
     }
+
 
     //参考自 https://blog.csdn.net/u013871100/article/details/82982235
     //通过注解@RabbitListener配置监听器

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" th: xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>麦子秒杀</title>
+</head>
+<body>
+<div id="container">
+    <div id="nav">
+
+    </div>
+    <div th:each="p:${products}">
+        <h3 th:text="${p.productName}">iphone 20</h3>
+        <img src="https://www.crsky.com/uploadfiles/article/2018/07/24/2018072422005440.jpg" alt="">
+        <div>
+            <label>售价</label>
+            <span th:text="${p.price}">10000.00</span>
+        </div>
+        <button>现在抢</button>
+    </div>
+</div>
+
+
+
+
+<script>
+
+</script>
+
+</body>
+</html>

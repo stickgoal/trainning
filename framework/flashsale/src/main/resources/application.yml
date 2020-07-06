@@ -1,0 +1,23 @@
+server:
+  port: 9000
+
+spring:
+  datasource:
+    username: root
+    password: root123
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/emall
+  rabbitmq:
+    username: guest
+    password: guest
+    port: 5672
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create
+    naming:
+       implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+       physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+  redis:
+    port: 6379
+    host: localhost

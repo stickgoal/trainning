@@ -5,6 +5,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.IOException;
+import java.util.Scanner;
 import java.util.concurrent.TimeoutException;
 
 public class NewTask {
@@ -27,19 +28,24 @@ public class NewTask {
                 arguments – map类型，其他参数
             * */
             channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-            String message = String.join(" ",args);
 
-
-            //发布消息
-            /**
-             * exchange – 发布到的交换器
-             * routingKey – 路由键，这里近似的看做队列名
-             * props – 其他属性
-             * body – 消息体
-             */
-            channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
-            System.out.println(" [x] Sent '" + message + "'");
-
+            boolean running = true;
+            while(running) {
+                Scanner scanner = new Scanner(System.in);
+                String message = scanner.next();
+                if("exit".equals(message)){
+                    break;
+                }
+                //发布消息
+                /**
+                 * exchange – 发布到的交换器
+                 * routingKey – 路由键，这里近似的看做队列名
+                 * props – 其他属性
+                 * body – 消息体
+                 */
+                channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
+                System.out.println(" [x] Sent '" + message + "'");
+            }
             //关闭链接
 //            connection.close();
         } catch (IOException e) {
