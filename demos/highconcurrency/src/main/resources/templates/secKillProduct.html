@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>秒杀首页</title>
+    <style>
+        .disabled{
+            color:gray
+        }
+        .enabled{
+            color:green;
+        }
+    </style>
+</head>
+<body>
+    <input type="hidden" name="productId" th:value="${p.productId}"/>
+    <h3 th:text="${p.productName}">商品名字</h3>
+    <div th:text="${p.price}">商品价格</div>
+    <div>
+        <button class="getIt" disabled>抢！</button>
+    </div>
+
+
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+
+    <script>
+        $(function () {
+            $(".getIt").attr("disabled","disabled");
+
+
+            //定时确认状态及替换url
+            var timer = setInterval(function(){
+                var productId = $("[name=productId]").val();
+                $.ajax({
+                    url:"/getAddress?productId="+productId,
+                    dataType:"json",
+                    success:function(result){
+                        if(result.success){
+                            clearInterval(timer);
+                            $(".getIt").removeAttr("disabled")
+                                .click(function () {
+
+                                    window.location=result.data;
+                                })
+
+                        }
+                    }
+                })
+            },1000);
+
+
+        })
+        
+
+
+    </script>
+
+</body>
+</html>

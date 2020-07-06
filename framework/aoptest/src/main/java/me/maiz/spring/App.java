@@ -12,13 +12,15 @@ public class App
 {
     public static void main( String[] args )
     {
-        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("aop-config.xml");
+       /* ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("aop-config.xml");
         UserService userService = context.getBean("userService", UserService.class);
-        userService.addUser(new User());
+        userService.addUser(new User());*/
         
         
         ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("aop-anno.xml");
         UserService userService1 = ctx.getBean("userService", UserService.class);
+        userService1.addUser(new User());
 
+        userService1.addUser(null);
     }
 }
