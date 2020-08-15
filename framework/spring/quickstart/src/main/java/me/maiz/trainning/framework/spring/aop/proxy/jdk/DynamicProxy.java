@@ -1,4 +1,4 @@
-package me.maiz.trainning.framework.spring.aop.proxy;
+package me.maiz.trainning.framework.spring.aop.proxy.jdk;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

@@ -1,5 +1,7 @@
 package me.maiz.trainning.framework.spring.aop.proxy;
 
+import me.maiz.trainning.framework.spring.aop.proxy.jdk.DynamicProxy;
+
 /**
  * Created by Lucas on 2017-01-12.
  */
