@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service("fileService")
 public class FileServiceImpl implements FileService {
 
-	private static final String FOLDER_PREFIX = "c:\\tmp\\static\\";
+	private static final String FOLDER_PREFIX = "D:\\tmp\\static\\";
 	private static final String SEPERATOR = "_";
 
 	@Override
@@ -30,6 +30,12 @@ public class FileServiceImpl implements FileService {
 
 		return filename;
 	}
+
+	@Override
+	public String getFilePath(String filename) {
+		return FOLDER_PREFIX + filename;
+	}
+
 
 	private String generateFileName(String originalFilename, String type) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddmmHHss");

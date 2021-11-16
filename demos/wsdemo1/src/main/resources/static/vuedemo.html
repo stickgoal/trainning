@@ -7,7 +7,7 @@
 <body>
 
 <div id="app">
-
+{{messages}}
 </div>
 
 <!-- 开发环境版本，包含了有帮助的命令行警告 -->
@@ -23,8 +23,12 @@
 <script>
     var app = new Vue({
         el:"#app",
+        data(){
+            return {messages:[]}
+        },
         mounted:function(){
             var messageFn = this.$message;
+            let _messages =this.messages;
             //连接到notify端点
             socket = new SockJS('notify');
             ws = Stomp.over(socket);//ws没有用var声明是个全局变量
@@ -33,6 +37,7 @@
                 //订阅/queue/notification 队列，接收该队列的消息
                 ws.subscribe("/queue/notification", function (message) {
                     messageFn(message.body);
+                    _messages.push(message.body)
                 });
             }, function (error) {
                 alert("STOMP error " + error);

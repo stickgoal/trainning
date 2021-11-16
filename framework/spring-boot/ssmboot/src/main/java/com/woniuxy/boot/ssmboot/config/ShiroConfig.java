@@ -5,6 +5,8 @@ import com.woniuxy.boot.ssmboot.common.EncryptUtil;
 import com.woniuxy.boot.ssmboot.component.MybatisShiroRealm;
 import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
+import org.apache.shiro.cache.CacheManager;
+import org.apache.shiro.cache.MemoryConstrainedCacheManager;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.spring.web.config.DefaultShiroFilterChainDefinition;
 import org.apache.shiro.spring.web.config.ShiroFilterChainDefinition;
@@ -31,6 +33,11 @@ public class ShiroConfig {
         return hashedCredentialsMatcher;
     }
 
+    @Bean
+    public CacheManager cacheManager(){
+        return new MemoryConstrainedCacheManager();
+    }
+
 
     @Bean
     public Realm shiroRealm(){
@@ -53,6 +60,14 @@ public class ShiroConfig {
         sfcd.addPathDefinition("/register","anon");
         sfcd.addPathDefinition("/login","anon");
         sfcd.addPathDefinition("/error","anon");
+        //放行Swagger2页面，需要放行这些
+        sfcd.addPathDefinition("/swagger-ui.html","anon");
+        sfcd.addPathDefinition("/swagger/**","anon");
+        sfcd.addPathDefinition("/webjars/**", "anon");
+        sfcd.addPathDefinition("/swagger-resources/**","anon");
+        sfcd.addPathDefinition("/v2/**","anon");
+        sfcd.addPathDefinition("/static/**", "anon");
+        
 //        sfcd.addPathDefinition("/","anon");
         sfcd.addPathDefinition("/logout","logout");
         sfcd.addPathDefinition("/**","user");

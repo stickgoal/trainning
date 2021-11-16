@@ -8,5 +8,5 @@ public interface FileService {
 
 	String save(MultipartFile file,String type);
 	
-	
+	String getFilePath(String filename);
 }

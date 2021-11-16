@@ -1,0 +1,9 @@
+spring:
+  redis:
+    host: localhost
+    port: 6379
+logging:
+  level:
+    org.redisson: debug
+server:
+  port: 8379

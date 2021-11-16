@@ -19,7 +19,13 @@
         socket = new SockJS('notify');
         ws = Stomp.over(socket);//ws没有用var声明是个全局变量
         //连接
-        ws.connect({}, function (frame) {
+        var headers = {
+            login: 'mylogin',
+            passcode: 'mypasscode',
+            // additional header
+            'client-id': 'my-client-id'
+        };
+        ws.connect(headers, function (frame) {
             //订阅/queue/notification 队列，接收该队列的消息
             ws.subscribe("/queue/notification", function (message) {
                 document.getElementById("notification").innerText += message.body;

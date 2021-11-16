@@ -31,10 +31,14 @@
       ```bash
       # 创建索引
       PUT /weather
+      ```
     # 删除索引
       DELETE /weather
     # 删除所有索引，慎用
       DELETE /*
+    
+      ```
+    
       ```
     
   - 添加数据
@@ -58,7 +62,7 @@
         "info":"晴朗",
         "temp":"23°C"
     }
-      ```
+    ```
 
     - 数据操作
     
@@ -83,13 +87,14 @@
       GET /weather/_search
       # 查询某个信息
       GET /weather/weather/1
+      ```
     # 删除某个信息
       DELETE /weather/weather/3
       ```
     
     - 搜索
     
-    ```bash
+    ​```bash
     GET /weather/weather/_search 
     { "query" : { "match" : { "info" : "晴" } } }
     
@@ -144,7 +149,7 @@
       "highlight": { "fields" : { "name" : {} ,"info":{},"description": {}} }
     }
     
-    ```
+      ```
     
   - 
 
