@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: rocketmqdemo
+server:
+  port: 8088
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: login-mq-group
+  consumer:
+    group: login-mq-consumer-group

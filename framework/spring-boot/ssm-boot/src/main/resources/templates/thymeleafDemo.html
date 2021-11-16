@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thymeleaf示例</title>
+
+    <head th:replace="~{layout/head::common-head}">
+
+    <style>
+        .username{
+            background-color: beige;
+            color:mediumvioletred;
+            text-shadow: 1px 1px 1px lightgray;
+        }
+        .dish{
+            color:saddlebrown;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<div id="container">
+    <div th:replace="~{layout/head::nav-bar}">
+        虚拟导航
+    </div>
+
+    <!--内容替换-->
+    <h2>早上好，<span class="username" th:text="${username}">玉林</span></h2>
+
+    <img th:src="@{${hongshaorou}}" alt="">
+    
+    <!--遍历-->
+    <ul >
+        <li th:class="${dishClass}"
+            th:classappend="${usernameClass}"
+            th:each="dish : ${dishes}" th:text="${dish}">白灼菜心</li>
+    </ul>
+
+    <!--判断-->
+    <div th:if="${age>14}">
+        读高中
+    </div>
+    <div th:unless="${age>14}">
+        读高中以下
+    </div>
+
+
+</div>
+
+</body>
+</html>

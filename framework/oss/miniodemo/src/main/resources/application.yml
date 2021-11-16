@@ -1,0 +1,12 @@
+file:
+  store:
+    minio:
+      endpoint: http://192.168.70.93:9000/
+      bucket: test
+      access-key: minioadmin
+      secret-key: minioadmin
+      tmp-dir: ./tmp/
+      tmp-clean: true
+      tmp-first-clean-time: 2021-5-27 20:00:00
+      tmp-clean-period: 12960000
+      tmp-alive-duration: 12960000

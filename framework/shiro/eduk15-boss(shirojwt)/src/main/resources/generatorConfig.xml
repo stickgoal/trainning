@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+
+    <!--JDBC Driver所在文件夹位置-->
+<!--    <classPathEntry location="D:\share\apps\64bit\lib\ojdbc6.jar" />-->
+
+    <context id="tables" targetRuntime="MyBatis3">
+
+        <plugin type="org.mybatis.generator.plugins.SerializablePlugin"></plugin>
+        <plugin type="org.mybatis.generator.plugins.ToStringPlugin"></plugin>
+
+        <!--JDBC配置-->
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/rocket"
+                        userId="root"
+                        password="root123">
+        </jdbcConnection>
+
+        <javaTypeResolver >
+            <property name="forceBigDecimals" value="false" />
+        </javaTypeResolver>
+
+        <!--java实体类所在包配置-->
+        <javaModelGenerator targetPackage="me.maiz.project.eduk15boss.model" targetProject="src/main/java">
+            <property name="enableSubPackages" value="true" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+
+        <!--sqlMap配置文件所在位置-->
+        <sqlMapGenerator targetPackage="resources.mappers"  targetProject="src/main/">
+            <property name="enableSubPackages" value="true" />
+        </sqlMapGenerator>
+
+        <!--Mapper接口所在位置-->
+        <javaClientGenerator type="XMLMAPPER" targetPackage="me.maiz.project.eduk15boss.dao"  targetProject="src/main/java">
+            <property name="enableSubPackages" value="true" />
+        </javaClientGenerator>
+        <!--要生成的表名-->
+        <table tableName="rkt_teacher" domainObjectName="Teacher"></table>
+        <table tableName="rkt_user" domainObjectName="User"></table>
+        <table tableName="boss_operator" domainObjectName="Operator"></table>
+        <table tableName="boss_permission" domainObjectName="Permisson"></table>
+        <table tableName="boss_role" domainObjectName="Role"></table>
+        <table tableName="boss_operator_role" domainObjectName="OperatorRole"></table>
+        <table tableName="boss_role_permission" domainObjectName="RolePermission"></table>
+
+
+
+    </context>
+</generatorConfiguration>
