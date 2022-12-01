@@ -12,7 +12,7 @@ public class LoginController {
     @RequestMapping("login")
     public Result<String> login(String username){
         log.info("username:{}",username);
-        return Result.getInstance(String.class).setCode(200).setData(username);
+        return Result.getInstance(String.class).setData(username);
     }
 
 }

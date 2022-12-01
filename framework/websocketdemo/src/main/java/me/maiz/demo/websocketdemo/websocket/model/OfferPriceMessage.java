@@ -2,6 +2,9 @@ package me.maiz.demo.websocketdemo.websocket.model;
 
 import lombok.Data;
 
+/**
+ * 出价信息模型对象
+ */
 @Data
 public class OfferPriceMessage {
     /**
