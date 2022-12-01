@@ -1,0 +1,18 @@
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  mapper-locations: classpath:mappers/*xml
+  type-aliases-package: me.maiz.demo.jsonlogin.model
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    password: 123321
+    url: jdbc:mysql://localhost:3306/dtxuser?serverTimezone=UTC
+    username: root
+logging:
+  level:
+    me.maiz: debug
+auth:
+  jwt:
+    sign-key: bukegaorendemimi111

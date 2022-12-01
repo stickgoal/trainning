@@ -29,9 +29,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/","/login","/login.html", "/css/**", "/js/**", "/images/**").permitAll()
                 .antMatchers("/user/**").hasRole("USER")
                 .anyRequest()
-                .authenticated()
-                .and()
-                .exceptionHandling();
+                .authenticated();
+//                .and()
+//                .exceptionHandling();
 //        http.csrf().disable() //禁用跨站csrf攻击防御，后面的章节会专门讲解
 //                .formLogin()
 //                .loginPage("/login.html")//用户未登录时，访问任何资源都转跳到该路径，即登录页面
@@ -51,7 +51,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(WebSecurity web) {
         //将项目中静态资源路径开放出来
-        web.ignoring().antMatchers("/config/**", "/css/**", "/fonts/**", "/img/**", "/js/**");
+        web.ignoring()
+                .antMatchers("/config/**", "/css/**", "/fonts/**", "/img/**", "/js/**");
     }
 
     @Override
