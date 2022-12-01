@@ -18,7 +18,7 @@ public class Result<T> {
 	/*
 	 * 响应编码
 	 */
-	private Integer code;
+	private String code;
 	
 	/*
 	 * 响应消息
@@ -32,7 +32,7 @@ public class Result<T> {
 	
 	public static Result<?> getInstance() {
 		Result<?> re = new Result<>();
-		re.setCode(200);
+		re.setCode("SUCCESS");
 		re.setMsg("处理成功");
 		return re;
 	}
@@ -40,7 +40,7 @@ public class Result<T> {
 
 	public static <S> Result<S> getInstance(Class<S> type) {
 		Result<S> re = new Result<S>();
-		re.setCode(200);
+		re.setCode("SUCCESS");
 		re.setMsg("处理成功");
 		return re;
 	}
@@ -48,20 +48,20 @@ public class Result<T> {
 
 	public static <S> Result<Set<S>> getInstanceSet(Class<S> type) {
 		Result<Set<S>> re = new Result<Set<S>>();
-		re.setCode(200);
+		re.setCode("SUCCESS");
 		re.setMsg("处理成功");
 		return re;
 	}
 
 	public boolean isSuccess(){
-		return code==200;
+		return code=="SUCCESS";
 	}
 
-	public Integer getCode() {
+	public String getCode() {
 		return code;
 	}
 
-	public Result<T> setCode(Integer code) {
+	public Result<T> setCode(String code) {
 		this.code = code;
 		return this;
 	}

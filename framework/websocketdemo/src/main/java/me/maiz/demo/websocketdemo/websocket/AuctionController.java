@@ -3,6 +3,7 @@ package me.maiz.demo.websocketdemo.websocket;
 
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
+import me.maiz.demo.websocketdemo.common.Result;
 import me.maiz.demo.websocketdemo.websocket.model.OfferPriceMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
@@ -30,25 +31,25 @@ public class AuctionController {
 
 
     @MessageMapping("/offer")
-//    @SendTo("/topic/broadcast")
     public void processMessageFromClient(@Payload OfferPriceMessage message, Principal principal) throws Exception {
         log.info("message：{}，principal:{}",message,principal);
-        //TODO 判断
-        if(message.getPrice()<100){
-            HashMap<String, Object> result = new HashMap<>();
-            result.put("success",false);
-            result.put("code","NOT_MAX");
-            result.put("message","您的出价"+message.getPrice()+"已不是最高价");
+        //判断是否大于目前最高价
+        double currentMaxPrice = getCurrentMax(message.getAuctionId());
+        if(message.getPrice()<=currentMaxPrice){
+            //不是最高价，向用户发送出价失败消息
+            Result<String> result = Result.getInstance(String.class).setCode("NOT_MAX").setData("不是最高价");
 
             messagingTemplate.convertAndSend("/queue/reply-user"+message.getJwt(),result);
-//            return null;
         }else {
-
+            //是最高价，广播给所有人
             messagingTemplate.convertAndSend("/topic/broadcast", message);
         }
-//        return message;
     }
 
+    private double getCurrentMax(int auctionId) {
+        //TODO 查数据库或者redis
+        return 100;
+    }
 
 
     @MessageExceptionHandler
