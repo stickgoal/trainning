@@ -11,7 +11,7 @@
 
 
 	<properties>
-		<spring.version>4.3.4.RELEASE</spring.version>
+		<spring.version>6.0.0</spring.version>
 		<jackson.version>1.9.12</jackson.version>
 		<mybatis.generator.outputDirectory>src/main/</mybatis.generator.outputDirectory>
 		<mybatis.generator.overwrite>true</mybatis.generator.overwrite>
