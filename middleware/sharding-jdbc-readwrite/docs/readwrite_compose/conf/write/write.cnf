@@ -1,0 +1,7 @@
+[mysqld]
+#主数据库端ID号
+server_id = 1
+#开启二进制日志
+log-bin = mysql-bin
+#需要复制的数据库名，如果复制多个数据库，重复设置这个选项即可
+binlog-do-db = sharding_db

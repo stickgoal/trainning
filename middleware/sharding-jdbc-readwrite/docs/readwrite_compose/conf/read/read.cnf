@@ -1,0 +1,5 @@
+[mysqld]
+#主数据库端ID号
+server_id = 2
+#开启二进制日志
+log-bin = mysql-bin

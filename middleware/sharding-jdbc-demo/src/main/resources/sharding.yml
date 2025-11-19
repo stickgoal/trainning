@@ -1,0 +1,50 @@
+dataSources:
+  ds0:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    jdbcUrl: jdbc:mysql://localhost:3306/ds0?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&allowMultiQueries=true
+    username: root
+    password: root123
+  ds1:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    jdbcUrl: jdbc:mysql://localhost:3306/ds1?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&allowMultiQueries=true
+    username: root
+    password: root123
+rules:
+- !SHARDING
+    tables: 
+      user_user_login:
+        actualDataNodes:  ds${0..1}.user_user_login
+        databaseStrategy:
+          standard: 
+            shardingColumn: user_id 
+            shardingAlgorithmName: db_mod2_inline
+        keyGenerateStrategy:
+          column: user_id
+          keyGeneratorName: snowflake
+      user_balance:
+        actualDataNodes: ds0.user_balance_${0..2}
+        tableStrategy:
+          standard:
+            shardingColumn: user_id
+            shardingAlgorithmName: user_balance_inline
+        keyGenerateStrategy:
+          column: user_id
+          keyGeneratorName: snowflake
+    shardingAlgorithms:
+      db_mod2_inline:
+        type: inline
+        props:
+          algorithm-expression: ds${user_id % 2}
+      user_balance_inline:
+        type: inline
+        props:
+          algorithm-expression: user_balance_${user_id % 3}
+    keyGenerators:
+      snowflake:
+        type: SNOWFLAKE
+        props:
+          worker-id: 123
+props:
+  sql-show: true

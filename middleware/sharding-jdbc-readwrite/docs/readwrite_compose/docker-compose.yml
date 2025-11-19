@@ -1,0 +1,43 @@
+version: '3.1'
+
+services:
+  mysql_local_master:
+    container_name: master
+    image: mysql:5.7.24
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+    ports:
+      - "13306:3306"
+    volumes:
+      - ./data/:/var/lib/mysql
+      - ./conf/write/:/etc/mysql/conf.d
+      - ./initsql/master/:/docker-entrypoint-initdb.d
+
+  mysql_local_slave1:
+    container_name: slave1
+    image: mysql:5.7.24
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+    ports:
+      - "13307:3306"
+    volumes:
+      - ./conf/read/:/etc/mysql/conf.d
+      - ./initsql/salve/:/docker-entrypoint-initdb.d
+    depends_on:
+      - mysql_local_master
+
+  mysql_local_slave2:
+    container_name: slave2
+    image: mysql:5.7.24
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+    ports:
+      - "13308:3306"
+    volumes:
+      - ./conf/read/:/etc/mysql/conf.d
+      - ./initsql/salve/:/docker-entrypoint-initdb.d
+    depends_on:
+      - mysql_local_master
