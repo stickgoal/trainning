@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: product
+  cloud:
+    nacos:
+      config:
+        server-addr: localhost:8848
+        file-extension: yaml
+        shared-configs[0]: #公共配置
+          data-id: common
+          refresh: true
+          file-extension: yaml
+
+base:
+  config:
+    mdb:
+      hostname: 127.0.0.1
+      dbname: product124
+      port: 3306
+      username: 'root'
+      password: 'root123'
+seata:
+  enabled: true
+  application-id: ${spring.application.name}
+  tx-service-group: ${spring.application.name}-tx-group
+  config:
+    type: nacos
+    nacos:
+      serverAddr: 127.0.0.1:8848
+      dataId: "seataServer.properties"
+      group: "DEFAULT_GROUP"  #不可缺少，默认是SEATA_GROUP
+      username: 'nacos'
+      password: 'nacos'
+  registry:
+    type: nacos
+    nacos:
+      application: seata-server
+      server-addr: 127.0.0.1:8848
+      username: 'nacos'
+      password: 'nacos'
+
+mybatis-plus:
+  type-aliases-package: com.woniuxy.mall.product.infra.model

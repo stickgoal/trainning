@@ -1,0 +1,17 @@
+server: 
+  port: 8001
+spring:
+  application:
+    name: demo-mcp-server
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  ai:
+    mcp:
+      server:
+        name: demo-mcp-server
+        version: 1.0.0
+        description: 本地mcp-server，支持访问商品数据
+        type: SYNC
+        base-url: http://localhost:8001

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI聊天对话框</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-container {
+            width: 400px;
+            height: 500px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ccc;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background-color: #dcf8c6;
+            text-align: right;
+        }
+        .ai-message {
+            background-color: #e0e0e0;
+            text-align: left;
+        }
+        .input-area {
+            display: flex;
+            padding: 10px;
+        }
+        .input-box {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .send-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .send-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <!-- 消息将在这里显示 -->
+        </div>
+        <div class="input-area">
+            <input type="text" class="input-box" id="messageInput" placeholder="输入消息...">
+            <button class="send-button" onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+    <!---- 添加 axios 引入 -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        let conversationId = null;
+        // 页面加载时获取 conversationId
+        window.onload = async function() {
+            try {
+                const response = await axios.get('/ai/getSessionId');
+                conversationId = response.data;
+                console.log('Conversation ID:', conversationId);
+            } catch (error) {
+                console.error('Failed to get conversation ID:', error);
+            }
+        };
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (message && conversationId) {
+                addMessage(message, 'user');
+                input.value = '';
+
+                // 发送消息到后端
+                axios.get('/ai/chat', {params:{conversationId: conversationId,
+                        question: message}
+
+                })
+                .then(response => {
+                    addMessage(response.data, 'ai');
+                })
+                .catch(error => {
+                    console.error('Error sending message:', error);
+                    addMessage('抱歉，发送消息时出现错误。', 'ai');
+                });
+            }
+        }
+
+        function addMessage(text, sender) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+            messageElement.textContent = text;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 允许按Enter键发送消息
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

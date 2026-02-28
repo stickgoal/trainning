@@ -1,0 +1,25 @@
+spring:
+  cloud:
+    sentinel:
+      transport:
+        port: 8720
+        dashboard: localhost:8080
+      eager: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/product124?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: root123
+feign:
+  sentinel:
+    enabled: true
+management: # 暴露 actuator，检查配置是否成功
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true

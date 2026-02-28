@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>智能体广场</title>
+    <!-- 引入样式 -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"
+    />
+    <style>
+      .title {
+        font-size: 1.5em;
+        color: black;
+        font-weight: bold;
+      }
+      .tag {
+        margin-left: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- html节点 -->
+    <div id="app">
+      <el-container width="1200px">
+        <el-header>
+          <el-row :gutter="5">
+            <el-col :span="4"> <img src="" alt="logo" /> </el-col>
+            <el-col :span="12">
+              <el-input placeholder="输入关键字开始搜索" v-model="keyword"></el-input>
+            </el-col>
+            <el-col :span="6">
+              <el-button type="danger">搜索</el-button>
+              <el-button type="success" @click="dialogFormVisible=true">新增</el-button>
+            </el-col>
+          </el-row>
+        </el-header>
+        <el-main>
+          <el-row :gutter="5">
+            <el-col :span="8"  v-for="i in products" :key="i.id">
+              <el-card :body-style="{padding:'0px'}">
+                <div width="100%">
+                <el-image
+                        fit="fill"
+                :src="i.mainPic"
+                  class="image"
+                />
+                </div>
+                <div style="padding: 14px">
+                  <span>{{i.title}}</span>
+                  <div class="bottom clearfix">
+                    <time class="time">{{ i.price }}</time>
+                    <el-button type="text" class="button">加入购物车</el-button>
+                  </div>
+                </div>
+              </el-card>
+            </el-col>
+          </el-row>
+          <el-row> <el-pagination
+            @current-change="pageChange"
+            :page-size="pageInfo.pageSize"
+            layout="prev, pager, next,total,jumper"
+            :total="pageInfo.total"
+          >
+          </el-pagination></el-row>
+        </el-main>
+      </el-container>
+
+<el-dialog title="新增" :visible.sync="dialogFormVisible">
+  <el-form :model="form">
+    <el-form-item label="商品名字" label-width="80px">
+      <el-input v-model="form.title" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="单价"  v-model="form.price" label-width="80px">
+     <el-input type="text"></el-input>
+    </el-form-item>
+  </el-form>
+  <div slot="footer" class="dialog-footer">
+    <el-button @click="dialogFormVisible = false">取 消</el-button>
+    <el-button type="primary" @click="addProduct">确 定</el-button>
+  </div>
+</el-dialog>
+
+    </div>
+
+    <!-- 引入vue -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+      // 不操作dom
+      var app = new Vue({
+        el: "#app",
+        data: {
+            keyword:'',
+            form:{
+                id: 4,
+                checked: true,
+                mainPic: "https://dummyimage.com/80x80?text=笔记本支架",
+                title: "笔记本电脑支架 可调节 散热",
+                price: 89.9,
+                quantity: 1,
+                discountAmount: 15.9,},
+            dialogFormVisible:false,
+            pageInfo: {
+            pageSize: 3,
+            total: 5,
+          },
+          products: []
+        },
+        methods: {
+            pageChange(currentPage) {
+            //真实情况，发送请求给后端，获取到指定的页数
+            this.cart = [
+              {
+                id: 4,
+                checked: true,
+                mainPic: "https://dummyimage.com/80x80?text=笔记本支架",
+                title: "笔记本电脑支架 可调节 散热",
+                price: 89.9,
+                quantity: 1,
+                discountAmount: 15.9,
+              },
+              {
+                id: 5,
+                checked: false,
+                mainPic: "https://dummyimage.com/80x80?text=无线鼠标",
+                title: "静音无线鼠标 人体工学 续航持久",
+                price: 69.9,
+                quantity: 3,
+                discountAmount: 10.0,
+              },
+            ]; //模拟结果
+          },
+          addProduct(){
+            console.log(this.form)
+            this.form.id=new Date().getMilliseconds();
+            this.form.mainPic='https://dummyimage.com/300x200?text='+this.form.title
+            this.products.push(Object.assign({},this.form));
+            this.dialogFormVisible=false;
+          }
+        },
+        computed: {},
+        mounted(){
+          axios.get('/search?keyword='+this.keyword)
+          .then(response=>{
+            console.log(response);
+            this.products=response.data;
+          })
+        }
+      });
+    </script>
+  </body>
+</html>
