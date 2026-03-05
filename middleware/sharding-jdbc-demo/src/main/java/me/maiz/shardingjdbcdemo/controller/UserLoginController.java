@@ -30,7 +30,6 @@ public class UserLoginController {
     @Autowired
     private BalanceService balanceService;
 
-
     @RequestMapping("/newUser")
     public String login(String username) {
         log.info("username:{}", username);
