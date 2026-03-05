@@ -1,0 +1,7 @@
+spring: 
+  application: 
+    name: log-collection
+logging:
+  structured:
+    format:
+      console: logstash
