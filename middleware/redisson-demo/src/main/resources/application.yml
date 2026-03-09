@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: redisson-demo
+  
+  # Redisson Configuration
+  redis:
+    host: localhost
+    port: 6379
+    password: 
+    database: 0
+    timeout: 3000
+    connection-pool-size: 64
+    connection-minimum-idle-size: 10
+
+# Redisson Configuration
+redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://${spring.redis.host}:${spring.redis.port}"
+      password: ${spring.redis.password:}
+      database: ${spring.redis.database}
+      connectionPoolSize: ${spring.redis.connection-pool-size}
+      connectionMinimumIdleSize: ${spring.redis.connection-minimum-idle-size}
+      timeout: ${spring.redis.timeout}
+      retryAttempts: 3
+      retryInterval: 1500
+      subscriptionsPerConnection: 5
+      subscriptionConnectionMinimumIdleSize: 1
+      subscriptionConnectionPoolSize: 50
+      idleConnectionTimeout: 10000
+      pingConnectionInterval: 30000
+      keepAlive: true
+    threads: 16
+    nettyThreads: 32
+
+logging:
+  level:
+    com.example.redisson: DEBUG
+    org.redisson: INFO
