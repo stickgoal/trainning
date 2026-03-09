@@ -14,14 +14,22 @@ redisson-demo/
 │   │   ├── RedissonCollectionController.java # 分布式集合控制器
 │   │   ├── RedissonPubSubController.java     # 发布订阅控制器
 │   │   ├── RedissonReactiveController.java  # 响应式编程控制器
-│   │   └── EcommerceLockController.java      # 电商场景锁控制器
+│   │   ├── EcommerceLockController.java      # 电商场景锁控制器
+│   │   ├── EcommerceCollectionController.java # 电商场景集合控制器
+│   │   ├── EcommercePubSubController.java    # 电商场景发布订阅控制器
+│   │   ├── EcommerceReactiveController.java  # 电商场景响应式控制器
+│   │   └── EcommerceBasicController.java     # 电商场景基础操作控制器
 │   ├── service/                              # 服务层
 │   │   ├── RedissonBasicService.java         # 基础操作服务
 │   │   ├── RedissonLockService.java          # 分布式锁服务
 │   │   ├── RedissonCollectionService.java    # 分布式集合服务
 │   │   ├── RedissonPubSubService.java        # 发布订阅服务
 │   │   ├── RedissonReactiveService.java      # 响应式编程服务
-│   │   └── EcommerceLockService.java          # 电商场景锁服务
+│   │   ├── EcommerceLockService.java          # 电商场景锁服务
+│   │   ├── EcommerceCollectionService.java    # 电商场景集合服务
+│   │   ├── EcommercePubSubService.java        # 电商场景发布订阅服务
+│   │   ├── EcommerceReactiveService.java      # 电商场景响应式服务
+│   │   └── EcommerceBasicService.java         # 电商场景基础操作服务
 │   └── model/                                # 数据模型
 │       ├── Product.java                      # 商品模型
 │       └── Order.java                        # 订单模型
@@ -57,6 +65,50 @@ redisson-demo/
 - **普通锁场景**: 订单创建（防止重复订单）
 - **分布式信号量**: 商品详情页限流控制
 - **分布式闭锁**: 聚合支付（等待多个支付渠道响应）
+
+### 2.2 电商场景分布式集合 (EcommerceCollectionService)
+- **分布式Map**: 购物车管理（支持TTL过期）
+- **分布式Set**: 商品收藏夹（支持交集、并集操作）
+- **分布式List**: 商品浏览历史（支持分页查询）
+- **分布式Queue**: 订单处理队列（异步处理）
+- **优先级队列**: VIP订单优先处理
+- **有序集合**: 商品销量排行榜
+- **双端队列**: 商品推荐缓存（LRU策略）
+- **地理空间**: 附近店铺查询
+
+### 2.3 电商场景发布订阅 (EcommercePubSubService)
+- **基础发布订阅**: 订单状态变更通知
+- **模式订阅**: 商品价格变动通知
+- **广播消息**: 促销活动广播
+- **延迟发布**: 库存预警通知
+- **实时数据流**: 用户行为流收集
+- **可靠消息**: 系统监控事件
+- **多房间聊天**: 实时客服聊天
+
+### 2.4 电商场景响应式编程 (EcommerceReactiveService)
+- **响应式搜索**: 基于Reactor的非阻塞商品搜索
+- **链式操作**: 用户会话管理（多步骤组合）
+- **批量操作**: 响应式库存更新
+- **背压处理**: 高并发购物车操作
+- **组合操作**: 响应式订单处理
+- **流式处理**: 实时商品推荐
+- **异步处理**: 缓存预热和数据同步
+- **限流控制**: 响应式令牌桶算法
+- **分布式事务**: 补偿事务机制
+
+### 2.5 电商场景基础操作 (EcommerceBasicService)
+- **String操作**: 用户会话管理
+- **Hash操作**: 商品信息缓存
+- **List操作**: 用户浏览历史
+- **Set操作**: 用户标签管理
+- **Sorted Set**: 商品评分排行
+- **Queue操作**: 消息队列
+- **原子操作**: 商品点击量统计
+- **位图操作**: 用户签到记录
+- **布隆过滤器**: 商品推荐去重
+- **HyperLogLog**: 网站UV统计
+- **批量操作**: 商品数据批量导入
+- **管道操作**: 提升批量操作性能
 
 ### 3. 分布式集合 (RedissonCollectionService)
 - **RMap**: 分布式 Map 操作，支持 TTL
@@ -257,6 +309,160 @@ curl "http://localhost:8080/api/redisson/ecommerce/scenarios/fair-lock"
 curl "http://localhost:8080/api/redisson/ecommerce/scenarios/multi-lock"
 curl "http://localhost:8080/api/redisson/ecommerce/scenarios/semaphore"
 curl "http://localhost:8080/api/redisson/ecommerce/scenarios/countdown-latch"
+```
+
+### 电商场景分布式集合
+
+#### 购物车管理
+```bash
+# 添加商品到购物车
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/collection/cart/add?userId=user1&productId=1001&quantity=2"
+
+# 获取购物车
+curl "http://localhost:8080/api/redisson/ecommerce/collection/cart/user1"
+
+# 更新购物车商品数量
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/collection/cart/update?userId=user1&productId=1001&quantity=3"
+```
+
+#### 收藏夹管理
+```bash
+# 添加商品到收藏夹
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/collection/favorites/add?userId=user1&productId=1002"
+
+# 获取收藏夹
+curl "http://localhost:8080/api/redisson/ecommerce/collection/favorites/user1"
+
+# 获取多个用户共同收藏的商品
+curl "http://localhost:8080/api/redisson/ecommerce/collection/favorites/common?userIds=user1,user2,user3"
+```
+
+#### 商品排行榜
+```bash
+# 记录商品销量
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/collection/ranking/sales?productId=1001&quantity=5"
+
+# 获取销量排行榜
+curl "http://localhost:8080/api/redisson/ecommerce/collection/ranking/top?topN=10"
+```
+
+#### 地理位置查询
+```bash
+# 添加店铺位置
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/collection/geo/store?storeId=store1&longitude=116.404&latitude=39.915"
+
+# 查找附近店铺
+curl "http://localhost:8080/api/redisson/ecommerce/collection/geo/nearby?longitude=116.404&latitude=39.915&radiusKm=5"
+```
+
+### 电商场景发布订阅
+
+#### 订单状态通知
+```bash
+# 发布订单状态变更
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/pubsub/order/status?orderId=ORD001&userId=user1&status=PAID"
+
+# 订阅订单状态
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/pubsub/order/status/subscribe?userId=user1&subscriberName=client1"
+```
+
+#### 价格变动通知
+```bash
+# 发布价格变动
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/pubsub/price/change?productId=1001&oldPrice=299.99&newPrice=259.99"
+
+# 订阅价格变动
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/pubsub/price/subscribe?pattern=product:price:*&subscriberName=user1"
+```
+
+#### 促销活动广播
+```bash
+# 广播促销活动
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/pubsub/promotion/broadcast?promotionId=PROMO001&title=双11大促&content=全场5折&discount=50%"
+
+# 订阅促销广播
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/pubsub/promotion/subscribe?subscriberName=user1"
+```
+
+#### 实时聊天客服
+```bash
+# 加入聊天室
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/pubsub/chat/join?roomId=room1&userName=customer1"
+
+# 发送消息
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/pubsub/chat/message?roomId=room1&userName=customer1&message=你好，我需要帮助"
+```
+
+### 电商场景响应式编程
+
+#### 响应式搜索
+```bash
+# 响应式商品搜索
+curl "http://localhost:8080/api/redisson/ecommerce/reactive/search?keyword=手机"
+```
+
+#### 响应式购物车操作
+```bash
+# 响应式批量购物车操作
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/reactive/cart/operations?userId=user1" \
+  -H "Content-Type: application/json" \
+  -d '["ADD:1001", "ADD:1002", "REMOVE:1003"]'
+```
+
+#### 响应式实时推荐
+```bash
+# 实时推荐流
+curl "http://localhost:8080/api/redisson/ecommerce/reactive/recommendations/user1"
+```
+
+#### 响应式监控指标
+```bash
+# 实时监控指标流
+curl "http://localhost:8080/api/redisson/ecommerce/reactive/metrics"
+```
+
+### 电商场景基础操作
+
+#### 用户会话管理
+```bash
+# 设置用户会话
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/basic/session?userId=user1&sessionId=session123&ttlHours=2"
+
+# 获取用户会话
+curl "http://localhost:8080/api/redisson/ecommerce/basic/session/user1"
+
+# 检查用户在线状态
+curl "http://localhost:8080/api/redisson/ecommerce/basic/session/user1/online"
+```
+
+#### 商品信息缓存
+```bash
+# 缓存商品信息
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/basic/product/cache?productId=1001&name=iPhone15&price=6999&category=手机&stock=100"
+
+# 获取商品信息
+curl "http://localhost:8080/api/redisson/ecommerce/basic/product/cache/1001"
+```
+
+#### 用户签到
+```bash
+# 用户签到
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/basic/checkin?userId=user1&dayOfYear=60"
+
+# 检查签到状态
+curl "http://localhost:8080/api/redisson/ecommerce/basic/checkin/user1/60"
+
+# 获取签到天数
+curl "http://localhost:8080/api/redisson/ecommerce/basic/checkin/user1"
+```
+
+#### UV统计
+```bash
+# 记录页面访问
+curl -X POST "http://localhost:8080/api/redisson/ecommerce/basic/hll/record?pageId=homepage&userId=user1"
+
+# 获取页面UV
+curl "http://localhost:8080/api/redisson/ecommerce/basic/hll/uv/homepage"
 ```
 
 ### 响应式编程
