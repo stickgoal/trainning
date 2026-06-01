@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: rag-redis
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/rag-redis?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root123
+  ai:
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY}
+      chat:
+        options:
+          model: qwen-plus
+      embedding:
+        options:
+          model: text-embedding-v3  # 阿里百炼的Embedding模型
+    vectorstore:
+      redis:
+        index: default-index
+        prefix: 'rag:'
+        initialize-schema: true  # 自动初始化索引（关键）
+  data:
+    redis:
+      host: 104.223.22.239
+      port: 6379
+      password: abc123
+server:
+  port: 8090
+logging:
+  level:
+    me.maiz:  debug

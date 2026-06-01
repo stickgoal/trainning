@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: helloworld
+  ai:
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY}
+logging:
+  level:
+    org.springframework.ai: debug

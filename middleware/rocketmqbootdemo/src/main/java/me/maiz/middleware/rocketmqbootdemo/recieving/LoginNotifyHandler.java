@@ -3,7 +3,6 @@ package me.maiz.middleware.rocketmqbootdemo.recieving;
 import lombok.extern.slf4j.Slf4j;
 import me.maiz.middleware.rocketmqbootdemo.sending.UserInfo;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
-import org.apache.rocketmq.common.admin.ConsumeStats;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.apache.rocketmq.spring.core.RocketMQReplyListener;
