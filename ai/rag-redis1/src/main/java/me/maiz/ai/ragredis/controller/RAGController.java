@@ -2,6 +2,7 @@ package me.maiz.ai.ragredis.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import me.maiz.ai.ragredis.param.ChatParam;
+import me.maiz.ai.ragredis.param.PageResponse;
 import me.maiz.ai.ragredis.service.RagService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -69,6 +70,19 @@ public class RAGController {
         log.info("查询会话历史，conversationId: {}", conversationId);
         return ragService.getConversationHistory(conversationId);
     }
+
+    /**
+     * 分页查询会话历史记录
+     */
+    @GetMapping("/chat/history/page")
+    public PageResponse<ChatParam> getConversationHistoryPage(
+            @RequestParam("conversationId") String conversationId,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        log.info("分页查询会话历史，conversationId: {}, page: {}, size: {}", conversationId, page, size);
+        return ragService.getConversationHistoryPage(conversationId, page, size);
+    }
+
 
 
 }

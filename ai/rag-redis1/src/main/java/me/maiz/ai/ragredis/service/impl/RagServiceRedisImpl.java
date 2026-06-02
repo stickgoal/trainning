@@ -1,6 +1,7 @@
 package me.maiz.ai.ragredis.service.impl;
 
 import me.maiz.ai.ragredis.param.ChatParam;
+import me.maiz.ai.ragredis.param.PageResponse;
 import me.maiz.ai.ragredis.service.RagService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,5 +122,41 @@ public class RagServiceRedisImpl implements RagService {
             chatParam.setContent(rs.getString("content"));
             return chatParam;
         });
+    }
+
+    @Override
+    public PageResponse<ChatParam> getConversationHistoryPage(String conversationId, int page, int size) {
+        if (page < 1) {
+            page = 1;
+        }
+        if (size < 1 || size > 100) {
+            size = 10;
+        }
+
+        int offset = (page - 1) * size;
+
+        String countSql = "SELECT COUNT(*) FROM SPRING_AI_CHAT_MEMORY WHERE conversation_id = ?";
+        Long total = jdbcTemplate.queryForObject(countSql, new Object[]{conversationId}, Long.class);
+        if (total == null) {
+            total = 0L;
+        }
+
+        String sql = "SELECT content, type FROM SPRING_AI_CHAT_MEMORY WHERE conversation_id = ? ORDER BY timestamp ASC LIMIT ? OFFSET ?";
+        List<ChatParam> records = jdbcTemplate.query(sql, new Object[]{conversationId, size, offset}, (rs, rowNum) -> {
+            ChatParam chatParam = new ChatParam();
+            chatParam.setRole(rs.getString("type").toLowerCase());
+            chatParam.setContent(rs.getString("content"));
+            return chatParam;
+        });
+
+        int totalPages = (int) Math.ceil((double) total / size);
+
+        return PageResponse.<ChatParam>builder()
+                .records(records)
+                .total(total)
+                .page(page)
+                .size(size)
+                .totalPages(totalPages)
+                .build();
     }
 }
