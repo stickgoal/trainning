@@ -11,7 +11,7 @@
     "aysnc"
   ],
   "dependencies": {
-    "koa": "2.0.0",
+    "koa": "2.13.4",
     "koa-router": "7.0.0"
   },
   "author": "Lucas",
