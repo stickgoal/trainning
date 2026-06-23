@@ -17,7 +17,7 @@ public interface EsMedicalService {
     Page<MedicalRecordDoc> page(int page, int size) throws Exception;
 
     // 4. Bool 查询：心内科 + 高血压 + 年龄 >=40
-    List<MedicalRecordDoc> searchByCondition() throws Exception;
+    List<MedicalRecordDoc> searchByCondition(String keyword) throws Exception;
 
     // 5. 清空索引数据
     void clearIndex() throws Exception;

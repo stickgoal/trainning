@@ -8,7 +8,7 @@ export default defineConfig({
     open: true,
     proxy: {
       '/ai': {
-        target: 'http://localhost:8090',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
     },

@@ -7,3 +7,6 @@ spring:
 logging:
   level:
     org.springframework.ai: debug
+    org.springframework.ai.chat.client.advisor: DEBUG
+server:
+  port: 8777

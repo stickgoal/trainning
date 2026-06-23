@@ -1,4 +1,5 @@
 package me.maiz.middleware.rocketmqbootdemo.sending;
+import java.util.Calendar;
 import java.util.Date;
 
 import lombok.extern.slf4j.Slf4j;
@@ -36,13 +37,15 @@ public class LoginController {
         userInfo.setRegTime(new Date());
         
         // 演示各种消息发送方式
-        messageSendService.sendSyncMessage(userInfo);           // 同步发送
-        messageSendService.sendAsyncMessage(userInfo);          // 异步发送
-        messageSendService.sendOnewayMessage(userInfo);         // Oneway 发送
-        messageSendService.sendOrderlyMessage(userInfo, "order_123");  // 顺序消息
-        messageSendService.sendDelayMessage(userInfo, 3);       // 延迟消息（10秒）
-        messageSendService.sendTransactionMessage(userInfo, null);  // 事务消息
-        
+//        messageSendService.sendSyncMessage(userInfo);           // 同步发送
+//        messageSendService.sendAsyncMessage(userInfo);          // 异步发送
+//        messageSendService.sendOnewayMessage(userInfo);         // Oneway 发送
+//        messageSendService.sendOrderlyMessage(userInfo, "order_123");  // 顺序消息
+//        messageSendService.sendDelayMessage(userInfo, 3);       // 延迟消息（10秒）
+//        messageSendService.sendTransactionMessage(userInfo, null);  // 事务消息
+        Calendar instance = Calendar.getInstance();
+        instance.add(Calendar.MINUTE, 2);
+        messageSendService.sendFixTimeMessage(userInfo, instance.getTime());
         return "success";
     }
 

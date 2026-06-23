@@ -17,6 +17,7 @@ public class DelayConsumer {
 
         // 实例化消费者
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("ExampleConsumer");
+        consumer.setNamesrvAddr("localhost:9876");
         // 订阅Topics
         consumer.subscribe("TestTopic", "*");
         // 注册消息监听者

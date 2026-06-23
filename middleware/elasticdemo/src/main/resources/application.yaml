@@ -5,3 +5,12 @@ spring:
     uris: http://localhost:9200
     username: elastic
     password: 123456
+server:
+  port: 8001
+logging:
+  level:
+    org.springframework.data.elasticsearch.client: TRACE
+    co.elastic.clients: TRACE
+    org.elasticsearch.client: TRACE
+    org.apache.hc.client5.http: DEBUG
+    org.apache.hc.client5.http.wire: DEBUG

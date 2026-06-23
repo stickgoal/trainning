@@ -2,6 +2,7 @@ package me.maiz.middleware.elasticdemo.controller;
 
 import lombok.RequiredArgsConstructor;
 import me.maiz.middleware.elasticdemo.entity.MedicalRecordDoc;
+import me.maiz.middleware.elasticdemo.repository.MedicalRecordRepository;
 import me.maiz.middleware.elasticdemo.service.EsMedicalService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -9,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/es")
 @RequiredArgsConstructor
 public class EsMedicalController {
+
+    private final MedicalRecordRepository medicalRecordRepository;
 
     @Qualifier("springDataService")
     private final EsMedicalService springDataService;
@@ -86,10 +88,10 @@ public class EsMedicalController {
     }
 
     @GetMapping("/springdata/search")
-    public ResponseEntity<Map<String, Object>> searchBySpringData() {
+    public ResponseEntity<Map<String, Object>> searchBySpringData(@RequestParam String keyword) {
         Map<String, Object> result = new HashMap<>();
         try {
-            List<MedicalRecordDoc> docs = springDataService.searchByCondition();
+            List<MedicalRecordDoc> docs = springDataService.searchByCondition(keyword);
             result.put("success", true);
             result.put("method", "Spring Data");
             result.put("count", docs.size());
@@ -231,10 +233,10 @@ public class EsMedicalController {
     }
 
     @GetMapping("/restclient/search")
-    public ResponseEntity<Map<String, Object>> searchByRestClient() {
+    public ResponseEntity<Map<String, Object>> searchByRestClient(@RequestParam String keyword) {
         Map<String, Object> result = new HashMap<>();
         try {
-            List<MedicalRecordDoc> docs = restClientService.searchByCondition();
+            List<MedicalRecordDoc> docs = restClientService.searchByCondition(keyword);
             result.put("success", true);
             result.put("method", "RestClient");
             result.put("count", docs.size());
@@ -355,7 +357,7 @@ public class EsMedicalController {
     }
 
     @GetMapping("/compare/search")
-    public ResponseEntity<Map<String, Object>> compareSearch() {
+    public ResponseEntity<Map<String, Object>> compareSearch(@RequestParam String keyword) {
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> springDataResult = new HashMap<>();
         Map<String, Object> restClientResult = new HashMap<>();
@@ -363,7 +365,7 @@ public class EsMedicalController {
         try {
             // Spring Data 方式
             long start1 = System.currentTimeMillis();
-            List<MedicalRecordDoc> docs1 = springDataService.searchByCondition();
+            List<MedicalRecordDoc> docs1 = springDataService.searchByCondition(keyword);
             long end1 = System.currentTimeMillis();
             springDataResult.put("success", true);
             springDataResult.put("count", docs1.size());
@@ -377,7 +379,7 @@ public class EsMedicalController {
         try {
             // RestClient 方式
             long start2 = System.currentTimeMillis();
-            List<MedicalRecordDoc> docs2 = restClientService.searchByCondition();
+            List<MedicalRecordDoc> docs2 = restClientService.searchByCondition(keyword);
             long end2 = System.currentTimeMillis();
             restClientResult.put("success", true);
             restClientResult.put("count", docs2.size());
@@ -458,5 +460,108 @@ public class EsMedicalController {
         result.put("springData", springDataResult);
         result.put("restClient", restClientResult);
         return ResponseEntity.ok(result);
+    }
+
+    // ==================== @Query DSL 查询测试 ====================
+
+    /**
+     * 测试1: 根据患者姓名模糊查询
+     */
+    @GetMapping("/query/search-by-patient")
+    public ResponseEntity<Map<String, Object>> searchByPatientName(@RequestParam String patientName) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            List<MedicalRecordDoc> docs = medicalRecordRepository.searchByPatientName(patientName);
+            result.put("success", true);
+            result.put("method", "@Query - match查询");
+            result.put("queryParam", patientName);
+            result.put("count", docs.size());
+            result.put("data", docs);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("患者姓名查询失败", e);
+            result.put("success", false);
+            result.put("message", "查询失败：" + e.getMessage());
+            return ResponseEntity.internalServerError().body(result);
+        }
+    }
+
+    /**
+     * 测试2: 根据科室和诊断结果组合查询
+     */
+    @GetMapping("/query/search-by-dept-diagnosis")
+    public ResponseEntity<Map<String, Object>> findByDeptAndDiagnosis(
+            @RequestParam String deptName,
+            @RequestParam String diagnosis) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            List<MedicalRecordDoc> docs = medicalRecordRepository.findByDeptAndDiagnosis(deptName, diagnosis);
+            result.put("success", true);
+            result.put("method", "@Query - bool多字段查询");
+            result.put("deptName", deptName);
+            result.put("diagnosis", diagnosis);
+            result.put("count", docs.size());
+            result.put("data", docs);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("科室诊断组合查询失败", e);
+            result.put("success", false);
+            result.put("message", "查询失败：" + e.getMessage());
+            return ResponseEntity.internalServerError().body(result);
+        }
+    }
+
+    /**
+     * 测试3: 年龄范围查询
+     */
+    @GetMapping("/query/search-by-age-range")
+    public ResponseEntity<Map<String, Object>> findByAgeRange(
+            @RequestParam Integer minAge,
+            @RequestParam Integer maxAge) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            List<MedicalRecordDoc> docs = medicalRecordRepository.findByAgeRange(minAge, maxAge);
+            result.put("success", true);
+            result.put("method", "@Query - range范围查询");
+            result.put("minAge", minAge);
+            result.put("maxAge", maxAge);
+            result.put("count", docs.size());
+            result.put("data", docs);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("年龄范围查询失败", e);
+            result.put("success", false);
+            result.put("message", "查询失败：" + e.getMessage());
+            return ResponseEntity.internalServerError().body(result);
+        }
+    }
+
+    /**
+     * 测试4: 复杂布尔查询
+     */
+    @GetMapping("/query/complex-search")
+    public ResponseEntity<Map<String, Object>> complexSearch(
+            @RequestParam String gender,
+            @RequestParam String keyword,
+            @RequestParam Integer minAge,
+            @RequestParam Integer maxAge) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            List<MedicalRecordDoc> docs = medicalRecordRepository.complexSearch(gender, keyword, minAge, maxAge);
+            result.put("success", true);
+            result.put("method", "@Query - 复杂bool查询");
+            result.put("gender", gender);
+            result.put("keyword", keyword);
+            result.put("minAge", minAge);
+            result.put("maxAge", maxAge);
+            result.put("count", docs.size());
+            result.put("data", docs);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("复杂查询失败", e);
+            result.put("success", false);
+            result.put("message", "查询失败：" + e.getMessage());
+            return ResponseEntity.internalServerError().body(result);
+        }
     }
 }

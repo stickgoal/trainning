@@ -15,6 +15,7 @@ public class DelaySender {
     public static void main(String[] args) throws Exception {
         // 实例化一个生产者来产生延时消息
         DefaultMQProducer producer = new DefaultMQProducer("ExampleProducerGroup");
+        producer.setNamesrvAddr("localhost:9876");
         // 启动生产者
         producer.start();
         int totalMessagesToSend = 100;

@@ -2,17 +2,14 @@ package me.maiz.middleware.elasticdemo.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.NumberRangeQuery;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import co.elastic.clients.json.JsonData;
 import lombok.RequiredArgsConstructor;
 import me.maiz.middleware.elasticdemo.entity.MedicalRecordDoc;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -66,9 +63,9 @@ public class EsMedicalServiceRestClientImpl implements EsMedicalService {
 
     // 4. Bool 查询：心内科 + 高血压 + 年龄 >=40
     @Override
-    public List<MedicalRecordDoc> searchByCondition() throws Exception {
+    public List<MedicalRecordDoc> searchByCondition(String keyword) throws Exception {
         BoolQuery boolQuery = BoolQuery.of(b -> b
-                .must(m -> m.match(t -> t.field("diagnosis").query("高血压")))
+                .must(m -> m.match(t -> t.field("diagnosis").query(keyword)))
                 .filter(f -> f.term(t -> t.field("deptName").value("心内科")))
                 .filter(f -> f.range(r -> r.number(n -> n.field("age").gte(40.0))))
         );

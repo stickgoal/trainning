@@ -5,10 +5,8 @@ import me.maiz.middleware.elasticdemo.entity.MedicalRecordDoc;
 import me.maiz.middleware.elasticdemo.repository.MedicalRecordRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,8 +44,8 @@ public class EsMedicalServiceSpringDataImpl implements EsMedicalService{
     }
 
     @Override
-    public List<MedicalRecordDoc> searchByCondition() throws Exception {
-        return repository.findByDiagnosisContaining("");
+    public List<MedicalRecordDoc> searchByCondition(String keyword) throws Exception {
+        return repository.findByDiagnosisContaining(keyword);
     }
 
     @Override

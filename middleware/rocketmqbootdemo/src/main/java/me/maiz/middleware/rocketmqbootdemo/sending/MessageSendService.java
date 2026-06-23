@@ -9,6 +9,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.text.DateFormat;
 import java.util.Date;
 
 /**
@@ -95,6 +96,12 @@ public class MessageSendService {
             delayLevel // 延迟级别
         );
         log.info("延迟消息发送成功，延迟级别：{}，结果：{}", delayLevel, sendResult);
+    }
+
+    public void sendFixTimeMessage(UserInfo userInfo, Date time) {
+        Message<UserInfo> message = MessageBuilder.withPayload(userInfo).build();
+        SendResult sendResult = rocketMQTemplate.syncSendDeliverTimeMills("delay-topic",userInfo, time.getTime());
+        log.info("定时消息发送成功，延迟级别：{}，结果：{}", DateFormat.getDateInstance(2).format(time), sendResult);
     }
 
     /**
