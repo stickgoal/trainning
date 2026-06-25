@@ -4,16 +4,16 @@ spring:
 langchain4j:
   open-ai:
     chat-model:
-      api-key: ${ZHIPU_API_KEY}           # 替换为你的 API Key
-      base-url: https://open.bigmodel.cn/api/paas/v4/ # DeepSeek 的 base-url
-      model-name: glm-4.7-flash              # 模型名称
+      api-key: ${DEEPSEEK_API_KEY}           # 替换为你的 API Key
+      base-url: https://api.deepseek.com/v1  # DeepSeek 的 base-url
+      model-name: deepseek-chat              # 模型名称
       temperature: 0.7                       # 可选，控制随机性
       log-requests: true                     # 可选，开启请求日志
       log-responses: true                    # 可选，开启响应日志
     streaming-chat-model:
-      api-key: ${ZHIPU_API_KEY}           # 替换为你的 API Key
-      base-url: https://open.bigmodel.cn/api/paas/v4/ # DeepSeek 的 base-url
-      model-name: glm-4.7-flash              # 模型名称
+      api-key: ${DEEPSEEK_API_KEY}           # 替换为你的 API Key
+      base-url: https://api.deepseek.com/v1  # DeepSeek 的 base-url
+      model-name: deepseek-chat              # 模型名称
       temperature: 0.7                       # 可选，控制随机性
       log-requests: true                     # 可选，开启请求日志
       log-responses: true                    # 可选，开启响应日志

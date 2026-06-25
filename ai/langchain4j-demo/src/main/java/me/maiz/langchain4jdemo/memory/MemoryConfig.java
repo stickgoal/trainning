@@ -9,13 +9,16 @@ import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Random;
+
 @Configuration
 public class MemoryConfig {
 
     @Bean
     public ChatMemoryProvider chatMemoryProvider() {
-        return memoryId -> MessageWindowChatMemory.builder()
-                .id(memoryId)
+        return memoryId ->
+                MessageWindowChatMemory.builder()
+                .id(memoryId==null?new Random().nextInt():memoryId)
                 .maxMessages(10)
                 .chatMemoryStore(redisStore()) // 注入Redis存储
                 .build();
