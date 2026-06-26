@@ -4,16 +4,22 @@ spring:
 langchain4j:
   open-ai:
     chat-model:
-      api-key: ${DEEPSEEK_API_KEY}           # 替换为你的 API Key
-      base-url: https://api.deepseek.com/v1  # DeepSeek 的 base-url
-      model-name: deepseek-chat              # 模型名称
-      temperature: 0.7                       # 可选，控制随机性
-      log-requests: true                     # 可选，开启请求日志
-      log-responses: true                    # 可选，开启响应日志
+      api-key: ${DASHSCOPE_API_KEY}                            # 阿里百炼 API Key
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1  # 百炼 OpenAI 兼容模式
+      model-name: qwen-plus                                   # 通义千问对话模型
+      temperature: 0.7
+      log-requests: true
+      log-responses: true
+    embedding-model:
+      api-key: ${DASHSCOPE_API_KEY}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model-name: text-embedding-v3                           # 通义千问 Embedding 模型
+      log-requests: true
+      log-responses: true
     streaming-chat-model:
-      api-key: ${DEEPSEEK_API_KEY}           # 替换为你的 API Key
-      base-url: https://api.deepseek.com/v1  # DeepSeek 的 base-url
-      model-name: deepseek-chat              # 模型名称
-      temperature: 0.7                       # 可选，控制随机性
-      log-requests: true                     # 可选，开启请求日志
-      log-responses: true                    # 可选，开启响应日志
+      api-key: ${DASHSCOPE_API_KEY}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model-name: qwen-plus
+      temperature: 0.7
+      log-requests: true
+      log-responses: true
