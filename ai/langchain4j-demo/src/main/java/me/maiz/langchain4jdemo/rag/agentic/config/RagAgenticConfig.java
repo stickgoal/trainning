@@ -33,25 +33,25 @@ import java.util.stream.Stream;
  * ContentRetriever 在 KnowledgeSearchTool 内部创建。
  */
 @Slf4j
-@Configuration
+// @Configuration
 public class RagAgenticConfig {
 
-    @Bean
+    // @Bean
     public EmbeddingStore<TextSegment> agenticEmbeddingStore() {
         return new InMemoryEmbeddingStore<>();
     }
 
-    @Bean
+    // @Bean
     public DocumentSplitter agenticDocumentSplitter() {
         return new DocumentByParagraphSplitter(300, 50);
     }
 
-    @Bean
+    // @Bean
     public KnowledgeSearchTool knowledgeSearchTool(EmbeddingModel embeddingModel) {
         return new KnowledgeSearchTool(agenticEmbeddingStore(), embeddingModel);
     }
 
-    @Bean
+    // @Bean
     public AdmissionAssistantAgent admissionAssistantAgent(
             ChatModel chatModel,
             KnowledgeSearchTool knowledgeSearchTool) {
@@ -61,7 +61,7 @@ public class RagAgenticConfig {
                 .build();
     }
 
-    @Bean
+    // @Bean
     public AgenticRagDataLoader agenticRagDataLoader(EmbeddingModel embeddingModel) {
         return new AgenticRagDataLoader(agenticEmbeddingStore(), agenticDocumentSplitter(), embeddingModel);
     }
@@ -76,7 +76,7 @@ public class RagAgenticConfig {
             this.store = store; this.splitter = splitter; this.embeddingModel = em;
         }
 
-        @PostConstruct
+        // @PostConstruct
         public void loadDocuments() {
             log.info("===== [Agentic RAG] 开始加载知识库 =====");
             try {

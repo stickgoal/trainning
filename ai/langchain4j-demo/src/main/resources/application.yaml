@@ -1,6 +1,13 @@
 spring:
   application:
     name: langchain4j-demo
+rag:
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    index-name: rag-basic-embedding
+    prefix: rag:embedding:
+    dimension: 1024   # DashScope text-embedding-v3 输出维度；切换 profile 时需重建索引
 langchain4j:
   open-ai:
     chat-model:
@@ -11,9 +18,10 @@ langchain4j:
       log-requests: true                     # 可选，开启请求日志
       log-responses: true                    # 可选，开启响应日志
     embedding-model:
-      api-key: ${AGENES_API_KEY}
-      base-url: https://apihub.agnes-ai.com/v1
-      model-name: agnes-2.0-flash
+      api-key: ${DASHSCOPE_API_KEY}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model-name: text-embedding-v3                           # 通义千问 Embedding 模型
+      max-segments-per-batch: 10                              # DashScope 限制单批最多10条
       log-requests: true
       log-responses: true
     streaming-chat-model:

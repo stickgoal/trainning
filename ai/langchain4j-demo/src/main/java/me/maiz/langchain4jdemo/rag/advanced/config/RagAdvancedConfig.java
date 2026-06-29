@@ -6,6 +6,8 @@ import dev.langchain4j.data.document.splitter.DocumentByParagraphSplitter;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+
+
 import dev.langchain4j.rag.DefaultRetrievalAugmentor;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
@@ -38,34 +40,34 @@ import java.util.stream.Stream;
  * 使用 inter-bean 引用避免 Spring 注入冲突。
  */
 @Slf4j
-@Configuration
+// @Configuration
 public class RagAdvancedConfig {
 
     // ========== 向量存储 ==========
 
-    @Bean
+    // @Bean
     public EmbeddingStore<TextSegment> advancedCourseEmbeddingStore() {
         return new InMemoryEmbeddingStore<>();
     }
 
-    @Bean
+    // @Bean
     public EmbeddingStore<TextSegment> advancedFaqEmbeddingStore() {
         return new InMemoryEmbeddingStore<>();
     }
 
-    @Bean
+    // @Bean
     public DocumentSplitter advancedDocumentSplitter() {
         return new DocumentByParagraphSplitter(300, 50);
     }
 
-    @Bean
+    // @Bean
     public QueryRewriteTransformer advancedQueryRewriteTransformer(ChatModel chatModel) {
         return new QueryRewriteTransformer(chatModel);
     }
 
     // ========== 文档注入 ==========
 
-    @Bean
+    // @Bean
     public AdvancedRagDataLoader advancedRagDataLoader(EmbeddingModel embeddingModel) {
         return new AdvancedRagDataLoader(
                 advancedCourseEmbeddingStore(),
@@ -76,7 +78,7 @@ public class RagAdvancedConfig {
 
     // ========== Retrieval Augmentor ==========
 
-    @Bean
+    // @Bean
     public dev.langchain4j.rag.RetrievalAugmentor advancedRetrievalAugmentor(
             EmbeddingModel embeddingModel,
             QueryRewriteTransformer queryRewriteTransformer) {
@@ -109,7 +111,7 @@ public class RagAdvancedConfig {
                 .build();
     }
 
-    @Bean
+    // @Bean
     public AdvancedKnowledgeAssistant advancedKnowledgeAssistant(
             ChatModel chatModel,
             dev.langchain4j.rag.RetrievalAugmentor retrievalAugmentor) {
@@ -131,7 +133,7 @@ public class RagAdvancedConfig {
             this.courseStore = cs; this.faqStore = fs; this.splitter = sp; this.embeddingModel = em;
         }
 
-        @PostConstruct
+        // @PostConstruct
         public void loadDocuments() {
             log.info("===== [进阶RAG] 开始加载知识库 =====");
             try {

@@ -18,11 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
  * 3. 每个模块可独立定制和替换
  */
 @Slf4j
-@RestController
-@RequestMapping("/rag/modular")
+// @RestController
+// @RequestMapping("/rag/modular")
 public class RagModularController {
 
-    @Autowired
+    // @Autowired
     private ModularRagService modularRagService;
 
     /**
@@ -31,7 +31,7 @@ public class RagModularController {
      * @param question 用户问题
      * @return 包含回答和各步骤统计信息的详细结果
      */
-    @GetMapping("/ask")
+    // @GetMapping("/ask")
     public RagResult ask(@RequestParam String question) {
         log.info("模块化 RAG 问答 - 问题: {}", question);
         return modularRagService.answer(question);

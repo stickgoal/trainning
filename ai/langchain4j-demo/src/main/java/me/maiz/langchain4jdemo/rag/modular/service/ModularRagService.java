@@ -24,25 +24,25 @@ import java.util.*;
  * ContentRetriever 在 @PostConstruct 中初始化（不注册为 Spring Bean）。
  */
 @Slf4j
-@Service
+// @Service
 public class ModularRagService {
 
-    @Autowired
+    // @Autowired
     private ChatModel chatModel;
 
-    @Autowired
+    // @Autowired
     @Qualifier("modularEmbeddingStore")
     private EmbeddingStore<TextSegment> modularEmbeddingStore;
 
-    @Autowired
+    // @Autowired
     private EmbeddingModel embeddingModel;
 
-    @Autowired
+    // @Autowired
     private ContentAggregator modularContentAggregator;
 
     private ContentRetriever contentRetriever;
 
-    @PostConstruct
+    // @PostConstruct
     public void init() {
         // 内部创建 ContentRetriever，不暴露为 Spring Bean
         this.contentRetriever = EmbeddingStoreContentRetriever.builder()

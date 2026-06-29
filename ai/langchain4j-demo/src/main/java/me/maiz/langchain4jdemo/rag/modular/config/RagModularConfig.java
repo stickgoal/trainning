@@ -31,25 +31,25 @@ import java.util.stream.Stream;
  * ContentRetriever 不在 Spring 中注册为 Bean。
  */
 @Slf4j
-@Configuration
+// @Configuration
 public class RagModularConfig {
 
-    @Bean
+    // @Bean
     public EmbeddingStore<TextSegment> modularEmbeddingStore() {
         return new InMemoryEmbeddingStore<>();
     }
 
-    @Bean
+    // @Bean
     public DocumentSplitter modularDocumentSplitter() {
         return new DocumentByParagraphSplitter(300, 50);
     }
 
-    @Bean
+    // @Bean
     public ContentAggregator modularContentAggregator() {
         return new ModularContentAggregator();
     }
 
-    @Bean
+    // @Bean
     public ModularRagDataLoader modularRagDataLoader(EmbeddingModel embeddingModel) {
         return new ModularRagDataLoader(modularEmbeddingStore(), modularDocumentSplitter(), embeddingModel);
     }
@@ -64,7 +64,7 @@ public class RagModularConfig {
             this.store = store; this.splitter = splitter; this.embeddingModel = em;
         }
 
-        @PostConstruct
+        // @PostConstruct
         public void loadDocuments() {
             log.info("===== [模块化RAG] 开始加载知识库 =====");
             try {

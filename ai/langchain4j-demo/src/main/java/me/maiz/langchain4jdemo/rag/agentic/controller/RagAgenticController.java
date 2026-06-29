@@ -17,11 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
  * - 复杂多步问题 → 可能多次调用工具
  */
 @Slf4j
-@RestController
-@RequestMapping("/rag/agentic")
+// @RestController
+// @RequestMapping("/rag/agentic")
 public class RagAgenticController {
 
-    @Autowired
+    // @Autowired
     private AdmissionAssistantAgent admissionAssistantAgent;
 
     /**
@@ -30,7 +30,7 @@ public class RagAgenticController {
      * @param message 用户消息
      * @return Agent 的回复
      */
-    @GetMapping("/chat")
+    // @GetMapping("/chat")
     public String chat(@RequestParam String message) {
         log.info("Agentic RAG 对话 - 消息: {}", message);
         long start = System.currentTimeMillis();

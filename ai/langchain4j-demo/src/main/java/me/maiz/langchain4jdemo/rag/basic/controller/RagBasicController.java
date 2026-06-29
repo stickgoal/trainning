@@ -11,10 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import me.maiz.langchain4jdemo.rag.basic.assistant.KnowledgeAssistant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -49,23 +46,22 @@ public class RagBasicController {
     @Autowired
     private EmbeddingModel embeddingModel;
 
-    @PostConstruct
-    public void loadDocuments() {
+    @Autowired
+    private EmbeddingStoreIngestor ingestor;
+
+    @PostMapping("/load")
+    public String loadDocuments() {
         log.info("===== [基础RAG] 开始加载知识库 =====");
         try {
             List<Document> documents = loadDocs();
             if (!documents.isEmpty()) {
-                EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
-                        .embeddingStore(embeddingStore)
-                        .embeddingModel(embeddingModel)
-                        .documentSplitter(documentSplitter)
-                        .build();
                 ingestor.ingest(documents);
                 log.info("===== [基础RAG] 知识库加载完成: {} 个文档 =====", documents.size());
             }
         } catch (Exception e) {
             log.error("[基础RAG] 知识库加载失败: {}，RAG 功能可能不可用", e.getMessage());
         }
+        return  "success";
     }
 
     private List<Document> loadDocs() {

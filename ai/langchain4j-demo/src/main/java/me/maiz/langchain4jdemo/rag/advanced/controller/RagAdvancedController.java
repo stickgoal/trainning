@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
  * 2. 多路检索：从课程库和 FAQ 库分别检索后合并结果
  */
 @Slf4j
-@RestController
-@RequestMapping("/rag/advanced")
+// @RestController
+// @RequestMapping("/rag/advanced")
 public class RagAdvancedController {
 
-    @Autowired
+    // @Autowired
     private AdvancedKnowledgeAssistant advancedKnowledgeAssistant;
 
     /**
@@ -29,7 +29,7 @@ public class RagAdvancedController {
      * @param question 用户问题
      * @return 优化后的回答
      */
-    @GetMapping("/ask")
+    // @GetMapping("/ask")
     public String ask(@RequestParam String question) {
         log.info("进阶 RAG 问答 - 问题: {}", question);
         long start = System.currentTimeMillis();
