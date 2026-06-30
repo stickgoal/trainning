@@ -1,5 +1,6 @@
 package me.maiz.langchain4jdemo.rag.basic.assistant;
 
+import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 
 /**
