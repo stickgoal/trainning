@@ -2,6 +2,13 @@ spring:
   application:
     name: langchain4j-demo
 langchain4j:
+  community:
+    redis:
+      host: 192.168.1.108
+      port: 6379
+      password: abc123
+      index-name: rag-documents
+      dimension: 1024
   open-ai:
     chat-model:
       api-key: ${AGENES_API_KEY}           # 替换为你的 API Key
@@ -11,9 +18,10 @@ langchain4j:
       log-requests: true                     # 可选，开启请求日志
       log-responses: true                    # 可选，开启响应日志
     embedding-model:
-      api-key: ${AGENES_API_KEY}
-      base-url: https://apihub.agnes-ai.com/v1
-      model-name: agnes-2.0-flash
+      api-key: ${DASHSCOPE_API_KEY}                            # 阿里百炼 API Key
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1  # 百炼 OpenAI 兼容模式
+      model-name: text-embedding-v3                           # 通义千问 Embedding 模型
+      max-batch-size: 10        # 设置批量大小为 10 个样本
       log-requests: true
       log-responses: true
     streaming-chat-model:
@@ -23,3 +31,7 @@ langchain4j:
       temperature: 0.7                       # 可选，控制随机性
       log-requests: true                     # 可选，开启请求日志
       log-responses: true                    # 可选，开启响应日志
+logging:
+  level:
+    me.maiz.langchain4jdemo.rag.basic: debug
+    dev.langchain4j: debug

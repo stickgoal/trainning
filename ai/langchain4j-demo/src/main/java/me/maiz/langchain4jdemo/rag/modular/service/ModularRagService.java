@@ -24,7 +24,7 @@ import java.util.*;
  * ContentRetriever 在 @PostConstruct 中初始化（不注册为 Spring Bean）。
  */
 @Slf4j
-@Service
+//@Service
 public class ModularRagService {
 
     @Autowired

@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 3. 每个模块可独立定制和替换
  */
 @Slf4j
-@RestController
+//@RestController
 @RequestMapping("/rag/modular")
 public class RagModularController {
 

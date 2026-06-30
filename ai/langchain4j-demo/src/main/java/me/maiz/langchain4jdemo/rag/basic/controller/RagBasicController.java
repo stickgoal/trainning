@@ -40,26 +40,14 @@ public class RagBasicController {
     private KnowledgeAssistant knowledgeAssistant;
 
     @Autowired
-    private EmbeddingStore<TextSegment> embeddingStore;
+    private  EmbeddingStoreIngestor ingestor;
 
-    @Autowired
-    @Qualifier("basicDocumentSplitter")
-    private DocumentSplitter documentSplitter;
-
-    @Autowired
-    private EmbeddingModel embeddingModel;
-
-    @PostConstruct
+    @RequestMapping("/load")
     public void loadDocuments() {
         log.info("===== [基础RAG] 开始加载知识库 =====");
         try {
             List<Document> documents = loadDocs();
             if (!documents.isEmpty()) {
-                EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
-                        .embeddingStore(embeddingStore)
-                        .embeddingModel(embeddingModel)
-                        .documentSplitter(documentSplitter)
-                        .build();
                 ingestor.ingest(documents);
                 log.info("===== [基础RAG] 知识库加载完成: {} 个文档 =====", documents.size());
             }

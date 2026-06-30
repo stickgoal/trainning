@@ -31,7 +31,7 @@ import java.util.stream.Stream;
  * ContentRetriever 不在 Spring 中注册为 Bean。
  */
 @Slf4j
-@Configuration
+//@Configuration
 public class RagModularConfig {
 
     @Bean

@@ -33,7 +33,7 @@ import java.util.stream.Stream;
  * ContentRetriever 在 KnowledgeSearchTool 内部创建。
  */
 @Slf4j
-@Configuration
+//@Configuration
 public class RagAgenticConfig {
 
     @Bean
