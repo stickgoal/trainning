@@ -208,26 +208,53 @@ SupervisorWorkflow workflow = AgenticServices
 
 ---
 
-### 6. HumanInTheLoop — 人工介入
+### 6. HumanInTheLoop — 人工介入 ✅ 四期已实现
 
 **业务需求：** 大额退款需人工审批，Agent 完成前期准备后暂停等待。
 
 **流程：**
 ```
-大额退款 → PreCheckAgent → PAUSE(等待人工) → ExecuteAgent → 最终执行
+大额退款 → PreCheckAgent（前置检查）
+         → HumanInTheLoop（暂停，写入 PendingResponse("managerApproval")）
+         → ExecuteAgent（读取 managerApproval 时阻塞 → 恢复后执行）
 ```
+
+**关键设计：**
+- HumanInTheLoop 是通过 `humanInTheLoopBuilder()` 构建的一个 Agent，
+  作为 `sequenceBuilder` 的一个子 Agent 串在 PreCheckAgent 与 ExecuteAgent 之间。
+- `responseProvider` 返回 `new PendingResponse<>("managerApproval")`，写入 AgenticScope
+  的 `managerApproval`，此时并不阻塞。
+- 工作流在**后台线程**运行；当 ExecuteAgent 读取 `managerApproval` 输入时，
+  `readStateBlocking` 触发 `PendingResponse.blockingGet()`，工作流「暂停」。
+- 工作流方法用 `@MemoryId` 绑定 requestId 到唯一 AgenticScope，
+  外部通过 `((AgenticScopeAccess) workflow).getAgenticScope(requestId)` 定位会话，
+  调用 `completePendingResponse("managerApproval", ...)` 注入结果，工作流「恢复」。
 
 **LangChain4j 实现：**
 ```java
-UntypedAgent workflow = AgenticServices.humanInTheLoopBuilder()
-    .subAgents(preCheckAgent, executeAgent)
-    .responseProvider(scope -> PendingResponse.forKey("managerApproval"))
-    .outputName("executionResult")
+HumanInTheLoop humanApprovalAgent = AgenticServices.humanInTheLoopBuilder()
+    .outputKey("managerApproval")
+    .responseProvider(scope -> new PendingResponse<>("managerApproval"))
     .build();
 
-// 恢复:
+HumanApprovalWorkflow workflow = AgenticServices.sequenceBuilder(HumanApprovalWorkflow.class)
+    .subAgents(preCheckAgent, humanApprovalAgent, executeAgent)
+    .outputKey("executionResult")
+    .build();
+
+// 后台线程运行（会在 ExecuteAgent 读取 managerApproval 时阻塞）:
+executor.submit(() -> workflow.process(requestId, orderId, reason, amount));
+
+// 人工审批，恢复执行:
+AgenticScope scope = ((AgenticScopeAccess) workflow).getAgenticScope(requestId);
 scope.completePendingResponse("managerApproval", "APPROVED");
 ```
+
+**REST 交互（两步）：**
+- `POST /api/humanintheloop/refund?orderId=ORD-003&reason=不喜欢了&amount=918`
+  → 运行至审批环节暂停，返回 requestId + 前置检查材料
+- `POST /api/humanintheloop/approve?requestId=REQ-xxxx&decision=APPROVED`
+  → 注入审批结论，恢复执行，返回最终结果
 
 ---
 
@@ -253,8 +280,8 @@ langchain4j-agentic/
 │   ├── parallel/              → (二期)
 │   ├── loop/                  → (二期)
 │   ├── conditional/           → (二期)
-│   ├── supervisor/            → (二期)
-│   └── humanintheloop/        → (二期)
+│   ├── supervisor/            → (三期)
+│   └── humanintheloop/        → (四期) PreCheckAgent + HumanInTheLoop + ExecuteAgent
 ├── src/main/resources/
 │   ├── application.yml
 │   └── prompts/               → 各 Agent 的 prompt 模板文件
@@ -285,5 +312,5 @@ langchain4j-agentic/
 | 一期 | 项目骨架 + Sequential Demo | ✅ 编译通过 + API 调用成功 |
 | 二期 | Parallel + Loop | ✅ 各自独立测试通过 |
 | 三期 | Conditional + Supervisor | ✅ 各自独立测试通过 |
-| 四期 | HumanInTheLoop | 待实施 |
+| 四期 | HumanInTheLoop | ✅ 编译通过 + 两步 REST 暂停/恢复 |
 | 五期 | README + 流程图 + 综合入口 | 待实施 |
