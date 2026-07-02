@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
  * - 复杂多步问题 → 可能多次调用工具
  */
 @Slf4j
-//@RestController
+@RestController
 @RequestMapping("/rag/agentic")
 public class RagAgenticController {
 

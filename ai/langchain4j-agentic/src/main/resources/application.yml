@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: langchain4j-agentic-demo
+
+langchain4j:
+  open-ai:
+    chat-model:
+      api-key: sk-JPIHxsZKulPYjtoQlFff4ZXtVpl15wYtcMgqiven7XqB9Avh
+      base-url: https://apihub.agnes-ai.com/v1
+      model-name: agnes-2.0-flash
+      temperature: 0.7
+      log-requests: true
+      log-responses: true
+
+logging:
+  level:
+    root: INFO
+    dev.langchain4j: DEBUG
+    com.example.agentic: DEBUG

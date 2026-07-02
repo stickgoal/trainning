@@ -2,11 +2,13 @@ package me.maiz.langchain4jdemo.rag.advanced.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import me.maiz.langchain4jdemo.rag.advanced.assistant.AdvancedKnowledgeAssistant;
+import me.maiz.langchain4jdemo.rag.advanced.config.RagAdvancedConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 进阶 RAG — 查询重写与多路检索演示
@@ -16,12 +18,21 @@ import org.springframework.web.bind.annotation.RestController;
  * 2. 多路检索：从课程库和 FAQ 库分别检索后合并结果
  */
 @Slf4j
-//@RestController
+@RestController
 @RequestMapping("/rag/advanced")
 public class RagAdvancedController {
 
     @Autowired
     private AdvancedKnowledgeAssistant advancedKnowledgeAssistant;
+
+    @Autowired
+    private RagAdvancedConfig.AdvancedRagDataLoader advancedRagDataLoader;
+
+    @RequestMapping("/load")
+    public String load() {
+        advancedRagDataLoader.loadDocuments();
+        return "知识库加载完成";
+    }
 
     /**
      * 进阶 RAG 问答（查询重写 + 多路检索）

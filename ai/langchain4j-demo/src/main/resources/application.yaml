@@ -1,7 +1,10 @@
 spring:
   application:
     name: langchain4j-demo
+
 langchain4j:
+  rag:
+    enabled: false
   community:
     redis:
       host: 192.168.1.108
@@ -9,6 +12,7 @@ langchain4j:
       password: abc123
       index-name: rag-documents
       dimension: 1024
+
   open-ai:
     chat-model:
       api-key: ${AGENES_API_KEY}           # 替换为你的 API Key

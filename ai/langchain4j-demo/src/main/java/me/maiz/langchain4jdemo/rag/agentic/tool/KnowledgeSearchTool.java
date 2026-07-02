@@ -41,7 +41,7 @@ public class KnowledgeSearchTool {
         this.contentRetriever = EmbeddingStoreContentRetriever.builder()
                 .embeddingStore(embeddingStore)
                 .embeddingModel(embeddingModel)
-                .maxResults(3)
+                .maxResults(5)
                 .minScore(0.5)
                 .build();
         log.info("KnowledgeSearchTool 初始化完成");

@@ -14,6 +14,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import me.maiz.langchain4jdemo.rag.agentic.agent.AdmissionAssistantAgent;
 import me.maiz.langchain4jdemo.rag.agentic.tool.KnowledgeSearchTool;
+import me.maiz.langchain4jdemo.rag.basic.custom.EmbeddingModelWrapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -33,13 +34,9 @@ import java.util.stream.Stream;
  * ContentRetriever 在 KnowledgeSearchTool 内部创建。
  */
 @Slf4j
-//@Configuration
+@Configuration
 public class RagAgenticConfig {
 
-    @Bean
-    public EmbeddingStore<TextSegment> agenticEmbeddingStore() {
-        return new InMemoryEmbeddingStore<>();
-    }
 
     @Bean
     public DocumentSplitter agenticDocumentSplitter() {
@@ -47,8 +44,8 @@ public class RagAgenticConfig {
     }
 
     @Bean
-    public KnowledgeSearchTool knowledgeSearchTool(EmbeddingModel embeddingModel) {
-        return new KnowledgeSearchTool(agenticEmbeddingStore(), embeddingModel);
+    public KnowledgeSearchTool knowledgeSearchTool(EmbeddingModel embeddingModel, EmbeddingStore<TextSegment> embeddingStore) {
+        return new KnowledgeSearchTool(embeddingStore, new EmbeddingModelWrapper(embeddingModel, 10));
     }
 
     @Bean
@@ -62,17 +59,17 @@ public class RagAgenticConfig {
     }
 
     @Bean
-    public AgenticRagDataLoader agenticRagDataLoader(EmbeddingModel embeddingModel) {
-        return new AgenticRagDataLoader(agenticEmbeddingStore(), agenticDocumentSplitter(), embeddingModel);
+    public AgenticRagDataLoader agenticRagDataLoader(EmbeddingModel embeddingModel, EmbeddingStore<TextSegment> embeddingStore) {
+        return new AgenticRagDataLoader(embeddingStore, agenticDocumentSplitter(), new EmbeddingModelWrapper(embeddingModel, 10));
     }
 
     @Slf4j
     public static class AgenticRagDataLoader {
         private final EmbeddingStore<TextSegment> store;
         private final DocumentSplitter splitter;
-        private final EmbeddingModel embeddingModel;
+        private final EmbeddingModelWrapper embeddingModel;
 
-        public AgenticRagDataLoader(EmbeddingStore<TextSegment> store, DocumentSplitter splitter, EmbeddingModel em) {
+        public AgenticRagDataLoader(EmbeddingStore<TextSegment> store, DocumentSplitter splitter, EmbeddingModelWrapper em) {
             this.store = store; this.splitter = splitter; this.embeddingModel = em;
         }
 
@@ -104,7 +101,7 @@ public class RagAgenticConfig {
                     log.info("===== [Agentic RAG] 知识库加载完成: {} 个文档 =====", documents.size());
                 }
             } catch (Exception e) {
-                log.error("[Agentic RAG] 知识库加载失败: {}，RAG 功能可能不可用", e.getMessage());
+                log.error("[Agentic RAG] 知识库加载失败: ", e);
             }
         }
     }

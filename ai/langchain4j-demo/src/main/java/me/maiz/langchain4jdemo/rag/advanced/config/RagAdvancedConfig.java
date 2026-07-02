@@ -1,5 +1,7 @@
 package me.maiz.langchain4jdemo.rag.advanced.config;
 
+import dev.langchain4j.community.store.embedding.redis.RedisEmbeddingStore;
+import dev.langchain4j.community.store.embedding.redis.spring.RedisEmbeddingStoreProperties;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.splitter.DocumentByParagraphSplitter;
@@ -12,13 +14,15 @@ import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
-import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import me.maiz.langchain4jdemo.rag.advanced.assistant.AdvancedKnowledgeAssistant;
+import me.maiz.langchain4jdemo.rag.advanced.custom.CustomRedisEmbeddingStore;
 import me.maiz.langchain4jdemo.rag.advanced.query.QueryRewriteTransformer;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import redis.clients.jedis.UnifiedJedis;
 
 import java.io.IOException;
 import java.net.URL;
@@ -27,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -38,20 +43,23 @@ import java.util.stream.Stream;
  * 使用 inter-bean 引用避免 Spring 注入冲突。
  */
 @Slf4j
-//@Configuration
+@Configuration
 public class RagAdvancedConfig {
 
     // ========== 向量存储 ==========
-
     @Bean
-    public EmbeddingStore<TextSegment> advancedCourseEmbeddingStore() {
-        return new InMemoryEmbeddingStore<>();
+    public CustomRedisEmbeddingStore advancedCourseEmbeddingStore(RedisEmbeddingStoreProperties properties, ObjectProvider<EmbeddingModel> embeddingModelProvider, ObjectProvider<UnifiedJedis> unifiedJedisProvider) {
+
+        return new CustomRedisEmbeddingStore(properties, embeddingModelProvider, unifiedJedisProvider,"rag:course:");
     }
 
     @Bean
-    public EmbeddingStore<TextSegment> advancedFaqEmbeddingStore() {
-        return new InMemoryEmbeddingStore<>();
+    public CustomRedisEmbeddingStore advancedFaqEmbeddingStore(RedisEmbeddingStoreProperties properties, ObjectProvider<EmbeddingModel> embeddingModelProvider, ObjectProvider<UnifiedJedis> unifiedJedisProvider) {
+
+        return new CustomRedisEmbeddingStore(properties, embeddingModelProvider, unifiedJedisProvider,"rag:faq:");
     }
+
+
 
     @Bean
     public DocumentSplitter advancedDocumentSplitter() {
@@ -66,10 +74,10 @@ public class RagAdvancedConfig {
     // ========== 文档注入 ==========
 
     @Bean
-    public AdvancedRagDataLoader advancedRagDataLoader(EmbeddingModel embeddingModel) {
+    public AdvancedRagDataLoader advancedRagDataLoader(EmbeddingModel embeddingModel,@Qualifier("advancedCourseEmbeddingStore")  CustomRedisEmbeddingStore advancedCourseEmbeddingStore,@Qualifier("advancedFaqEmbeddingStore")  CustomRedisEmbeddingStore advancedFaqEmbeddingStore) {
         return new AdvancedRagDataLoader(
-                advancedCourseEmbeddingStore(),
-                advancedFaqEmbeddingStore(),
+                advancedCourseEmbeddingStore.getRedisEmbeddingStore(),
+                advancedFaqEmbeddingStore.getRedisEmbeddingStore(),
                 advancedDocumentSplitter(),
                 embeddingModel);
     }
@@ -79,19 +87,21 @@ public class RagAdvancedConfig {
     @Bean
     public dev.langchain4j.rag.RetrievalAugmentor advancedRetrievalAugmentor(
             EmbeddingModel embeddingModel,
+            @Qualifier("advancedCourseEmbeddingStore") CustomRedisEmbeddingStore advancedCourseEmbeddingStore,
+            @Qualifier("advancedFaqEmbeddingStore") CustomRedisEmbeddingStore advancedFaqEmbeddingStore,
             QueryRewriteTransformer queryRewriteTransformer) {
 
         ContentRetriever courseRetriever = EmbeddingStoreContentRetriever.builder()
-                .embeddingStore(advancedCourseEmbeddingStore())
+                .embeddingStore(advancedCourseEmbeddingStore.getRedisEmbeddingStore())
                 .embeddingModel(embeddingModel)
-                .maxResults(2)
+                .maxResults(5)
                 .minScore(0.5)
                 .build();
 
         ContentRetriever faqRetriever = EmbeddingStoreContentRetriever.builder()
-                .embeddingStore(advancedFaqEmbeddingStore())
+                .embeddingStore(advancedFaqEmbeddingStore.getRedisEmbeddingStore())
                 .embeddingModel(embeddingModel)
-                .maxResults(2)
+                .maxResults(5)
                 .minScore(0.5)
                 .build();
 
@@ -131,7 +141,6 @@ public class RagAdvancedConfig {
             this.courseStore = cs; this.faqStore = fs; this.splitter = sp; this.embeddingModel = em;
         }
 
-        @PostConstruct
         public void loadDocuments() {
             log.info("===== [进阶RAG] 开始加载知识库 =====");
             try {
