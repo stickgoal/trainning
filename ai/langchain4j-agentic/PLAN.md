@@ -313,4 +313,4 @@ langchain4j-agentic/
 | 二期 | Parallel + Loop | ✅ 各自独立测试通过 |
 | 三期 | Conditional + Supervisor | ✅ 各自独立测试通过 |
 | 四期 | HumanInTheLoop | ✅ 编译通过 + 两步 REST 暂停/恢复 |
-| 五期 | README + 流程图 + 综合入口 | 待实施 |
+| 五期 | README + 流程图 + 综合入口 | ✅ 完成 |
