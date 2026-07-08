@@ -43,7 +43,7 @@ import java.util.stream.Stream;
  * 使用 inter-bean 引用避免 Spring 注入冲突。
  */
 @Slf4j
-@Configuration
+//@Configuration
 public class RagAdvancedConfig {
 
     // ========== 向量存储 ==========

@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: integrated-demo-service
+  ai:
+    dashscope:
+      api-key: ${AI_DASHSCOPE_API_KEY}
+      chat:
+        options:
+          model: qwen-turbo
+    alibaba:
+      mcp:
+        nacos:
+          server-addr: 127.0.0.1:8848
+          namespace: public
+          username: nacos
+          password: nacos
+          client:
+            enabled: true
+            sse:
+              connections:
+                weather-service:
+                  service-name: weather-mcp-service
+                  version: 1.0.0
+                calculator-service:
+                  service-name: calculator-mcp-service
+                  version: 1.0.0
+
+alibaba:
+  a2a:
+    nacos:
+      server-addr: 127.0.0.1:8848
+      discovery:
+        enabled: true
+        namespace: public
+        group: DEFAULT_GROUP
+
+logging:
+  level:
+    com.alibaba.cloud.ai: INFO

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring AI Agentic Workflow Demo — 电商智能售后处理平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --purple: #8b5cf6;
+            --accent-1: #06b6d4;
+            --accent-2: #f97316;
+            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,.08), 0 4px 10px rgba(0,0,0,.04);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --shadow: 0 1px 3px rgba(0,0,0,.3);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,.4);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            transition: background .3s, color .3s;
+        }
+
+        /* ── Hero ── */
+        .hero {
+            background: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 50%, #8b5cf6 100%);
+            color: #fff;
+            padding: 60px 24px 50px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .hero h1 { font-size: 2.4rem; font-weight: 700; margin-bottom: 12px; position: relative; z-index: 1; }
+        .hero p { font-size: 1.1rem; opacity: .9; max-width: 680px; margin: 0 auto 20px; position: relative; z-index: 1; }
+        .hero .badges {
+            display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1;
+        }
+        .badge {
+            background: rgba(255,255,255,.2); backdrop-filter: blur(8px);
+            padding: 4px 14px; border-radius: 20px; font-size: .85rem; font-weight: 500;
+        }
+
+        /* ── Theme Toggle ── */
+        .theme-toggle {
+            position: fixed; top: 16px; right: 16px; z-index: 100;
+            width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.3);
+            background: rgba(255,255,255,.15); backdrop-filter: blur(8px);
+            color: #fff; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all .2s;
+        }
+        .theme-toggle:hover { background: rgba(255,255,255,.25); }
+
+        /* ── Container ── */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+        /* ── Section Titles ── */
+        .section-title {
+            text-align: center; margin: 48px 0 28px;
+        }
+        .section-title h2 { font-size: 1.7rem; font-weight: 700; margin-bottom: 8px; }
+        .section-title p { color: var(--text-secondary); font-size: .95rem; }
+
+        /* ── Mermaid container ── */
+        .mermaid-wrapper {
+            background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow);
+            padding: 24px; margin-bottom: 40px; overflow-x: auto;
+            display: flex; justify-content: center;
+        }
+
+        /* ── Cards Grid ── */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(540px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        /* ── Card ── */
+        .card {
+            background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden; transition: box-shadow .25s, transform .2s;
+        }
+        .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+
+        .card-header {
+            padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: flex-start; gap: 14px;
+        }
+        .card-number {
+            width: 42px; height: 42px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; font-weight: 700; color: #fff; flex-shrink: 0;
+        }
+        .card-number.c1 { background: var(--primary); }
+        .card-number.c2 { background: var(--accent-1); }
+        .card-number.c3 { background: var(--purple); }
+        .card-number.c4 { background: var(--accent-2); }
+        .card-number.c5 { background: #ec4899; }
+        .card-number.c6 { background: var(--danger); }
+
+        .card-title { font-size: 1.1rem; font-weight: 700; }
+        .card-subtitle { font-size: .85rem; color: var(--text-secondary); margin-top: 2px; }
+
+        .card-body { padding: 20px 24px; }
+
+        .card-body .desc { font-size: .92rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.7; }
+
+        /* ── Card Diagram ── */
+        .card-diagram {
+            background: var(--bg); border-radius: var(--radius-sm); padding: 12px;
+            margin-bottom: 18px; overflow-x: auto; font-size: .82rem;
+        }
+
+        /* ── Form ── */
+        .form-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .form-row input, .form-row textarea {
+            flex: 1; min-width: 120px;
+            padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+            font-size: .9rem; background: var(--bg); color: var(--text);
+            transition: border-color .2s;
+        }
+        .form-row input:focus, .form-row textarea:focus {
+            outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+        }
+        .form-row textarea { min-height: 60px; resize: vertical; }
+        .form-row .api-label {
+            font-size: .78rem; color: var(--text-secondary); background: var(--bg);
+            padding: 9px 12px; border-radius: var(--radius-sm); white-space: nowrap;
+            font-family: 'Consolas', 'Courier New', monospace; border: 1px solid var(--border);
+        }
+
+        .btn {
+            padding: 9px 22px; border: none; border-radius: var(--radius-sm);
+            font-size: .9rem; font-weight: 600; cursor: pointer; transition: all .2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+
+        /* ── Result ── */
+        .result-box {
+            margin-top: 14px; background: var(--bg); border-radius: var(--radius-sm);
+            padding: 14px; border: 1px solid var(--border);
+            max-height: 360px; overflow-y: auto; display: none;
+        }
+        .result-box.visible { display: block; }
+        .result-box pre {
+            font-family: 'Consolas', 'Courier New', monospace; font-size: .82rem;
+            white-space: pre-wrap; word-break: break-all; color: var(--text);
+        }
+        .result-box .status-tag {
+            display: inline-block; padding: 2px 10px; border-radius: 12px;
+            font-size: .75rem; font-weight: 600; margin-bottom: 8px;
+        }
+        .status-tag.ok { background: #dcfce7; color: #16a34a; }
+        .status-tag.err { background: #fee2e2; color: #dc2626; }
+        .status-tag.pending { background: #fef3c7; color: #d97706; }
+
+        [data-theme="dark"] .status-tag.ok { background: #14532d; color: #86efac; }
+        [data-theme="dark"] .status-tag.err { background: #7f1d1d; color: #fca5a5; }
+        [data-theme="dark"] .status-tag.pending { background: #713f12; color: #fde68a; }
+
+        .spinner {
+            display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3);
+            border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── API Table ── */
+        .api-table-wrapper { overflow-x: auto; margin-bottom: 48px; }
+        .api-table {
+            width: 100%; border-collapse: collapse; background: var(--card-bg);
+            border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+        }
+        .api-table th, .api-table td {
+            padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border);
+            font-size: .9rem;
+        }
+        .api-table th { background: var(--bg); font-weight: 600; color: var(--text-secondary); font-size: .8rem; text-transform: uppercase; }
+        .api-table td.method { font-weight: 700; }
+        .api-table td.method.get { color: var(--success); }
+        .api-table td.method.post { color: var(--primary); }
+        .api-table td.endpoint { font-family: 'Consolas', 'Courier New', monospace; font-size: .85rem; }
+        .api-table tr:last-child td { border-bottom: none; }
+
+        /* ── Footer ── */
+        .footer { text-align: center; padding: 32px 24px; color: var(--text-secondary); font-size: .85rem; border-top: 1px solid var(--border); }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .hero h1 { font-size: 1.6rem; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .form-row { flex-direction: column; }
+            .form-row .api-label { font-size: .72rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<button class="theme-toggle" id="themeToggle" title="切换深色/浅色主题" onclick="toggleTheme()">🌓</button>
+
+<!-- Hero -->
+<div class="hero">
+    <h1>🤖 Spring AI Agentic Workflow Demo</h1>
+    <p>电商智能售后处理平台 — 使用 Spring AI + Spring AI Alibaba 实现六种 AI Agent 工作流模式，提供交互式测试体验</p>
+    <div class="badges">
+        <span class="badge">Spring Boot 3.5.3</span>
+        <span class="badge">Spring AI 1.0.0</span>
+        <span class="badge">Spring AI Alibaba</span>
+        <span class="badge">JDK 17</span>
+        <span class="badge">Agnes AI</span>
+    </div>
+</div>
+
+<div class="container">
+
+<!-- Architecture Overview -->
+<div class="section-title">
+    <h2>🏗️ 架构总览</h2>
+    <p>六种 Agentic 工作流模式，统一电商售后场景</p>
+</div>
+<div class="mermaid-wrapper">
+    <div class="mermaid">
+graph TD
+    subgraph API["REST API Layer"]
+        DASH["Web Dashboard"]
+        REST["8 Endpoints"]
+    end
+    subgraph WF["Workflow Layer"]
+        S1["① Sequential<br/>顺序链"]
+        S2["② Parallel<br/>并行核验"]
+        S3["③ Loop<br/>迭代优化"]
+        S4["④ Conditional<br/>条件分流"]
+        S5["⑤ Supervisor<br/>主管调度"]
+        S6["⑥ HumanInTheLoop<br/>人工介入"]
+    end
+    subgraph INFRA["Infrastructure"]
+        LLM["Agnes AI<br/>agnes-2.0-flash"]
+        TOOLS["AfterSalesTools<br/>@Tool 工具"]
+        DATA["MockDataService<br/>模拟数据"]
+    end
+    DASH --> REST --> S1 & S2 & S3 & S4 & S5 & S6
+    S1 & S2 & S3 & S4 & S5 & S6 --> LLM & TOOLS & DATA
+    style S1 fill:#3b82f6,color:#fff
+    style S2 fill:#06b6d4,color:#fff
+    style S3 fill:#8b5cf6,color:#fff
+    style S4 fill:#f97316,color:#fff
+    style S5 fill:#ec4899,color:#fff
+    style S6 fill:#ef4444,color:#fff
+    </div>
+</div>
+
+<!-- Workflow Cards -->
+<div class="section-title">
+    <h2>🧪 六种工作流模式</h2>
+    <p>点击下方卡片中的「发送请求」按钮，实时调用后端 API 查看效果</p>
+</div>
+
+<div class="cards-grid">
+
+<!-- ===== 1. Sequential ===== -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-number c1">①</div>
+        <div>
+            <div class="card-title">Sequential — 顺序审批链</div>
+            <div class="card-subtitle">RiskAgent → FinanceAgent → ServiceAgent</div>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="desc">用户申请退款，依次经过风控检查、财务核算、客服确认三级审批，每步依赖前一步的输出结果。</p>
+        <div class="card-diagram">
+            <div class="mermaid">
+flowchart LR
+    A[退款申请] --> B[RiskAgent<br/>风控检查]
+    B --> C[FinanceAgent<br/>财务核算]
+    C --> D[ServiceAgent<br/>客服确认]
+    D --> E[最终结果]
+            </div>
+        </div>
+        <div class="form-row">
+            <span class="api-label">POST /api/sequential/refund</span>
+            <input type="text" id="seq-orderId" value="ORD-001" placeholder="订单ID">
+            <input type="text" id="seq-reason" value="商品质量问题" placeholder="退款原因">
+            <button class="btn btn-primary" onclick="callAPI('sequential')">
+                <span id="seq-spinner" style="display:none" class="spinner"></span> 发送
+            </button>
+        </div>
+        <div class="result-box" id="seq-result"></div>
+    </div>
+</div>
+
+<!-- ===== 2. Parallel ===== -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-number c2">②</div>
+        <div>
+            <div class="card-title">Parallel — 并行核验</div>
+            <div class="card-subtitle">OrderCheck + CreditCheck + StockCheck → Summary</div>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="desc">退款申请同时核验订单状态、用户信用、商品库存三个维度，互不依赖，并行处理后由 SummaryAgent 汇总决策。</p>
+        <div class="card-diagram">
+            <div class="mermaid">
+flowchart TD
+    A[退款申请] --> B1[OrderCheck]
+    A --> B2[CreditCheck]
+    A --> B3[StockCheck]
+    B1 & B2 & B3 --> C[SummaryAgent]
+    C --> D[最终决策]
+            </div>
+        </div>
+        <div class="form-row">
+            <span class="api-label">POST /api/parallel/check</span>
+            <input type="text" id="par-orderId" value="ORD-001" placeholder="订单ID">
+            <input type="text" id="par-reason" value="商品质量问题" placeholder="退款原因">
+            <button class="btn btn-primary" onclick="callAPI('parallel')">
+                <span id="par-spinner" style="display:none" class="spinner"></span> 发送
+            </button>
+        </div>
+        <div class="result-box" id="par-result"></div>
+    </div>
+</div>
+
+<!-- ===== 3. Loop ===== -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-number c3">③</div>
+        <div>
+            <div class="card-title">Loop — 迭代优化</div>
+            <div class="card-subtitle">DraftAgent ↔ ReviewAgent 循环直到评分达标</div>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="desc">自动生成售后回复文案，通过"起草→评审→修改"循环迭代，直到 ReviewAgent 评分 ≥ 8 分后输出最终文案。</p>
+        <div class="card-diagram">
+            <div class="mermaid">
+flowchart TD
+    A[投诉] --> B[DraftAgent<br/>起草]
+    B --> C[ReviewAgent<br/>评审]
+    C -->|≥8分| D[输出文案]
+    C -->|需改进| B
+            </div>
+        </div>
+        <div class="form-row">
+            <span class="api-label">POST /api/loop/reply</span>
+            <input type="text" id="loop-orderId" value="ORD-001" placeholder="订单ID">
+            <input type="text" id="loop-reason" value="商品质量问题" placeholder="投诉原因">
+            <button class="btn btn-primary" onclick="callAPI('loop')">
+                <span id="loop-spinner" style="display:none" class="spinner"></span> 发送
+            </button>
+        </div>
+        <div class="result-box" id="loop-result"></div>
+    </div>
+</div>
+
+<!-- ===== 4. Conditional ===== -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-number c4">④</div>
+        <div>
+            <div class="card-title">Conditional — 条件分流</div>
+            <div class="card-subtitle">ClassifyAgent → 自动退款 / 人工审核 / 换货处理</div>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="desc">根据退款原因自动分类，走不同处理通道：质量问题→快速退款、个人原因→人工审核、换货请求→换货处理。</p>
+        <div class="card-diagram">
+            <div class="mermaid">
+flowchart TD
+    A[退款申请] --> B[ClassifyAgent]
+    B --> C{分类结果}
+    C -->|质量问题| D[AutoRefund]
+    C -->|个人原因| E[ManualReview]
+    C -->|换货| F[Exchange]
+            </div>
+        </div>
+        <div class="form-row">
+            <span class="api-label">POST /api/conditional/refund</span>
+            <input type="text" id="cond-orderId" value="ORD-001" placeholder="订单ID">
+            <input type="text" id="cond-reason" value="商品质量问题" placeholder="退款原因">
+            <button class="btn btn-primary" onclick="callAPI('conditional')">
+                <span id="cond-spinner" style="display:none" class="spinner"></span> 发送
+            </button>
+        </div>
+        <div class="result-box" id="cond-result"></div>
+    </div>
+</div>
+
+<!-- ===== 5. Supervisor ===== -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-number" style="background:#ec4899;">⑤</div>
+        <div>
+            <div class="card-title">Supervisor — 主管调度</div>
+            <div class="card-subtitle">LLM 驱动动态编排 Emotion/Fact/Solution/Notify Agent</div>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="desc">复杂售后诉求由 Supervisor Agent 动态编排执行计划，自主决定调用顺序，灵活调度 Emotions、Fact、Solution、Notify 四个子 Agent。</p>
+        <div class="card-diagram">
+            <div class="mermaid">
+flowchart TD
+    A[复杂投诉] --> B[Supervisor]
+    B -.-> C[EmotionAgent]
+    B -.-> D[FactAgent]
+    B -.-> E[SolutionAgent]
+    B -.-> F[NotifyAgent]
+    C & D & E & F -.-> B
+    B --> G[通知文案]
+            </div>
+        </div>
+        <div class="form-row">
+            <span class="api-label">POST /api/supervisor/handle</span>
+            <input type="text" id="sup-orderId" value="ORD-001" placeholder="订单ID">
+            <input type="text" id="sup-complaint" value="收到商品有质量问题，非常生气，要求退款并赔偿" placeholder="投诉内容">
+            <button class="btn btn-primary" onclick="callAPI('supervisor')">
+                <span id="sup-spinner" style="display:none" class="spinner"></span> 发送
+            </button>
+        </div>
+        <div class="result-box" id="sup-result"></div>
+    </div>
+</div>
+
+<!-- ===== 6. HumanInTheLoop ===== -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-number c6">⑥</div>
+        <div>
+            <div class="card-title">HumanInTheLoop — 人工介入</div>
+            <div class="card-subtitle">PreCheck → 暂停等待审批 → Execute</div>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="desc">大额退款需人工审批。Agent 完成前置检查后自动暂停，等待主管审批后恢复执行。两步交互：提交退款 → 人工审批。</p>
+        <div class="card-diagram">
+            <div class="mermaid">
+flowchart TD
+    A[大额退款] --> B[PreCheckAgent]
+    B --> C[⏸️ 暂停等待]
+    C -->|APPROVED| D[ExecuteAgent]
+    C -->|REJECTED| E[拒绝退款]
+    D --> F[最终结果]
+            </div>
+        </div>
+        <div style="border-left:3px solid var(--primary); padding:6px 12px; margin-bottom:12px; font-size:.85rem; color:var(--text-secondary)">
+            ⚠️ 两步操作：先点 <b>提交退款</b> 获取 requestId，再点 <b>人工审批</b> 完成流程
+        </div>
+        <div class="form-row">
+            <span class="api-label">POST .../refund</span>
+            <input type="text" id="hitl-orderId" value="ORD-003" placeholder="订单ID">
+            <input type="text" id="hitl-reason" value="不喜欢了" placeholder="退款原因">
+            <input type="number" id="hitl-amount" value="918" placeholder="金额" style="max-width:100px">
+            <button class="btn btn-primary" onclick="callAPI('hitl-submit')">
+                <span id="hitl-submit-spinner" style="display:none" class="spinner"></span> ① 提交退款
+            </button>
+        </div>
+        <div class="form-row">
+            <span class="api-label">POST .../approve</span>
+            <input type="text" id="hitl-requestId" value="" placeholder="从上一步结果获取 requestId">
+            <select id="hitl-decision" style="padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:.9rem">
+                <option value="APPROVED">APPROVED</option>
+                <option value="REJECTED">REJECTED</option>
+            </select>
+            <button class="btn btn-primary" onclick="callAPI('hitl-approve')">
+                <span id="hitl-approve-spinner" style="display:none" class="spinner"></span> ② 人工审批
+            </button>
+        </div>
+        <div class="result-box" id="hitl-result"></div>
+    </div>
+</div>
+
+</div><!-- /cards-grid -->
+
+<!-- API Table -->
+<div class="section-title">
+    <h2>📡 API 端点总览</h2>
+    <p>全部 8 个 REST 端点，均可通过 Dashboard 或 curl 直接调用</p>
+</div>
+<div class="api-table-wrapper">
+<table class="api-table">
+    <thead>
+        <tr><th>方法</th><th>端点</th><th>模式</th><th>参数</th></tr>
+    </thead>
+    <tbody>
+        <tr><td class="method get">GET</td><td class="endpoint">/api/health</td><td>健康检查</td><td>—</td></tr>
+        <tr><td class="method post">POST</td><td class="endpoint">/api/sequential/refund</td><td>顺序审批链</td><td>orderId, reason</td></tr>
+        <tr><td class="method post">POST</td><td class="endpoint">/api/parallel/check</td><td>并行核验</td><td>orderId, reason</td></tr>
+        <tr><td class="method post">POST</td><td class="endpoint">/api/loop/reply</td><td>迭代优化</td><td>orderId, reason</td></tr>
+        <tr><td class="method post">POST</td><td class="endpoint">/api/conditional/refund</td><td>条件分流</td><td>orderId, reason</td></tr>
+        <tr><td class="method post">POST</td><td class="endpoint">/api/supervisor/handle</td><td>主管调度</td><td>orderId, complaint</td></tr>
+        <tr><td class="method post">POST</td><td class="endpoint">/api/humanintheloop/refund</td><td>人工介入-提交</td><td>orderId, reason, amount</td></tr>
+        <tr><td class="method post">POST</td><td class="endpoint">/api/humanintheloop/approve</td><td>人工介入-审批</td><td>requestId, decision, comment</td></tr>
+    </tbody>
+</table>
+</div>
+
+</div><!-- /container -->
+
+<div class="footer">
+    Spring AI Agentic Workflow Demo · 电商智能售后处理平台 · Powered by Spring AI + Agnes AI
+</div>
+
+<script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+
+    // ── Theme ──
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+    }
+
+    // ── API Call ──
+    async function callAPI(mode) {
+        let url = '', label = mode;
+
+        switch (mode) {
+            case 'sequential':
+                url = '/api/sequential/refund?orderId=' + encodeURIComponent(__val('seq-orderId'))
+                    + '&reason=' + encodeURIComponent(__val('seq-reason'));
+                break;
+            case 'parallel':
+                url = '/api/parallel/check?orderId=' + encodeURIComponent(__val('par-orderId'))
+                    + '&reason=' + encodeURIComponent(__val('par-reason'));
+                break;
+            case 'loop':
+                url = '/api/loop/reply?orderId=' + encodeURIComponent(__val('loop-orderId'))
+                    + '&reason=' + encodeURIComponent(__val('loop-reason'));
+                break;
+            case 'conditional':
+                url = '/api/conditional/refund?orderId=' + encodeURIComponent(__val('cond-orderId'))
+                    + '&reason=' + encodeURIComponent(__val('cond-reason'));
+                break;
+            case 'supervisor':
+                url = '/api/supervisor/handle?orderId=' + encodeURIComponent(__val('sup-orderId'))
+                    + '&complaint=' + encodeURIComponent(__val('sup-complaint'));
+                break;
+            case 'hitl-submit':
+                url = '/api/humanintheloop/refund?orderId=' + encodeURIComponent(__val('hitl-orderId'))
+                    + '&reason=' + encodeURIComponent(__val('hitl-reason'))
+                    + '&amount=' + encodeURIComponent(__val('hitl-amount'));
+                break;
+            case 'hitl-approve':
+                url = '/api/humanintheloop/approve?requestId=' + encodeURIComponent(__val('hitl-requestId'))
+                    + '&decision=' + encodeURIComponent(__val('hitl-decision'));
+                break;
+        }
+
+        const spinnerEl = document.getElementById(label + '-spinner');
+        const resultEl = document.getElementById(label === 'hitl-submit' || label === 'hitl-approve' ? 'hitl-result' : label + '-result');
+
+        // Show spinner
+        if (spinnerEl) spinnerEl.style.display = 'inline-block';
+        if (resultEl) { resultEl.classList.add('visible'); resultEl.innerHTML = '<span style="color:var(--text-secondary)">⏳ 请求中...</span>'; }
+
+        try {
+            const res = await fetch(url, { method: 'POST' });
+            const data = await res.json();
+            const pretty = JSON.stringify(data, null, 2);
+
+            let statusClass = 'ok';
+            if (data.status === 'PENDING_APPROVAL') statusClass = 'pending';
+            if (data.status === 'ERROR' || data.status === 'NOT_FOUND') statusClass = 'err';
+
+            if (resultEl) {
+                resultEl.innerHTML =
+                    '<span class="status-tag ' + statusClass + '">' + (res.ok ? '200 OK' : res.status + ' Error') + '</span>'
+                    + '<pre>' + escapeHtml(pretty) + '</pre>';
+            }
+
+            // Auto-fill requestId for HumanInTheLoop
+            if (mode === 'hitl-submit' && data.requestId) {
+                document.getElementById('hitl-requestId').value = data.requestId;
+                if (resultEl) {
+                    resultEl.innerHTML += '<div style="margin-top:8px;font-size:.85rem;color:var(--primary);font-weight:600">✅ requestId 已自动填入下方审批表单，点击「人工审批」继续</div>';
+                }
+            }
+        } catch (err) {
+            if (resultEl) {
+                resultEl.innerHTML = '<span class="status-tag err">Network Error</span><pre>' + escapeHtml(err.message) + '</pre>';
+            }
+        } finally {
+            if (spinnerEl) spinnerEl.style.display = 'none';
+        }
+    }
+
+    function __val(id) { return document.getElementById(id)?.value || ''; }
+    function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+</script>
+
+</body>
+</html>

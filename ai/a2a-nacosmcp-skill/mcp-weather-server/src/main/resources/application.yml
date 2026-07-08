@@ -1,0 +1,29 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: mcp-weather-server
+  ai:
+    mcp:
+      server:
+        name: weather-mcp-service
+        version: 1.0.0
+        type: SYNC
+        instructions: "提供天气查询和空气质量查询能力的 MCP 服务"
+
+alibaba:
+  mcp:
+    nacos:
+      server-addr: 127.0.0.1:8848
+      namespace: public
+      username: nacos
+      password: nacos
+      register:
+        enabled: true
+        service-group: DEFAULT_GROUP
+        service-name: weather-mcp-service
+
+logging:
+  level:
+    com.alibaba.cloud.ai: DEBUG

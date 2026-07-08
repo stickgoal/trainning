@@ -33,11 +33,11 @@ public class RagBasicConfig {
     /**
      * 向量存储（Bean 名称唯一，避免与其他 Config 冲突）
      */
-//    @Bean
-//    @Primary
-//    public EmbeddingStore<TextSegment> basicEmbeddingStore() {
-//        return new InMemoryEmbeddingStore<>();
-//    }
+    @Bean
+    @Primary
+    public EmbeddingStore<TextSegment> basicEmbeddingStore() {
+        return new InMemoryEmbeddingStore<>();
+    }
 
     @Bean
     public DocumentSplitter basicDocumentSplitter() {

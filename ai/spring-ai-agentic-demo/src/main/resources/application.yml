@@ -1,0 +1,63 @@
+server:
+  port: 8081
+
+# ── 工具调用模式切换 ──
+# function-calling: 使用 Spring AI FunctionToolCallback（默认）
+# mcp: 通过 MCP Client 连接外部 MCP Server
+app:
+  tool-mode: function-calling
+
+spring:
+  application:
+    name: spring-ai-agentic-demo
+  autoconfigure:
+    exclude:
+      # 禁用 DashScope 自动配置，避免与 OpenAI ChatModel Bean 冲突
+      # 如需启用 DashScope，请移除以下排除项并注释掉 openai 配置
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeAutoConfiguration
+      # 禁用 MCP Client 自动配置（当前使用 function-calling 模式）
+      # 如需启用 MCP 模式，请移除以下排除项，并确保 mcp-server jar 已构建
+      - org.springframework.ai.mcp.client.autoconfigure.McpClientAutoConfiguration
+      - org.springframework.ai.mcp.client.autoconfigure.McpToolCallbackAutoConfiguration
+  ai:
+    openai:
+      api-key: sk-JPIHxsZKulPYjtoQlFff4ZXtVpl15wYtcMgqiven7XqB9Avh
+      base-url: https://apihub.agnes-ai.com/v1
+      chat:
+        options:
+          model: agnes-2.0-flash
+          temperature: 0.7
+    # Spring AI Alibaba DashScope 配置（可选，取消注释启用通义千问）
+    # 注意：启用 DashScope 需同时移除 spring.autoconfigure.exclude 中的 DashScope 排除项
+    # dashscope:
+    #   api-key: ${DASHSCOPE_API_KEY}
+    #   chat:
+    #     options:
+    #       model: qwen-plus
+
+    # ── MCP Client 配置（仅当 app.tool-mode=mcp 时生效）──
+    mcp:
+      client:
+        enabled: true
+        name: agentic-mcp-client
+        version: 1.0.0
+        request-timeout: 30s
+        type: SYNC
+        toolcallback:
+          enabled: true
+        stdio:
+          connections:
+            aftersales:
+              command: java
+              args:
+                - "-Dspring.ai.mcp.server.stdio=true"
+                - "-Dspring.main.web-application-type=none"
+                - "-Dspring.main.banner-mode=off"
+                - "-jar"
+                - "${user.dir}/mcp-server/target/agentic-mcp-server-0.0.1-SNAPSHOT.jar"
+
+logging:
+  level:
+    root: INFO
+    org.springframework.ai: DEBUG
+    com.example.agentic: DEBUG

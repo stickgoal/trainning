@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
  * 2. 多路检索：从课程库和 FAQ 库分别检索后合并结果
  */
 @Slf4j
-@RestController
+//@RestController
 @RequestMapping("/rag/advanced")
 public class RagAdvancedController {
 

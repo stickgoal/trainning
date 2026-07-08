@@ -1,0 +1,20 @@
+spring:
+  main:
+    banner-mode: off
+    web-application-type: none
+  ai:
+    mcp:
+      server:
+        name: agentic-aftersales-mcp-server
+        version: 1.0.0
+        type: SYNC
+        instructions: "电商售后工具集 MCP Server，提供订单、商品、用户查询能力"
+        capabilities:
+          tool: true
+        stdio: true
+
+logging:
+  pattern:
+    console:
+  level:
+    root: WARN

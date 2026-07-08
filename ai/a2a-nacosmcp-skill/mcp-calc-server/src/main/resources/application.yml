@@ -1,0 +1,29 @@
+server:
+  port: 8092
+
+spring:
+  application:
+    name: mcp-calc-server
+  ai:
+    mcp:
+      server:
+        name: calculator-mcp-service
+        version: 1.0.0
+        type: SYNC
+        instructions: "提供数学计算能力的 MCP 服务，支持四则运算、幂运算、阶乘等"
+
+alibaba:
+  mcp:
+    nacos:
+      server-addr: 127.0.0.1:8848
+      namespace: public
+      username: nacos
+      password: nacos
+      register:
+        enabled: true
+        service-group: DEFAULT_GROUP
+        service-name: calculator-mcp-service
+
+logging:
+  level:
+    com.alibaba.cloud.ai: DEBUG

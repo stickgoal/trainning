@@ -24,8 +24,8 @@ public class MemoryConfig {
                 .build();
     }
 
-    @Bean
-    public ChatMemoryStore redisStore() {
-        return RedisChatMemoryStore.builder().host("127.0.0.1").port(6379).storeType(StoreType.STRING).prefix("chat:memory:").build();
-    }
+//    @Bean
+//    public ChatMemoryStore redisStore() {
+//        return RedisChatMemoryStore.builder().host("127.0.0.1").port(6379).storeType(StoreType.STRING).prefix("chat:memory:").build();
+//    }
 }
