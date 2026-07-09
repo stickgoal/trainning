@@ -1,0 +1,13 @@
+{
+  "name": "weather-mcp-server",
+  "version": "1.0.0",
+  "description": "A simple MCP server providing weather and calculator tools for LangChain4j MCP tutorial",
+  "type": "module",
+  "main": "weather-mcp-server.js",
+  "scripts": {
+    "start": "node weather-mcp-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  }
+}

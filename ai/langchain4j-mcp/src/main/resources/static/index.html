@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LangChain4j MCP Tutorial Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e3a5f, #2563eb); padding: 2rem; text-align: center; }
+        .header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .header p { color: #94a3b8; font-size: 0.95rem; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; transition: border-color 0.2s; }
+        .card:hover { border-color: #3b82f6; }
+        .card h2 { font-size: 1.1rem; color: #60a5fa; margin-bottom: 0.5rem; }
+        .card .badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-bottom: 0.75rem; }
+        .badge-stdio { background: #1e40af; color: #bfdbfe; }
+        .badge-http { background: #7c2d12; color: #fed7aa; }
+        .badge-streamable { background: #14532d; color: #bbf7d0; }
+        .badge-multi { background: #581c87; color: #e9d5ff; }
+        .badge-weather { background: #155e75; color: #67e8f9; }
+        .card p { color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem; line-height: 1.5; }
+        .card .endpoints { font-family: 'Fira Code', monospace; font-size: 0.8rem; color: #4ade80; }
+        .card input { width: 100%; padding: 8px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .card button { width: 100%; padding: 8px; background: #2563eb; border: none; border-radius: 6px; color: white; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; }
+        .card button:hover { background: #1d4ed8; }
+        .card button:disabled { background: #475569; cursor: not-allowed; }
+        .card .result { margin-top: 0.75rem; padding: 0.75rem; background: #0f172a; border-radius: 6px; font-size: 0.8rem; color: #e2e8f0; white-space: pre-wrap; max-height: 200px; overflow-y: auto; display: none; }
+        .status-bar { text-align: center; padding: 1rem; color: #64748b; font-size: 0.85rem; }
+        .status-bar a { color: #60a5fa; text-decoration: none; }
+        .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #334155; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 LangChain4j MCP Tutorial</h1>
+        <p>Model Context Protocol — 三种传输方式 + 多 Provider + AI Service</p>
+    </div>
+
+    <div class="container">
+        <div class="grid">
+            <!-- stdio -->
+            <div class="card">
+                <h2>1. stdio 传输</h2>
+                <span class="badge badge-stdio">STDIO</span>
+                <p>通过标准输入/输出与本地 MCP Server 子进程通信。最简单的本地集成方式。</p>
+                <div class="endpoints">POST /api/stdio/ask?question=</div>
+                <input type="text" placeholder="北京天气怎么样？" id="stdio-input" value="北京天气怎么样？">
+                <button onclick="askMcp('stdio', 'stdio-input', 'stdio-result')">发送</button>
+                <div class="result" id="stdio-result"></div>
+            </div>
+
+            <!-- HTTP/SSE -->
+            <div class="card">
+                <h2>2. HTTP/SSE 传输</h2>
+                <span class="badge badge-http">LEGACY</span>
+                <p>通过 HTTP 请求和 SSE 通道与远程 MCP Server 通信（已弃用，建议使用 Streamable HTTP）。</p>
+                <div class="endpoints">POST /api/http/ask?question=</div>
+                <input type="text" placeholder="上海天气怎么样？" id="http-input" value="上海天气怎么样？">
+                <button onclick="askMcp('http', 'http-input', 'http-result')">发送</button>
+                <div class="result" id="http-result"></div>
+            </div>
+
+            <!-- Streamable HTTP -->
+            <div class="card">
+                <h2>3. Streamable HTTP 传输</h2>
+                <span class="badge badge-streamable">RECOMMENDED</span>
+                <p>MCP 2025-06-18 规范标准传输方式，支持 SSE 流和常规 HTTP 响应。</p>
+                <div class="endpoints">POST /api/streamable/ask?question=</div>
+                <input type="text" placeholder="深圳天气怎么样？" id="streamable-input" value="深圳天气怎么样？">
+                <button onclick="askMcp('streamable', 'streamable-input', 'streamable-result')">发送</button>
+                <div class="result" id="streamable-result"></div>
+            </div>
+
+            <!-- Multi Provider -->
+            <div class="card">
+                <h2>4. 多 MCP Provider</h2>
+                <span class="badge badge-multi">MULTI</span>
+                <p>组合多个 MCP Client，让 LLM 同时使用来自不同 Server 的工具。</p>
+                <div class="endpoints">POST /api/multiprovider/ask?question=</div>
+                <input type="text" placeholder="杭州天气和2+3*4的计算" id="multi-input" value="杭州天气怎么样？再算一下 2+3*4">
+                <button onclick="askMcp('multiprovider', 'multi-input', 'multi-result')">发送</button>
+                <div class="result" id="multi-result"></div>
+            </div>
+
+            <!-- Weather Assistant -->
+            <div class="card">
+                <h2>5. AI Service + MCP</h2>
+                <span class="badge badge-weather">AI SERVICE</span>
+                <p>标准的 AI Service 模式：ChatModel + McpToolProvider → AiServices 组装。</p>
+                <div class="endpoints">POST /api/weather/ask?question=</div>
+                <input type="text" placeholder="成都天气，需要穿外套吗？" id="weather-input" value="成都天气，需要穿外套吗？">
+                <button onclick="askMcp('weather', 'weather-input', 'weather-result')">发送</button>
+                <div class="result" id="weather-result"></div>
+            </div>
+
+            <!-- Health -->
+            <div class="card" style="text-align: center;">
+                <h2>系统状态</h2>
+                <span class="badge badge-stdio">HEALTH</span>
+                <p>检查应用和 MCP 连接状态</p>
+                <div class="endpoints">GET /api/health</div>
+                <button onclick="checkHealth()">检查健康状态</button>
+                <div class="result" id="health-result"></div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <p>LangChain4j <span style="color:#60a5fa">1.16.0-beta26</span> · Spring Boot <span style="color:#60a5fa">3.5.3</span> · JDK <span style="color:#60a5fa">17</span> · <a href="https://modelcontextprotocol.io" target="_blank">MCP Protocol</a></p>
+        </div>
+    </div>
+
+    <script>
+        async function askMcp(type, inputId, resultId) {
+            const input = document.getElementById(inputId);
+            const result = document.getElementById(resultId);
+            const btn = input.nextElementSibling;
+
+            const question = input.value.trim();
+            if (!question) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> 发送中...';
+            result.style.display = 'block';
+            result.innerHTML = '<span class="loading"></span> 等待响应...';
+
+            try {
+                const response = await fetch(`/api/${type}/ask?question=${encodeURIComponent(question)}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    result.innerHTML = `🤖 ${data.answer || data}`;
+                } else {
+                    const text = await response.text();
+                    result.innerHTML = `❌ ${response.status}: ${text}`;
+                }
+            } catch (error) {
+                result.innerHTML = `❌ 网络错误: ${error.message}`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '发送';
+            }
+        }
+
+        async function checkHealth() {
+            const result = document.getElementById('health-result');
+            result.style.display = 'block';
+            result.innerHTML = '<span class="loading"></span> 检查中...';
+
+            try {
+                const response = await fetch('/api/health');
+                const text = await response.text();
+                result.innerHTML = `✅ ${text}`;
+            } catch (error) {
+                result.innerHTML = `❌ ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
