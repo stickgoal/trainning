@@ -1,29 +1,29 @@
 package com.example.mcp.stdio;
 
+import com.example.mcp.common.FallbackToolProvider;
+import com.example.mcp.common.McpResourceResolver;
+import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.stdio.StdioMcpTransport;
-import dev.langchain4j.mcp.McpToolProvider;
+import dev.langchain4j.service.tool.ToolProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.File;
 import java.util.List;
 
 /**
  * stdio 传输方式 MCP 配置。
  *
- * 通过 StdioMcpTransport 启动一个 Node.js 子进程作为 MCP Server，
+ * <p>通过 StdioMcpTransport 启动一个 Node.js 子进程作为 MCP Server，
  * 客户端通过标准输入/输出与其通信。
  *
- * 工作流程：
- * 1. 从 classpath 解析 MCP Server 脚本的文件系统路径
- * 2. 构建 StdioMcpTransport，指定 node 启动命令
- * 3. 创建 McpClient 连接到 MCP Server
- * 4. 创建 McpToolProvider 将 MCP 工具暴露给 AI Service
+ * <p>配置以弹性方式构建：若 Node.js 未安装或脚本缺失导致启动失败，
+ * 不会让整个应用崩溃，而是返回一个 {@link FallbackToolProvider}（无工具），
+ * 相关端点会向用户说明原因。
  */
 @Slf4j
 @Configuration
@@ -33,67 +33,37 @@ public class StdioMcpConfig {
     private String serverScriptPath;
 
     /**
-     * 创建并配置 McpClient (stdio 传输)
-     */
-    @Bean(name = "stdioMcpClient")
-    public McpClient stdioMcpClient() throws Exception {
-        log.info("Initializing StdioMcpClient with server script: {}", serverScriptPath);
-
-        // 1. 解析 MCP Server 脚本路径（从 classpath 到文件系统）
-        String scriptPath = resolveScriptPath(serverScriptPath);
-        log.info("Resolved MCP server script path: {}", scriptPath);
-
-        // 2. 构建 stdio 传输：使用 node 启动 MCP Server
-        McpTransport transport = StdioMcpTransport.builder()
-                .command(List.of("node", scriptPath))
-                .logEvents(true)
-                .build();
-
-        // 3. 创建 MCP Client
-        McpClient client = DefaultMcpClient.builder()
-                .key("stdio-weather-client")
-                .transport(transport)
-                .build();
-
-        log.info("StdioMcpClient initialized successfully");
-        return client;
-    }
-
-    /**
-     * 创建 MCP Tool Provider，将 MCP 工具暴露给 AI Service
+     * 创建 MCP Tool Provider（stdio 传输），将 MCP 工具暴露给 AI Service。
+     *
+     * <p>返回类型为 {@link ToolProvider} 接口：连接成功时返回真正的
+     * {@link McpToolProvider}，失败时返回 {@link FallbackToolProvider}，
+     * 从而保证 Spring 上下文一定能初始化成功。
      */
     @Bean(name = "stdioToolProvider")
-    public McpToolProvider stdioToolProvider(@org.springframework.beans.factory.annotation.Qualifier("stdioMcpClient") McpClient mcpClient) {
-        return McpToolProvider.builder()
-                .mcpClients(mcpClient)
-                .build();
-    }
+    public ToolProvider stdioToolProvider() {
+        try {
+            String scriptPath = McpResourceResolver.resolve(serverScriptPath);
+            log.info("Initializing StdioMcpClient with server script: {}", scriptPath);
 
-    /**
-     * 从 classpath 资源路径解析到文件系统绝对路径。
-     * 开发环境：从 target/classes 或 src/main/resources 获取
-     */
-    private String resolveScriptPath(String resourcePath) throws Exception {
-        // 尝试从 classpath 加载
-        var classLoader = getClass().getClassLoader();
-        var resource = classLoader.getResource(resourcePath);
+            McpTransport transport = StdioMcpTransport.builder()
+                    .command(List.of("node", scriptPath))
+                    .logEvents(true)
+                    .build();
 
-        if (resource != null) {
-            File file = new File(resource.toURI());
-            if (file.exists()) {
-                return file.getAbsolutePath();
-            }
+            McpClient client = DefaultMcpClient.builder()
+                    .key("stdio-weather-client")
+                    .transport(transport)
+                    .build();
+
+            log.info("StdioMcpClient initialized successfully");
+            return McpToolProvider.builder()
+                    .mcpClients(client)
+                    .build();
+        } catch (Exception e) {
+            log.error("Failed to initialize stdio MCP client. Is Node.js installed and "
+                    + "'npm install' executed in the mcp-server directory? Falling back to no tools.", e);
+            return new FallbackToolProvider("stdio MCP Server 启动失败：请确认已安装 Node.js，"
+                    + "并在 mcp-server 目录执行过 npm install。脚本路径: " + serverScriptPath);
         }
-
-        // 回退：从 src/main/resources 获取（开发时使用）
-        String devPath = "src/main/resources/" + resourcePath;
-        File devFile = new File(devPath);
-        if (devFile.exists()) {
-            return devFile.getAbsolutePath();
-        }
-
-        throw new IllegalStateException("MCP server script not found: " + resourcePath
-                + ". Please ensure the file exists in src/main/resources/" + resourcePath
-                + " and run 'npm install' in that directory first.");
     }
 }

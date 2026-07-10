@@ -2,26 +2,20 @@ package com.example.mcp;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
 
 /**
  * Spring Boot 上下文加载测试。
  *
- * 注意：由于 MCP Client 需要实际连接 MCP Server，
- * 测试中禁用了 MCP 自动配置以避免启动失败。
+ * <p>由于 MCP 配置已具备弹性（MCP Server 不可达时自动降级为空工具 Provider），
+ * 这里直接加载完整应用上下文即可，无需排除任何配置。
+ * 若 stdio 的 Node.js MCP Server 可用，则天气/计算工具会被注册；
+ * 远程 HTTP/SSE、Streamable HTTP 服务器未运行时则优雅降级。
  */
 @SpringBootTest
-@TestPropertySource(properties = {
-    "spring.autoconfigure.exclude=" +
-        "com.example.mcp.stdio.StdioMcpConfig," +
-        "com.example.mcp.http.HttpMcpConfig," +
-        "com.example.mcp.streamable.StreamableHttpMcpConfig," +
-        "com.example.mcp.multiprovider.MultiProviderConfig"
-})
 class McpDemoApplicationTest {
 
     @Test
     void contextLoads() {
-        // 验证 Spring 上下文能正常加载
+        // 验证 Spring 上下文能正常加载（含 MCP 配置弹性初始化）
     }
 }
