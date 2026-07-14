@@ -219,42 +219,24 @@ SupervisorWorkflow workflow = AgenticServices
          → ExecuteAgent（读取 managerApproval 时阻塞 → 恢复后执行）
 ```
 
-**关键设计：**
-- HumanInTheLoop 是通过 `humanInTheLoopBuilder()` 构建的一个 Agent，
-  作为 `sequenceBuilder` 的一个子 Agent 串在 PreCheckAgent 与 ExecuteAgent 之间。
-- `responseProvider` 返回 `new PendingResponse<>("managerApproval")`，写入 AgenticScope
-  的 `managerApproval`，此时并不阻塞。
-- 工作流在**后台线程**运行；当 ExecuteAgent 读取 `managerApproval` 输入时，
-  `readStateBlocking` 触发 `PendingResponse.blockingGet()`，工作流「暂停」。
-- 工作流方法用 `@MemoryId` 绑定 requestId 到唯一 AgenticScope，
-  外部通过 `((AgenticScopeAccess) workflow).getAgenticScope(requestId)` 定位会话，
-  调用 `completePendingResponse("managerApproval", ...)` 注入结果，工作流「恢复」。
+**关键设计（生产级改造版）：**
+- 「暂停」不再由库内的阻塞 `PendingResponse` 承担，而是由数据库状态机 `approval_request` 承担，
+  状态贯穿 `PENDING_PRECHECK → AWAITING_APPROVAL → EXECUTING → EXECUTED/REJECTED`（异常为 `FAILED`）。
+- `submitRefund` 仅跑有界的前置检查 LLM 调用，落库为 `AWAITING_APPROVAL` 后**立即返回**，不后台挂线程、不忙等。
+- `approve` 用 `UPDATE ... WHERE status='AWAITING_APPROVAL'` 条件更新原子接管控权，调度异步执行后
+  **立刻返回 202**，HTTP 线程零阻塞；结果通过 `GET /status` 轮询。
+- 执行阶段仅在专用、有界、带 `CallerRunsPolicy` 背压的线程池 `humanApprovalTaskExecutor` 中跑，
+  人工等待期间**不占用任何线程**，可水平扩展、重启可恢复。
+- 已删除原 `HumanApprovalWorkflow`（不再依赖库内阻塞 `PendingResponse`）；详细设计见
+  `docs/humanintheloop-refactor-proposal.md`。
 
-**LangChain4j 实现：**
-```java
-HumanInTheLoop humanApprovalAgent = AgenticServices.humanInTheLoopBuilder()
-    .outputKey("managerApproval")
-    .responseProvider(scope -> new PendingResponse<>("managerApproval"))
-    .build();
-
-HumanApprovalWorkflow workflow = AgenticServices.sequenceBuilder(HumanApprovalWorkflow.class)
-    .subAgents(preCheckAgent, humanApprovalAgent, executeAgent)
-    .outputKey("executionResult")
-    .build();
-
-// 后台线程运行（会在 ExecuteAgent 读取 managerApproval 时阻塞）:
-executor.submit(() -> workflow.process(requestId, orderId, reason, amount));
-
-// 人工审批，恢复执行:
-AgenticScope scope = ((AgenticScopeAccess) workflow).getAgenticScope(requestId);
-scope.completePendingResponse("managerApproval", "APPROVED");
-```
-
-**REST 交互（两步）：**
+**REST 交互（非阻塞三步）：**
 - `POST /api/humanintheloop/refund?orderId=ORD-003&reason=不喜欢了&amount=918`
-  → 运行至审批环节暂停，返回 requestId + 前置检查材料
-- `POST /api/humanintheloop/approve?requestId=REQ-xxxx&decision=APPROVED`
-  → 注入审批结论，恢复执行，返回最终结果
+  → 前置检查后进入等待，返回 200 + requestId + 前置检查材料（status=AWAITING_APPROVAL）
+- `POST /api/humanintheloop/approve?requestId=REQ-xxxx&decision=APPROVED&approver=张三`
+  → 受理并调度执行，返回 **202 Accepted**（status=EXECUTING）
+- `GET  /api/humanintheloop/status?requestId=REQ-xxxx`
+  → 轮询返回当前快照，终态含 `executionResult`（status=EXECUTED/REJECTED/FAILED）
 
 ---
 
