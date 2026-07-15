@@ -1,10 +1,11 @@
 package com.example.agentic.humanintheloop.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.example.agentic.common.tool.AfterSalesTools;
 import com.example.agentic.humanintheloop.RefundWorkflow;
+import com.example.agentic.humanintheloop.agent.ExecuteAgent;
+import com.example.agentic.humanintheloop.agent.PreCheckAgent;
 import com.example.agentic.humanintheloop.agent.RefundApprovalAgent;
-import com.example.agentic.humanintheloop.agent.RefundExecuteAgent;
-import com.example.agentic.humanintheloop.agent.RefundPreCheckAgent;
 import com.example.agentic.humanintheloop.entity.HitlPendingEntity;
 import com.example.agentic.humanintheloop.mapper.HitlPendingMapper;
 import com.example.agentic.humanintheloop.model.ApprovalResponse;
@@ -14,6 +15,7 @@ import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.internal.PendingResponse;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
+import dev.langchain4j.model.chat.ChatModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -68,20 +70,28 @@ public class ApprovalService {
     private final Map<String, CompletableFuture<String>> running = new ConcurrentHashMap<>();
 
     @Autowired
-    public ApprovalService(HitlPendingMapper pendingMapper,
+    public ApprovalService(ChatModel chatModel,
+                           AfterSalesTools tools,
+                           HitlPendingMapper pendingMapper,
                            ObjectMapper objectMapper,
                            @Qualifier("hitlWorkflowExecutor") ExecutorService workflowExecutor) {
         this.pendingMapper = pendingMapper;
         this.objectMapper = objectMapper;
         this.workflowExecutor = workflowExecutor;
 
-        // 用 @HumanInTheLoop 注解类 + 非 AI @Agent 类组装顺序工作流。
-        // subAgents 接收 Class，由 createBuiltInAgentExecutor 识别注解并装配，无需 chatModel。
+        // 前置检查 / 执行 为 LLM Agent（AiServices）；审批节点用 @HumanInTheLoop 注解。
+        PreCheckAgent preCheckAgent = AgenticServices.agentBuilder(PreCheckAgent.class)
+                .chatModel(chatModel).tools(tools).outputKey("preCheckResult").build();
+        ExecuteAgent executeAgent = AgenticServices.agentBuilder(ExecuteAgent.class)
+                .chatModel(chatModel).tools(tools).outputKey("executionResult").build();
+
+        // subAgents 可混用「已构建的 LLM Agent 实例」与「@HumanInTheLoop 注解类」：
+        // 前者是 InternalAgent 代理；后者由 createBuiltInAgentExecutor 识别注解装配（自身无需 chatModel）。
         this.workflow = AgenticServices.sequenceBuilder(RefundWorkflow.class)
-                .subAgents(RefundPreCheckAgent.class, RefundApprovalAgent.class, RefundExecuteAgent.class)
+                .subAgents(preCheckAgent, RefundApprovalAgent.class, executeAgent)
                 .outputKey("executionResult")
                 .build();
-        log.info("ApprovalService initialized: RefundWorkflow built with @HumanInTheLoop annotation");
+        log.info("ApprovalService initialized: RefundWorkflow built (LLM precheck/execute + @HumanInTheLoop approval)");
     }
 
     // =========================================================================

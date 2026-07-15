@@ -214,9 +214,9 @@ src/main/java/com/example/agentic/
 ├── humanintheloop/     # 模式六：人工介入（@HumanInTheLoop 注解 + PendingResponse）
 │   ├── RefundWorkflow.java          # 顺序工作流接口（@MemoryId 绑定会话）
 │   ├── agent/
-│   │   ├── RefundPreCheckAgent.java # 非 AI @Agent：前置检查
-│   │   ├── RefundApprovalAgent.java # @HumanInTheLoop 注解：返回 PendingResponse
-│   │   └── RefundExecuteAgent.java  # 非 AI @Agent：执行/驳回退款
+│   │   ├── PreCheckAgent.java        # LLM Agent：前置检查（AiServices）
+│   │   ├── RefundApprovalAgent.java  # @HumanInTheLoop 注解：返回 PendingResponse
+│   │   └── ExecuteAgent.java         # LLM Agent：执行/驳回退款（AiServices）
 │   ├── service/ApprovalService.java # 创建 CompletableFuture、序列化落库、审批/恢复
 │   ├── controller/
 │   │   ├── HumanInTheLoopController.java  # /refund /approve /status
@@ -895,9 +895,9 @@ sequenceDiagram
     participant C as Controller
     participant S as ApprovalService
     participant W as Workflow (后台线程)
-    participant P as RefundPreCheckAgent
+    participant P as PreCheckAgent
     participant A as RefundApprovalAgent(@HumanInTheLoop)
-    participant E as RefundExecuteAgent
+    participant E as ExecuteAgent
     participant DB as hitl_pending 表
     participant M as 主管 (Human)
 
@@ -945,7 +945,7 @@ sequenceDiagram
 
 **(1) `@HumanInTheLoop` 注解**（`dev.langchain4j.agentic.declarative.HumanInTheLoop`）
 
-标注在某个 **静态方法** 上，该方法即被框架识别为一个「人工介入」Agent。被 `AgenticServices.sequenceBuilder(...).subAgents(该类.class, ...)` 装配时，框架经由 `createHumanInTheLoopAgent` 把该方法的返回值作为 `PendingResponse` 写入 AgenticScope 的 `outputKey`。**无需 chatModel**，因此适合非 AI 的纯人工门禁节点。
+标注在某个 **静态方法** 上，该方法即被框架识别为一个「人工介入」Agent。被 `AgenticServices.sequenceBuilder(...).subAgents(该类.class, ...)` 装配时，框架经由 `createHumanInTheLoopAgent` 把该方法的返回值作为 `PendingResponse` 写入 AgenticScope 的 `outputKey`。该节点本身不需要 chatModel（它是人工门禁，不是 LLM 推理），可与同工作流中的 LLM Agent 共存。
 
 ```java
 public interface RefundApprovalAgent {
@@ -979,20 +979,22 @@ public interface RefundApprovalAgent {
 
 > 包路径：`com.example.agentic.humanintheloop`。完整源码见仓库，下面按 6 步讲解。
 
-#### Step 1：定义三个 Agent（@HumanInTheLoop 注解 + 非 AI @Agent）
+#### Step 1：定义三个 Agent（LLM Agent + @HumanInTheLoop 注解）
 
-前置检查与执行用普通类的 `@Agent` 静态方法（非 AI，无需大模型）；审批用 `@HumanInTheLoop` 注解。
+前置检查与执行用 LLM Agent（AiServices 接口，`@UserMessage` + `@V` 绑定输入）；审批节点用 `@HumanInTheLoop` 注解。三者通过 `outputKey` 串联数据流：`preCheckResult` → `managerApproval` → `executionResult`。
 
 ```java
-// 前置检查：非 AI @Agent，产出写入 preCheckResult
-public class RefundPreCheckAgent {
-    @Agent(description = "退款前置检查", outputKey = "preCheckResult")
-    public static String preCheck(@V("orderId") String orderId,
-                                  @V("reason") String reason,
-                                  @V("amount") double amount) {
-        return String.format("【前置检查】订单 %s 申请退款 ¥%.2f，原因：%s。建议人工审批。",
-                orderId, amount, reason);
-    }
+// 前置检查：LLM Agent，产出写入 preCheckResult
+public interface PreCheckAgent {
+    @UserMessage("""
+        你是电商售后前置审核专员……请先调用工具查询订单与用户信息，输出审批材料与初审建议。
+        订单ID: {{orderId}}  退款原因: {{reason}}  金额: {{amount}} 元
+        """)
+    @Agent(name = "PreCheckAgent", description = "退款前置检查，准备审批材料",
+           outputKey = "preCheckResult")
+    String preCheck(@V("orderId") String orderId,
+                    @V("reason") String reason,
+                    @V("amount") double amount);
 }
 
 // 人工审批：@HumanInTheLoop 注解，返回 PendingResponse
@@ -1004,17 +1006,17 @@ public interface RefundApprovalAgent {
     }
 }
 
-// 执行：读取 managerApproval 时会阻塞，直到审批完成
-public class RefundExecuteAgent {
-    @Agent(description = "根据审批结论执行或驳回退款", outputKey = "executionResult")
-    public static String execute(@V("orderId") String orderId,
-                                 @V("amount") double amount,
-                                 @V("managerApproval") String approval) {
-        if (approval == null || !approval.toUpperCase().contains("APPROVED")) {
-            return String.format("订单 %s 退款被驳回（%s），未执行。", orderId, approval);
-        }
-        return String.format("订单 %s 退款 ¥%.2f 已执行完成（%s）。", orderId, amount, approval);
-    }
+// 执行：LLM Agent，读取 managerApproval 时会阻塞，直到审批完成
+public interface ExecuteAgent {
+    @UserMessage("""
+        你是售后执行专员……根据主管审批结论执行退款并生成客户通知。
+        订单ID: {{orderId}}  前置材料: {{preCheckResult}}  审批结论: {{managerApproval}}
+        """)
+    @Agent(name = "ExecuteAgent", description = "依据审批结论执行退款",
+           outputKey = "executionResult")
+    String execute(@V("orderId") String orderId,
+                   @V("preCheckResult") String preCheckResult,
+                   @V("managerApproval") String managerApproval);
 }
 ```
 
@@ -1031,18 +1033,23 @@ public interface RefundWorkflow {
 }
 ```
 
-组装时 `subAgents` 直接传 **类对象**：框架的 `createBuiltInAgentExecutor` 会识别 `@HumanInTheLoop` 与 `@Agent` 注解并自动装配，**无需 chatModel**。
+组装时 `subAgents` 混用「已构建的 LLM Agent 实例」与「`@HumanInTheLoop` 注解类」：前者是 `agentBuilder(...).chatModel(...).build()` 产出的代理，后者由 `createBuiltInAgentExecutor` 识别注解装配（审批节点自身不需要 chatModel）。
 
 ```java
+PreCheckAgent preCheckAgent = AgenticServices.agentBuilder(PreCheckAgent.class)
+        .chatModel(chatModel).tools(tools).outputKey("preCheckResult").build();
+ExecuteAgent executeAgent = AgenticServices.agentBuilder(ExecuteAgent.class)
+        .chatModel(chatModel).tools(tools).outputKey("executionResult").build();
+
 this.workflow = AgenticServices.sequenceBuilder(RefundWorkflow.class)
-        .subAgents(RefundPreCheckAgent.class, RefundApprovalAgent.class, RefundExecuteAgent.class)
+        .subAgents(preCheckAgent, RefundApprovalAgent.class, executeAgent)
         .outputKey("executionResult")
         .build();
 ```
 
 #### Step 3：ApprovalService —— 创建 CompletableFuture + 阻塞等待
 
-`submitRefund` 创建一个 `CompletableFuture`，把工作流丢到后台线程。工作流会在 `RefundExecuteAgent` 读取 `managerApproval` 时阻塞（`blockingGet()`），即「阻塞等待人工审批」。
+`submitRefund` 创建一个 `CompletableFuture`，把工作流丢到后台线程。工作流会在 `ExecuteAgent` 读取 `managerApproval` 时阻塞（`blockingGet()`），即「阻塞等待人工审批」。
 
 ```java
 public ApprovalResponse submitRefund(String orderId, String reason, double amount) {
@@ -1226,10 +1233,10 @@ gantt
     返回 COMPLETED              :crit, t9, 00:02:02, 00:02:03
 
     section 后台工作流线程
-    RefundPreCheckAgent         :active, w1, 00:00:01, 00:00:02
-    RefundApprovalAgent 返回    :w2, 00:00:02, 00:00:02
-    RefundExecuteAgent 阻塞     :crit, w3, 00:00:02, 00:02:01
-    RefundExecuteAgent 恢复     :active, w4, 00:02:01, 00:02:02
+    PreCheckAgent               :active, w1, 00:00:01, 00:00:04
+    RefundApprovalAgent 返回    :w2, 00:00:04, 00:00:05
+    ExecuteAgent 阻塞           :crit, w3, 00:00:05, 00:02:01
+    ExecuteAgent 恢复           :active, w4, 00:02:01, 00:02:02
     工作流完成                  :done, w5, 00:02:02, 00:02:02
 ```
 
