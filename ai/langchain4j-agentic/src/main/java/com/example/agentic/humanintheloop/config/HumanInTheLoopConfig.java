@@ -2,43 +2,39 @@ package com.example.agentic.humanintheloop.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * HumanInTheLoop 生产化配置。
+ * HumanInTheLoop 配置。
  *
- * <h3>核心思路</h3>
- * 把「人工等待」从线程里彻底拿掉：HTTP 请求线程只在有界的 LLM 调用（前置检查 / 执行）上停留，
- * 而人工审批是「落库 + 立即返回」的异步动作。真正需要线程的仅限执行阶段的 LLM 调用，
- * 由下方专用线程池承载，且具备有界队列与背压策略。
- *
- * <p>对比原实现：原代码用 {@code Executors.newCachedThreadPool()} 跑整条工作流，
- * 并在 {@code PendingResponse.blockingGet()} 处把线程一直挂起直到人工审批，
- * 再用 {@code future.get(120s)} 把 HTTP 线程也阻塞住 —— 既浪费线程又无法重启恢复。
+ * <p>本实现采用 LangChain4j 官方默认的 {@code @HumanInTheLoop} + {@code PendingResponse}
+ * 机制，工作流线程会在审批点通过 {@code PendingResponse.blockingGet()} <b>阻塞</b>等待人工审批，
+ * 这是该机制的固有语义（与上一版"非阻塞状态机"是两条不同路线）。
+ * 因此需要一个线程池来承载这些"阻塞等待"的工作流线程。</p>
  */
 @Configuration
-@EnableAsync
-@EnableScheduling
 public class HumanInTheLoopConfig {
 
-    /** 执行 Agent（LLM 调用）专用线程池；仅承载有限的执行阶段，绝不承载人工等待。 */
-    @Bean("humanApprovalTaskExecutor")
-    public Executor humanApprovalTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(8);
-        executor.setQueueCapacity(100);
-        executor.setThreadNamePrefix("hitl-exec-");
-        // 队列满时由调用方线程直接执行，形成自然背压，避免任务被丢弃
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.setAwaitTerminationSeconds(30);
-        executor.initialize();
-        return executor;
+    /**
+     * 承载阻塞式工作流线程的线程池。
+     * 每个在途审批会占用一个线程直到人工完成审批；生产环境应根据并发审批量调大或改用虚拟线程。
+     */
+    @Bean(destroyMethod = "shutdown")
+    public ExecutorService hitlWorkflowExecutor() {
+        ThreadFactory factory = new ThreadFactory() {
+            private final AtomicInteger counter = new AtomicInteger();
+
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r, "hitl-workflow-" + counter.incrementAndGet());
+                t.setDaemon(true);
+                return t;
+            }
+        };
+        return Executors.newFixedThreadPool(16, factory);
     }
 }

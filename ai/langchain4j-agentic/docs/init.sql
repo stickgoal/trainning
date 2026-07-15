@@ -96,27 +96,24 @@ INSERT INTO `order_item` (`order_id`, `product_id`, `product_name`, `quantity`, 
   ('ORD-003', 'PRD-003', '运动跑鞋', 2, 459.00);
 
 -- ----------------------------------------------------------------------------
--- 人工审批(HumanInTheLoop)请求表
--- 取代原本内存中的 Map<String, Future<String>> 易失状态，作为「暂停→等待人工→恢复」
--- 唯一的状态真相来源(source of truth)。进程重启后可恢复、可审计、可查询。
+-- HumanInTheLoop 待审批持久化表
+-- 保存 @HumanInTheLoop 暂停时的 PendingResponse 序列化 JSON 与业务上下文。
+-- 进程重启后内存 AgenticScope/阻塞线程丢失，但本表记录仍在，可按 business_id 反序列化恢复。
 -- ----------------------------------------------------------------------------
-DROP TABLE IF EXISTS `approval_request`;
-CREATE TABLE `approval_request` (
-  `request_id`       VARCHAR(40)    NOT NULL COMMENT '审批请求ID, 如 REQ-xxxxxxxx',
-  `order_id`         VARCHAR(32)    NOT NULL COMMENT '关联订单ID',
-  `reason`           VARCHAR(512)   DEFAULT NULL COMMENT '退款原因',
-  `amount`           DECIMAL(12,2)  NOT NULL DEFAULT 0.00 COMMENT '申请退款金额',
-  `precheck_result`  MEDIUMTEXT     COMMENT '前置检查Agent产出材料(供人工审批参考)',
-  `status`           VARCHAR(32)    NOT NULL COMMENT '状态机: PENDING_PRECHECK / AWAITING_APPROVAL / EXECUTING / EXECUTED / REJECTED / FAILED',
-  `decision`         VARCHAR(16)    DEFAULT NULL COMMENT '审批结论: APPROVED / REJECTED',
-  `decision_comment` VARCHAR(512)   DEFAULT NULL COMMENT '审批备注',
-  `approver`         VARCHAR(64)    DEFAULT NULL COMMENT '审批人',
-  `execution_result` MEDIUMTEXT     COMMENT '执行Agent产出结果',
-  `error_message`    VARCHAR(1024)  DEFAULT NULL COMMENT '失败原因(status=FAILED时)',
-  `created_at`       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at`       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `completed_at`     DATETIME       DEFAULT NULL COMMENT '完成时间',
-  PRIMARY KEY (`request_id`),
-  KEY `idx_status` (`status`),
-  KEY `idx_order` (`order_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='人工审批(HumanInTheLoop)请求表';
+DROP TABLE IF EXISTS `hitl_pending`;
+CREATE TABLE `hitl_pending` (
+  `business_id`        VARCHAR(64)    NOT NULL COMMENT '业务ID(取orderId), 主键与恢复依据',
+  `order_id`           VARCHAR(32)    NOT NULL COMMENT '关联订单ID',
+  `reason`             VARCHAR(512)   DEFAULT NULL COMMENT '退款原因',
+  `amount`             DECIMAL(12,2)  NOT NULL DEFAULT 0.00 COMMENT '申请退款金额',
+  `response_id`        VARCHAR(80)    NOT NULL COMMENT 'PendingResponse.responseId, 如 approval:ORD-003',
+  `serialized_pending` TEXT           NOT NULL COMMENT 'PendingResponse序列化JSON, 如 {"responseId":"approval:ORD-003"}',
+  `precheck_result`    MEDIUMTEXT     DEFAULT NULL COMMENT '前置检查材料(供人工审批参考)',
+  `status`             VARCHAR(32)    NOT NULL COMMENT '状态: PENDING/APPROVED/COMPLETED/REJECTED/RECOVERED/ERROR',
+  `decision`           VARCHAR(16)    DEFAULT NULL COMMENT '审批结论: APPROVED / REJECTED',
+  `result`             MEDIUMTEXT     DEFAULT NULL COMMENT '最终执行结果',
+  `created_at`         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at`         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`business_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='HumanInTheLoop待审批持久化表(存序列化PendingResponse)';

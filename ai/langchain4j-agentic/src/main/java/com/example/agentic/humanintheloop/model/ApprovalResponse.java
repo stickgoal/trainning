@@ -1,16 +1,13 @@
 package com.example.agentic.humanintheloop.model;
 
-import com.example.agentic.humanintheloop.entity.ApprovalRequestEntity;
+import com.example.agentic.humanintheloop.entity.HitlPendingEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 /**
- * 人工审批请求的对外响应模型（视图对象）。
- * 相比原实现直接返回 {@code Map<String, Object>}，这里用强类型 DTO，便于契约稳定与前端消费。
+ * HumanInTheLoop 接口统一返回体。
  */
 @Data
 @Builder
@@ -18,49 +15,54 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ApprovalResponse {
 
-    private String requestId;
-    private String orderId;
-    private String reason;
-    private Double amount;
+    /** 业务ID（orderId） */
+    private String businessId;
 
+    /** 状态编码，见 {@link ApprovalStatus} */
     private String status;
+
+    /** 状态中文说明 */
     private String statusLabel;
 
+    /** PendingResponse 的 responseId（如 approval:ORD-003） */
+    private String responseId;
+
+    /** 前置检查材料 */
     private String precheckResult;
+
+    /** 审批结论 */
     private String decision;
-    private String decisionComment;
-    private String approver;
-    private String executionResult;
-    private String errorMessage;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private LocalDateTime completedAt;
+    /** 最终执行结果 */
+    private String result;
 
-    /** 面向调用方的提示（如轮询地址、不可审批原因等） */
+    /** PendingResponse 序列化后的 JSON（便于直观看到序列化内容） */
+    private String serializedPending;
+
+    /** 提示信息 */
     private String message;
 
-    public static ApprovalResponse from(ApprovalRequestEntity e) {
-        if (e == null) {
-            return null;
-        }
-        ApprovalStatus status = ApprovalStatus.from(e.getStatus());
+    public static ApprovalResponse from(HitlPendingEntity e, String precheckResult, String message) {
+        ApprovalStatus s = ApprovalStatus.from(e == null ? null : e.getStatus());
         return ApprovalResponse.builder()
-                .requestId(e.getRequestId())
-                .orderId(e.getOrderId())
-                .reason(e.getReason())
-                .amount(e.getAmount())
-                .status(e.getStatus())
-                .statusLabel(status != null ? status.label() : e.getStatus())
-                .precheckResult(e.getPrecheckResult())
-                .decision(e.getDecision())
-                .decisionComment(e.getDecisionComment())
-                .approver(e.getApprover())
-                .executionResult(e.getExecutionResult())
-                .errorMessage(e.getErrorMessage())
-                .createdAt(e.getCreatedAt())
-                .updatedAt(e.getUpdatedAt())
-                .completedAt(e.getCompletedAt())
+                .businessId(e == null ? null : e.getBusinessId())
+                .status(e == null ? null : e.getStatus())
+                .statusLabel(s == null ? null : s.label())
+                .responseId(e == null ? null : e.getResponseId())
+                .precheckResult(precheckResult)
+                .decision(e == null ? null : e.getDecision())
+                .result(e == null ? null : e.getResult())
+                .serializedPending(e == null ? null : e.getSerializedPending())
+                .message(message)
+                .build();
+    }
+
+    public static ApprovalResponse notFound(String businessId, String message) {
+        return ApprovalResponse.builder()
+                .businessId(businessId)
+                .status(ApprovalStatus.NOT_FOUND.code())
+                .statusLabel(ApprovalStatus.NOT_FOUND.label())
+                .message(message)
                 .build();
     }
 }

@@ -1,28 +1,26 @@
 package com.example.agentic.humanintheloop.model;
 
 /**
- * 人工审批(HumanInTheLoop)请求状态机。
+ * HumanInTheLoop 审批状态。
  *
  * <pre>
- *   submitRefund ──► PENDING_PRECHECK ──► AWAITING_APPROVAL
- *                                                 │ approve(原子翻转)
- *                                                 ▼
- *                                            EXECUTING ──► EXECUTED   (审批通过并执行退款)
- *                                                 │
- *                                                 └────────► REJECTED  (审批驳回)
- *   (任意阶段异常) ─────────────────────────────────► FAILED
+ *   submitRefund ──► PENDING ──(approve)──► COMPLETED   (审批通过并执行)
+ *                          │                   │
+ *                          │                   └──► REJECTED   (审批驳回)
+ *                          │
+ *                          └──(recover，模拟重启后)──► RECOVERED   (中断后恢复完成)
+ *   (任意阶段异常) ─────────────────────────────────► ERROR
  * </pre>
- *
- * 状态全部持久化于 {@code approval_request} 表，进程重启后可恢复，不再依赖内存 Map。
  */
 public enum ApprovalStatus {
 
-    PENDING_PRECHECK("PENDING_PRECHECK", "前置检查中"),
-    AWAITING_APPROVAL("AWAITING_APPROVAL", "等待人工审批"),
-    EXECUTING("EXECUTING", "审批通过，执行中"),
-    EXECUTED("EXECUTED", "已执行(退款)"),
+    PENDING("PENDING", "等待人工审批"),
+    APPROVED("APPROVED", "已审批"),
+    COMPLETED("COMPLETED", "已完成"),
     REJECTED("REJECTED", "已驳回"),
-    FAILED("FAILED", "处理失败");
+    RECOVERED("RECOVERED", "重启恢复后完成"),
+    NOT_FOUND("NOT_FOUND", "未找到"),
+    ERROR("ERROR", "处理失败");
 
     private final String code;
     private final String label;
@@ -52,8 +50,8 @@ public enum ApprovalStatus {
         return null;
     }
 
-    /** 是否为终态（无需再轮询）。 */
+    /** 是否为终态。 */
     public boolean isTerminal() {
-        return this == EXECUTED || this == REJECTED || this == FAILED;
+        return this == COMPLETED || this == REJECTED || this == RECOVERED || this == ERROR;
     }
 }
