@@ -138,7 +138,8 @@ LangChain4j Agentic 提供了五种 Builder，对应不同的编排模式：
 | `conditionalBuilder()` | 条件路由（if/else） | `.subAgents(predicate, agent)` |
 | `loopBuilder()` | 循环迭代 | `.exitCondition()`, `.maxIterations()` |
 | `supervisorBuilder()` | LLM 驱动动态调度 | `.supervisorContext()` |
-| `humanInTheLoopBuilder()` | 暂停等人工 | `.responseProvider()` |
+| `humanInTheLoopBuilder()` | 暂停等人工（低级 API） | `.responseProvider()` |
+| `@HumanInTheLoop` 注解 | 暂停等人工（声明式，推荐） | 标注静态方法，返回 `PendingResponse` |
 
 ### 2.5 技术栈一览
 
@@ -210,7 +211,18 @@ src/main/java/com/example/agentic/
 ├── loop/               # 模式三：迭代优化
 ├── conditional/        # 模式四：条件分流
 ├── supervisor/         # 模式五：主管调度
-├── humanintheloop/     # 模式六：人工介入
+├── humanintheloop/     # 模式六：人工介入（@HumanInTheLoop 注解 + PendingResponse）
+│   ├── RefundWorkflow.java          # 顺序工作流接口（@MemoryId 绑定会话）
+│   ├── agent/
+│   │   ├── RefundPreCheckAgent.java # 非 AI @Agent：前置检查
+│   │   ├── RefundApprovalAgent.java # @HumanInTheLoop 注解：返回 PendingResponse
+│   │   └── RefundExecuteAgent.java  # 非 AI @Agent：执行/驳回退款
+│   ├── service/ApprovalService.java # 创建 CompletableFuture、序列化落库、审批/恢复
+│   ├── controller/
+│   │   ├── HumanInTheLoopController.java  # /refund /approve /status
+│   │   └── RecoveryController.java        # /simulate-restart /recover /recover/pending
+│   ├── entity/HitlPendingEntity.java # 存序列化 PendingResponse 的记录
+│   └── mapper/HitlPendingMapper.java
 └── AgenticDemoApplication.java
 ```
 
@@ -870,188 +882,358 @@ public class SupervisorService {
 
 ## 9. 模式六：HumanInTheLoop — 人工介入
 
+> 本章采用 LangChain4j 官方默认机制实现：用 `@HumanInTheLoop` 注解标记审批方法，配合 `PendingResponse` 完成状态的保存与恢复，并演示「进程重启后按业务 ID 恢复中断的审批」。
+
 ### 9.1 场景描述
 
-> **业务需求：** 大额退款需人工审批，Agent 完成前置检查后自动暂停，等待主管审批后恢复执行。
+> **业务需求：** 大额退款需人工审批。工作流完成前置检查后自动暂停，等待主管审批后恢复执行；
+> 若应用在审批等待期间重启，重启后能按业务 ID 反序列化 `PendingResponse` 并完成中断的审批。
 
 ```mermaid
 sequenceDiagram
     participant U as 用户/系统
     participant C as Controller
-    participant S as HumanInTheLoopService
+    participant S as ApprovalService
     participant W as Workflow (后台线程)
-    participant P as PreCheckAgent
-    participant H as HumanInTheLoop
-    participant E as ExecuteAgent
+    participant P as RefundPreCheckAgent
+    participant A as RefundApprovalAgent(@HumanInTheLoop)
+    participant E as RefundExecuteAgent
+    participant DB as hitl_pending 表
     participant M as 主管 (Human)
-    
+
     U->>C: POST /refund
     C->>S: submitRefund()
-    S->>S: 创建后台线程
-    S->>W: 启动 workflow.process()
-    
+    S->>S: 创建 CompletableFuture + 后台线程
+    S->>W: workflow.process(orderId, ...)
+
     W->>P: 前置检查
     P-->>W: preCheckResult
-    
-    W->>H: 写入 PendingResponse("managerApproval")
-    H-->>W: ⏸️ 工作流不阻塞在这里
-    
-    W->>E: 需要读取 managerApproval
-    Note over E: ⏳ readStateBlocking<br/>等待人工审批...
-    
-    S-->>C: 返回 PENDING_APPROVAL + requestId
-    C-->>U: {"requestId": "REQ-xxx", "status": "PENDING_APPROVAL"}
-    
+
+    W->>A: 调用 @HumanInTheLoop 方法
+    A-->>W: 返回 PendingResponse("approval:orderId")
+    Note over W: 写入 scope("managerApproval")，<br/>工作流本身不阻塞
+
+    W->>E: 读取 managerApproval
+    Note over E: readState 触发 blockingGet()<br/>⏳ 阻塞等待人工审批...
+
+    S->>DB: 序列化 PendingResponse → JSON 落库
+    S-->>C: PENDING + responseId + 序列化JSON
+    C-->>U: {"status":"PENDING","responseId":"approval:ORD-003"}
+
     Note over M: 主管审核材料后做决定
-    
-    M->>U: POST /approve?decision=APPROVED
-    U->>C: 审批请求
-    C->>S: approve(requestId, "APPROVED")
-    S->>S: AgenticScope.completePendingResponse()
-    
+    M->>C: POST /approve?businessId=ORD-003&decision=APPROVED
+    C->>S: approve()
+    S->>W: scope.completePendingResponse(responseId, "APPROVED")
+
     Note over E: 🔓 阻塞解除，继续执行
     E-->>W: executionResult
-    S-->>C: 返回最终结果
-    C-->>U: {"status": "COMPLETED", "executionResult": ...}
+    S-->>C: COMPLETED + result
+    C-->>U: {"status":"COMPLETED","result":"...已执行完成..."}
 ```
 
 ### 9.2 关键特征
 
-- **双步交互**：第一步提交申请 → 工作流暂停；第二步人工审批 → 工作流恢复
-- **后台线程阻塞**：工作流在后台线程运行，读取 PendingResponse 时阻塞
-- **外部恢复**：通过 `AgenticScope.completePendingResponse()` 注入结果恢复
-- **MemoryId 绑定**：`@MemoryId` 将 requestId 绑定到唯一 AgenticScope
+- **注解驱动**：审批方法用 `@HumanInTheLoop` 注解标记，返回 `PendingResponse`；无需手写 `humanInTheLoopBuilder()`
+- **阻塞语义**：工作流线程在下游读取 `PendingResponse` 时经 `blockingGet()` 阻塞，实现「暂停 → 等待人工 → 恢复」
+- **可序列化**：`PendingResponse` 经 Jackson 序列化只保留 `responseId`，`CompletableFuture` 被标为 `@JsonIgnore`，反序列化时重建 —— 这是跨进程恢复的基础
+- **按业务 ID 恢复**：审批状态序列化落库 `hitl_pending` 表，进程重启后内存会话丢失，但可按 `businessId` 反序列化恢复并完成中断的审批
+- **MemoryId 绑定**：`@MemoryId` 将业务 ID 绑定到唯一 `AgenticScope`，使外部能定位会话并注入审批结果
 
-### 9.3 代码实现——六个关键步骤
+### 9.3 核心机制：@HumanInTheLoop 注解与 PendingResponse
 
-#### Step 1：Workflow 接口用 @MemoryId 绑定会话
+在动手前，先厘清 LangChain4j（1.16.0-beta26）的两个关键对象，它们是本章全部行为的基础。
 
-```java
-public interface HumanApprovalWorkflow {
-    String process(
-        @MemoryId String requestId,   // ← 绑定会话ID
-        @V("orderId") String orderId,
-        @V("reason") String reason,
-        @V("amount") double amount
-    );
-}
-```
+**(1) `@HumanInTheLoop` 注解**（`dev.langchain4j.agentic.declarative.HumanInTheLoop`）
 
-#### Step 2：HumanInTheLoop Agent 返回 PendingResponse
+标注在某个 **静态方法** 上，该方法即被框架识别为一个「人工介入」Agent。被 `AgenticServices.sequenceBuilder(...).subAgents(该类.class, ...)` 装配时，框架经由 `createHumanInTheLoopAgent` 把该方法的返回值作为 `PendingResponse` 写入 AgenticScope 的 `outputKey`。**无需 chatModel**，因此适合非 AI 的纯人工门禁节点。
 
 ```java
-HumanInTheLoop humanApprovalAgent = AgenticServices
-    .humanInTheLoopBuilder()
-    .description("暂停工作流，等待售后主管对大额退款进行人工审批")
-    .outputKey("managerApproval")
-    .responseProvider(scope -> {
-        log.info("Workflow paused, waiting for manager approval");
-        return new PendingResponse<>("managerApproval");
-        // ↑ 写入 Scope，ExecuteAgent 读取时触发阻塞
-    })
-    .build();
-```
-
-#### Step 3：用 sequenceBuilder 串联
-
-```java
-this.workflow = AgenticServices
-    .sequenceBuilder(HumanApprovalWorkflow.class)
-    .subAgents(preCheckAgent, humanApprovalAgent, executeAgent)
-    .outputKey("executionResult")
-    .build();
-```
-
-#### Step 4：后台线程提交+等待暂停
-
-```java
-public Map<String, Object> submitRefund(String orderId, String reason, double amount) {
-    String requestId = "REQ-" + UUID.randomUUID().toString().substring(0, 8);
-
-    // 后台线程启动工作流（它会阻塞在 ExecuteAgent 读取 managerApproval 处）
-    Future<String> future = executor.submit(
-        () -> workflow.process(requestId, orderId, reason, amount)
-    );
-    runningWorkflows.put(requestId, future);
-
-    // 轮询等待 HumanInTheLoop 写入 PendingResponse
-    AgenticScope scope = awaitPause(requestId, future);
-
-    return Map.of(
-        "requestId", requestId,
-        "status", "PENDING_APPROVAL",
-        "preCheckResult", scope.readState("preCheckResult", "")
-    );
-}
-```
-
-#### Step 5：轮询检测暂停点
-
-```java
-private AgenticScope awaitPause(String requestId, Future<String> future) {
-    AgenticScopeAccess access = (AgenticScopeAccess) workflow;
-    long deadline = System.currentTimeMillis() + 60_000L;
-    
-    while (System.currentTimeMillis() < deadline) {
-        if (future.isDone()) return access.getAgenticScope(requestId);
-        
-        AgenticScope scope = access.getAgenticScope(requestId);
-        // 🔍 检查 PendingResponse 是否已写入
-        if (scope != null && scope.pendingResponseIds().contains(APPROVAL_KEY)) {
-            return scope;  // ← 找到了！工作流已到达暂停点
-        }
-        Thread.sleep(200);
+public interface RefundApprovalAgent {
+    @HumanInTheLoop(description = "暂停工作流，等待人工审批", outputKey = "managerApproval")
+    static PendingResponse<String> requestApproval(@V("orderId") String orderId,
+                                                    @V("amount") double amount) {
+        return new PendingResponse<>("approval:" + orderId);   // ← responseId 与业务ID绑定
     }
-    throw new RuntimeException("等待暂停点超时");
 }
 ```
 
-#### Step 6：人工审批恢复工作流
+**(2) `PendingResponse`**（`dev.langchain4j.agentic.internal.PendingResponse`）
+
+一个「可被外部完成」的延迟响应，内部持有一个 `CompletableFuture`：
+
+| 方法 | 作用 |
+|---|---|
+| `new PendingResponse<>(responseId)` | 创建一个未完成的响应，`responseId` 是后续定位/完成的关联键 |
+| `blockingGet()` | 阻塞直到被 `complete`（内部即 `future.join()`） |
+| `complete(value)` | 注入结果，释放所有阻塞在 `blockingGet()` 的线程 |
+| `responseId()` | 返回关联键 |
+
+**序列化语义（重点）**：`PendingResponse` 用 Jackson 注解标记 —— 构造器是 `@JsonCreator`，`CompletableFuture` 字段是 `@JsonIgnore`。因此：
+
+- 序列化后只保留 `{"responseId":"approval:ORD-003"}`；
+- 反序列化时会用 `responseId` 重建一个 **新的、未完成的** `CompletableFuture`，使外部系统可「重新连接」并完成它。
+
+> 这正是「进程重启后恢复」的语义基础：重启后原阻塞线程已消失，但 `responseId` 被持久化；重启后反序列化得到 `responseId`，重跑工作流到暂停点，用该 `responseId` 完成审批即可。
+
+### 9.4 代码实现
+
+> 包路径：`com.example.agentic.humanintheloop`。完整源码见仓库，下面按 6 步讲解。
+
+#### Step 1：定义三个 Agent（@HumanInTheLoop 注解 + 非 AI @Agent）
+
+前置检查与执行用普通类的 `@Agent` 静态方法（非 AI，无需大模型）；审批用 `@HumanInTheLoop` 注解。
 
 ```java
-public Map<String, Object> approve(String requestId, String decision, String comment) {
-    Future<String> future = runningWorkflows.get(requestId);
-    
-    // 🔑 通过 AgenticScopeAccess 定位到指定会话的 Scope
-    AgenticScope scope = ((AgenticScopeAccess) workflow).getAgenticScope(requestId);
-    
-    String approvalText = decision + (comment != null ? " - " + comment : "");
-    // 🔓 注入审批结果，解除 ExecuteAgent 的阻塞
-    scope.completePendingResponse(APPROVAL_KEY, approvalText);
-    
-    // 等待工作流完成
-    String result = future.get(120, TimeUnit.SECONDS);
-    
-    runningWorkflows.remove(requestId);
-    return Map.of("requestId", requestId, "status", "COMPLETED", "executionResult", result);
+// 前置检查：非 AI @Agent，产出写入 preCheckResult
+public class RefundPreCheckAgent {
+    @Agent(description = "退款前置检查", outputKey = "preCheckResult")
+    public static String preCheck(@V("orderId") String orderId,
+                                  @V("reason") String reason,
+                                  @V("amount") double amount) {
+        return String.format("【前置检查】订单 %s 申请退款 ¥%.2f，原因：%s。建议人工审批。",
+                orderId, amount, reason);
+    }
+}
+
+// 人工审批：@HumanInTheLoop 注解，返回 PendingResponse
+public interface RefundApprovalAgent {
+    @HumanInTheLoop(description = "暂停工作流，等待人工审批", outputKey = "managerApproval")
+    static PendingResponse<String> requestApproval(@V("orderId") String orderId,
+                                                    @V("amount") double amount) {
+        return new PendingResponse<>("approval:" + orderId);
+    }
+}
+
+// 执行：读取 managerApproval 时会阻塞，直到审批完成
+public class RefundExecuteAgent {
+    @Agent(description = "根据审批结论执行或驳回退款", outputKey = "executionResult")
+    public static String execute(@V("orderId") String orderId,
+                                 @V("amount") double amount,
+                                 @V("managerApproval") String approval) {
+        if (approval == null || !approval.toUpperCase().contains("APPROVED")) {
+            return String.format("订单 %s 退款被驳回（%s），未执行。", orderId, approval);
+        }
+        return String.format("订单 %s 退款 ¥%.2f 已执行完成（%s）。", orderId, amount, approval);
+    }
 }
 ```
 
-### 9.4 HumanInTheLoop 的执行时序
+#### Step 2：定义工作流接口并组装
+
+`@MemoryId` 绑定会话；为简化「按业务 ID 恢复」，这里直接用 `orderId` 作为 memoryId。
+
+```java
+public interface RefundWorkflow {
+    String process(@MemoryId String requestId,      // ← 同时作为 scope 的 memoryId，取 orderId
+                   @V("orderId") String orderId,
+                   @V("reason") String reason,
+                   @V("amount") double amount);
+}
+```
+
+组装时 `subAgents` 直接传 **类对象**：框架的 `createBuiltInAgentExecutor` 会识别 `@HumanInTheLoop` 与 `@Agent` 注解并自动装配，**无需 chatModel**。
+
+```java
+this.workflow = AgenticServices.sequenceBuilder(RefundWorkflow.class)
+        .subAgents(RefundPreCheckAgent.class, RefundApprovalAgent.class, RefundExecuteAgent.class)
+        .outputKey("executionResult")
+        .build();
+```
+
+#### Step 3：ApprovalService —— 创建 CompletableFuture + 阻塞等待
+
+`submitRefund` 创建一个 `CompletableFuture`，把工作流丢到后台线程。工作流会在 `RefundExecuteAgent` 读取 `managerApproval` 时阻塞（`blockingGet()`），即「阻塞等待人工审批」。
+
+```java
+public ApprovalResponse submitRefund(String orderId, String reason, double amount) {
+    CompletableFuture<String> future = new CompletableFuture<>();
+    running.put(orderId, future);
+
+    // 后台线程运行工作流：在 ExecuteAgent 读取 managerApproval 时阻塞
+    workflowExecutor.submit(() -> {
+        try {
+            future.complete(workflow.process(orderId, orderId, reason, amount));
+        } catch (Throwable t) {
+            future.completeExceptionally(t);
+        }
+    });
+
+    // 轮询等待到达暂停点
+    AgenticScope scope = awaitPause(orderId, future);
+    // ...见 Step 4：取出 PendingResponse 序列化落库
+}
+```
+
+#### Step 4：序列化 PendingResponse 落库
+
+到达暂停点后，从 `scope.state().get("managerApproval")` 取出 **真实的 `PendingResponse`**，用 Jackson 序列化为 JSON 落库。`scope.state()` 返回原始 Map（不会阻塞），而 `readState()` 对延迟响应才会阻塞。
+
+```java
+AgenticScope scope = awaitPause(orderId, future);
+
+// 取出真实 PendingResponse 并序列化
+Object stored = scope.state().get(APPROVAL_OUTPUT_KEY);   // "managerApproval"
+PendingResponse<?> pending = (stored instanceof PendingResponse<?> p)
+        ? p
+        : new PendingResponse<>(responseId(orderId));
+String serialized = serialize(pending);   // → {"responseId":"approval:ORD-003"}
+
+// 落库（hitl_pending 表，主键 businessId = orderId）
+HitlPendingEntity entity = HitlPendingEntity.builder()
+        .businessId(orderId).orderId(orderId).reason(reason).amount(amount)
+        .responseId(pending.responseId())
+        .serializedPending(serialized)
+        .status(ApprovalStatus.PENDING.code())
+        .precheckResult(readQuietly(scope, "preCheckResult"))
+        .build();
+saveOrUpdate(entity);
+
+return ApprovalResponse.from(entity, entity.getPrecheckResult(), "已暂停等待人工审批");
+```
+
+序列化/反序列化的实现（日志会打印全过程，是演示重点）：
+
+```java
+public String serialize(PendingResponse<?> pending) {
+    String json = objectMapper.writeValueAsString(pending);
+    log.info("[serialize] responseId={} → json={}", pending.responseId(), json);
+    return json;
+}
+
+public PendingResponse<?> deserialize(String json) {
+    PendingResponse<?> pr = objectMapper.readValue(json, PendingResponse.class);
+    log.info("[deserialize] json={} → responseId={} (新 CompletableFuture 已重建, isDone={})",
+            json, pr.responseId(), pr.isDone());
+    return pr;
+}
+```
+
+#### Step 5：人工审批 —— completePendingResponse 恢复工作流
+
+`approve` 通过 `AgenticScopeAccess` 定位会话，调用 `completePendingResponse(responseId, value)` 注入审批结论，解除 `ExecuteAgent` 的阻塞，然后阻塞等待最终结果。
+
+```java
+public ApprovalResponse approve(String orderId, String decision, String comment) {
+    CompletableFuture<String> future = running.get(orderId);
+    AgenticScope scope = ((AgenticScopeAccess) workflow).getAgenticScope(orderId);
+    if (future == null || scope == null) {
+        return ApprovalResponse.notFound(orderId,
+                "内存中无运行中的会话（可能进程已重启），请改用 POST /recover 恢复");
+    }
+
+    String approvalText = decision + (isBlank(comment) ? "" : " - " + comment);
+    // 🔓 用 responseId 完成 PendingResponse，解除阻塞
+    scope.completePendingResponse(responseId(orderId), approvalText);
+
+    // 阻塞等待工作流恢复执行并产出最终结果
+    String result = future.get(RESULT_TIMEOUT_S, TimeUnit.SECONDS);
+
+    running.remove(orderId);
+    ((AgenticScopeAccess) workflow).evictAgenticScope(orderId);
+    markStatus(orderId, isApproved(decision) ? COMPLETED : REJECTED, decision, result);
+    return ApprovalResponse.from(pendingMapper.selectById(orderId), null, "审批已完成");
+}
+```
+
+> `responseId(orderId)` 即 `"approval:" + orderId`，与 `RefundApprovalAgent` 中构造的一致。`completePendingResponse` 在 scope 内部按 `responseId` 匹配到对应的 `PendingResponse` 并 `complete`。
+
+#### Step 6：重启恢复 —— 反序列化 PendingResponse 并完成中断的审批
+
+进程重启后，内存中的 `AgenticScope` 与阻塞线程都已丢失，但 `hitl_pending` 表里的序列化 JSON 仍在。`RecoveryController.recover` 反序列化取得 `responseId`，重跑工作流到暂停点，用该 `responseId` 完成审批。
+
+```java
+public ApprovalResponse recover(String orderId, String decision, String comment) {
+    HitlPendingEntity entity = pendingMapper.selectById(orderId);
+    if (entity == null) return ApprovalResponse.notFound(orderId, "未找到待恢复记录");
+
+    // ★ 反序列化：从 DB 的 JSON 还原 PendingResponse，取得 responseId
+    PendingResponse<?> restored = deserialize(entity.getSerializedPending());
+    log.info("recover: deserialized responseId={}", restored.responseId());
+
+    // 重启后内存 scope 已丢失：重跑工作流到暂停点
+    CompletableFuture<String> future = new CompletableFuture<>();
+    running.put(orderId, future);
+    workflowExecutor.submit(() -> future.complete(
+            workflow.process(orderId, orderId, entity.getReason(), entity.getAmount())));
+
+    AgenticScope scope = awaitPause(orderId, future);
+    // 用反序列化得到的 responseId 完成中断的审批
+    scope.completePendingResponse(restored.responseId(), decision);
+
+    String result = future.get(RESULT_TIMEOUT_S, TimeUnit.SECONDS);
+    markStatus(orderId, isApproved(decision) ? RECOVERED : REJECTED, decision, result);
+    return ApprovalResponse.from(pendingMapper.selectById(orderId), null, "已通过重启恢复完成");
+}
+```
+
+`RecoveryController` 还提供 `simulate-restart`（清除内存会话、保留 DB 记录，用于演示）与 `recover/pending`（列出中断记录）两个端点。
+
+### 9.5 演示流程
+
+**流程 A：正常审批（不重启）**
+
+```bash
+# 1) 提交退款，工作流暂停，PendingResponse 序列化落库
+curl -X POST "http://localhost:8080/api/humanintheloop/refund?orderId=ORD-003&reason=不喜欢了&amount=918"
+# → {"status":"PENDING","responseId":"approval:ORD-003","serializedPending":"{\"responseId\":\"approval:ORD-003\"}",...}
+
+# 2) 人工审批，恢复工作流并阻塞等待结果
+curl -X POST "http://localhost:8080/api/humanintheloop/approve?businessId=ORD-003&decision=APPROVED"
+# → {"status":"COMPLETED","result":"订单 ORD-003 退款 ¥918.00 已执行完成..."}
+```
+
+**流程 B：模拟进程重启后恢复**
+
+```bash
+# 1) 提交退款（暂停、落库）
+curl -X POST "http://localhost:8080/api/humanintheloop/refund?orderId=ORD-004&reason=质量问题&amount=1200"
+
+# 2) 模拟进程重启：清除内存会话，DB 记录保留
+curl -X POST "http://localhost:8080/api/humanintheloop/simulate-restart?businessId=ORD-004"
+
+# 3) 查看待恢复记录
+curl "http://localhost:8080/api/humanintheloop/recover/pending"
+
+# 4) 恢复并完成中断的审批（日志会打印反序列化过程）
+curl -X POST "http://localhost:8080/api/humanintheloop/recover?businessId=ORD-004&decision=APPROVED"
+# → {"status":"RECOVERED","result":"订单 ORD-004 退款 ¥1200.00 已执行完成..."}
+```
+
+恢复时日志会输出：
+
+```
+[deserialize] json={"responseId":"approval:ORD-004"} → responseId=approval:ORD-004 (新 CompletableFuture 已重建, isDone=false)
+recover: deserialized responseId=approval:ORD-004
+```
+
+### 9.6 HumanInTheLoop 的执行时序
 
 ```mermaid
 gantt
-    title HumanInTheLoop 工作流执行时序
+    title HumanInTheLoop 工作流执行时序（正常流程）
     dateFormat HH:mm:ss
     axisFormat %M:%S
-    
+
     section 主线程
-    提交申请 submitRefund    :active, t1, 00:00:00, 00:00:01
-    轮询等待暂停点           :t2, 00:00:01, 00:00:05
-    返回 PENDING_APPROVAL    :crit, t3, 00:00:05, 00:00:06
-    等待人工决策 (任意时长)  :t4, 00:00:06, 00:02:00
-    审批调用 approve         :active, t5, 00:02:00, 00:02:02
-    completePendingResponse  :t6, 00:02:02, 00:02:02
-    等待工作流完成           :t7, 00:02:02, 00:02:10
-    返回 COMPLETED           :crit, t8, 00:02:10, 00:02:11
-    
+    提交申请 submitRefund       :active, t1, 00:00:00, 00:00:01
+    轮询等待暂停点              :t2, 00:00:01, 00:00:02
+    序列化 PendingResponse 落库 :t3, 00:00:02, 00:00:03
+    返回 PENDING                :crit, t4, 00:00:03, 00:00:04
+    等待人工决策 (任意时长)     :t5, 00:00:04, 00:02:00
+    审批调用 approve            :active, t6, 00:02:00, 00:02:01
+    completePendingResponse     :t7, 00:02:01, 00:02:01
+    阻塞等待工作流完成          :t8, 00:02:01, 00:02:02
+    返回 COMPLETED              :crit, t9, 00:02:02, 00:02:03
+
     section 后台工作流线程
-    PreCheckAgent            :active, w1, 00:00:01, 00:00:04
-    HumanInTheLoop 写入      :w2, 00:00:04, 00:00:05
-    ExecuteAgent 阻塞等待    :crit, w3, 00:00:05, 00:02:02
-    ExecuteAgent 恢复执行    :active, w4, 00:02:02, 00:02:09
-    工作流完成               :done, w5, 00:02:09, 00:02:10
+    RefundPreCheckAgent         :active, w1, 00:00:01, 00:00:02
+    RefundApprovalAgent 返回    :w2, 00:00:02, 00:00:02
+    RefundExecuteAgent 阻塞     :crit, w3, 00:00:02, 00:02:01
+    RefundExecuteAgent 恢复     :active, w4, 00:02:01, 00:02:02
+    工作流完成                  :done, w5, 00:02:02, 00:02:02
 ```
+
+> **重启恢复流程**：`simulate-restart` 清除内存会话 → `recover` 反序列化 `PendingResponse` 取得 `responseId` → 重跑工作流到暂停点 → `completePendingResponse(responseId, decision)` 完成 → `status=RECOVERED`。时序上与上图「后台工作流线程」段一致，区别仅在于暂停点之前的会话是重启后重建的。
 
 ---
 
@@ -1066,7 +1248,7 @@ gantt
 | **Loop** | `loopBuilder` | 循环 A⇄B | 运行时 exitCondition | 变量（多轮） | 内容生成+质量门控 |
 | **Conditional** | `conditionalBuilder` | 树形分支 | 运行时 Predicate | 确定（但路径可变） | 分类路由、多通道处理 |
 | **Supervisor** | `supervisorBuilder` | LLM动态 | LLM自主决策 | 不确定 | 复杂多变场景 |
-| **HumanInTheLoop** | `humanInTheLoopBuilder` | 暂停点注入 | 外部人工输入 | 确定+暂停 | 需要审批的业务流程 |
+| **HumanInTheLoop** | `@HumanInTheLoop` 注解 | 暂停点注入 | 外部人工输入 | 确定+暂停 | 需要审批的业务流程 |
 
 ### 10.2 选型决策树
 
@@ -1182,10 +1364,12 @@ public String query(String id) { ... }
 
 ### 11.6 HumanInTheLoop 模式注意事项
 
-1. **后台线程管理**：确保线程池合理配置，防止线程泄漏
-2. **会话清理**：审批完成后及时 `evictAgenticScope()`，防止内存泄漏
-3. **超时机制**：awaitPause 要有超时，future.get() 也要有超时
-4. **幂等性**：`completePendingResponse` 重复调用应安全（框架已处理）
+1. **阻塞代价**：官方 `@HumanInTheLoop` + `PendingResponse` 机制下，每条在途审批会占用一个工作流线程（在 `blockingGet()` 处阻塞）。高并发场景应配合虚拟线程，或改用「DB 状态机 + 非阻塞」方案（见仓库 git 历史中 `6d1094f` 提交）。
+2. **会话清理**：审批完成后及时 `evictAgenticScope()`，防止内存泄漏；`simulate-restart` 也会清内存会话但保留 DB 记录。
+3. **序列化内容**：`PendingResponse` 经 Jackson 序列化只保留 `responseId`，`CompletableFuture` 不被序列化；反序列化会重建新 future。因此「重启恢复」靠的是持久化的 `responseId`，而非原线程。
+4. **responseId 必须可重放**：重启后重跑工作流会创建新的 `PendingResponse`，其 `responseId` 必须与落库时一致（本例用 `"approval:" + orderId`），`completePendingResponse` 才能匹配到。
+5. **超时机制**：`awaitPause` 与 `future.get()` 都要有超时，避免无限挂起。
+6. **幂等性**：`completePendingResponse` 重复调用返回 `false`（框架已处理），但仍建议在 `approve` 前校验状态。
 
 ### 11.7 调试技巧
 
@@ -1211,7 +1395,7 @@ langchain4j:
 | outputKey 读取到 null | key 不匹配或 Agent 未执行 | 检查 outputKey 拼写、确认 Agent 执行顺序 |
 | Loop 不退出 | exitCondition 永远不满足 | 检查条件逻辑、增加 maxIterations |
 | Conditional 不匹配 | Predicate 没覆盖所有情况 | 添加兜底分支或确保分类结果在预期枚举内 |
-| HumanInTheLoop 超时 | 轮询时间不够或 PendingResponse 未写入 | 增加 awaitPause 超时、检查 humanInTheLoopBuilder 配置 |
+| HumanInTheLoop 超时 | 轮询时间不够或 PendingResponse 未写入 | 增加 awaitPause 超时、检查 `@HumanInTheLoop` 方法的 `outputKey` 与 `responseId` 是否一致 |
 
 ---
 
