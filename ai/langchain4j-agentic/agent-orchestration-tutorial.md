@@ -212,7 +212,7 @@ src/main/java/com/example/agentic/
 ├── conditional/        # 模式四：条件分流
 ├── supervisor/         # 模式五：主管调度
 ├── humanintheloop/     # 模式六：人工介入（@HumanInTheLoop 注解 + PendingResponse）
-│   ├── RefundWorkflow.java          # 顺序工作流接口（@MemoryId 绑定会话）
+│   ├── HitlRefundWorkflow.java      # 顺序工作流接口（@MemoryId 绑定会话）
 │   ├── agent/
 │   │   ├── PreCheckAgent.java        # LLM Agent：前置检查（AiServices）
 │   │   ├── RefundApprovalAgent.java  # @HumanInTheLoop 注解：返回 PendingResponse
@@ -1014,9 +1014,12 @@ public interface ExecuteAgent {
         """)
     @Agent(name = "ExecuteAgent", description = "依据审批结论执行退款",
            outputKey = "executionResult")
+    // 注意：managerApproval 在 HITL 阶段是 PendingResponse(DelayedResponse)，
+    // 框架 planner 要求同一 scope key 类型一致，故这里用 Object（PendingResponse 是其子类型，
+    // 读取时框架自动 blockingGet 得到解析后的 String 审批结论）。
     String execute(@V("orderId") String orderId,
                    @V("preCheckResult") String preCheckResult,
-                   @V("managerApproval") String managerApproval);
+                   @V("managerApproval") Object managerApproval);
 }
 ```
 
@@ -1025,7 +1028,7 @@ public interface ExecuteAgent {
 `@MemoryId` 绑定会话；为简化「按业务 ID 恢复」，这里直接用 `orderId` 作为 memoryId。
 
 ```java
-public interface RefundWorkflow {
+public interface HitlRefundWorkflow {
     String process(@MemoryId String requestId,      // ← 同时作为 scope 的 memoryId，取 orderId
                    @V("orderId") String orderId,
                    @V("reason") String reason,
@@ -1033,9 +1036,9 @@ public interface RefundWorkflow {
 }
 ```
 
-组装时 `subAgents` 混用「已构建的 LLM Agent 实例」与「`@HumanInTheLoop` 注解类」：前者是 `agentBuilder(...).chatModel(...).build()` 产出的代理，后者由 `createBuiltInAgentExecutor` 识别注解装配（审批节点自身不需要 chatModel）。
+组装时 `subAgents` 混用「已构建的 LLM Agent 实例」与「`@HumanInTheLoop` 实例」：前者是 `agentBuilder(...).chatModel(...).build()` 产出的代理；后者先用 `createBuiltInAgentExecutor(RefundApprovalAgent.class)` 构建为 `AgentExecutor` 实例（框架识别 `@HumanInTheLoop` 注解装配，审批节点自身不需要 chatModel）。
 
-同时注册一个 `AgentListener`（`inheritedBySubagents=true`，会透传到各子 agent）：当 `@HumanInTheLoop` 产出 `PendingResponse` 时，在工作流线程上把 `AgenticScope` 投递给等待中的 `pauseSignal`，**取代调用方的忙等轮询**。
+⚠️ **关键坑（必看）**：框架的 `inheritedBySubagents` 机制在 `setParent` 时**不会**把根 listener 透传到 `@HumanInTheLoop` 这类非 AI 的 `NonAiAgentInstance`——其 `setParent` 仅保存 parent，并不调用 `registerInheritedParentListener`，因此 `afterAgentInvocation` 对非 AI 子 agent 触发时只带它自己的（空）listener。为可靠捕获 HITL 产出的 `PendingResponse`，这里**显式把暂停监听挂到审批 agent 实例上**（该实例的 `registerInheritedParentListener` 在 `NonAiAgentInstance` 中正确实现：只要 `inheritedBySubagents()=true` 就会把该 listener 组合进审批 agent 自身的 listener；而 `AgentInvoker.super.invoke` 触发 `afterAgentInvocation` 时用的正是 agent 自身的 listener）。
 
 ```java
 PreCheckAgent preCheckAgent = AgenticServices.agentBuilder(PreCheckAgent.class)
@@ -1043,31 +1046,36 @@ PreCheckAgent preCheckAgent = AgenticServices.agentBuilder(PreCheckAgent.class)
 ExecuteAgent executeAgent = AgenticServices.agentBuilder(ExecuteAgent.class)
         .chatModel(chatModel).tools(tools).outputKey("executionResult").build();
 
-this.workflow = AgenticServices.sequenceBuilder(RefundWorkflow.class)
-        .listener(new AgentListener() {
-            @Override public boolean inheritedBySubagents() { return true; }
-            @Override
-            public void afterAgentInvocation(AgentResponse resp) {
-                // HITL agent 的 output 就是 PendingResponse —— 暂停点已到达
-                if (resp.output() instanceof PendingResponse<?> pr) {
-                    onApprovalPaused(pr, resp.agenticScope());
-                }
-            }
-        })
-        .subAgents(preCheckAgent, RefundApprovalAgent.class, executeAgent)
+// 审批节点为 @HumanInTheLoop（NonAiAgentInstance）。框架不会经 setParent 透传根 listener，
+// 故显式把暂停监听挂到审批 agent 实例上：HITL 产出 PendingResponse 时，listener 在工作流
+// 线程上把真实的 PendingResponse 投递给 pauseSignal，取代调用方的忙等轮询。
+AgentExecutor approvalAgent = AgenticServices.createBuiltInAgentExecutor(RefundApprovalAgent.class);
+approvalAgent.registerInheritedParentListener(new AgentListener() {
+    @Override public boolean inheritedBySubagents() { return true; } // 触发组合逻辑（实际只挂自身）
+    @Override
+    public void afterAgentInvocation(AgentResponse resp) {
+        // HITL agent 的 output 就是 PendingResponse —— 暂停点已到达
+        if (resp.output() instanceof PendingResponse<?> pr) {
+            onApprovalPaused(pr);
+        }
+    }
+});
+
+this.workflow = AgenticServices.sequenceBuilder(HitlRefundWorkflow.class)
+        .subAgents(preCheckAgent, approvalAgent, executeAgent)
         .outputKey("executionResult")
         .build();
 ```
 
 #### Step 3：ApprovalService —— 创建 CompletableFuture + 事件驱动等待暂停
 
-`submitRefund` 创建两个 future：`future`（工作流最终结果）与 `pauseSignal`（到达暂停点的信号）。工作流丢到后台线程，会在 `ExecuteAgent` 读取 `managerApproval` 时阻塞（`blockingGet()`）。调用方不再忙等轮询，而是 `pauseSignal.get(timeout)`——当 `@HumanInTheLoop` 产出 `PendingResponse` 时，Step 2 注册的 listener 会在工作流线程上把 `AgenticScope` 投递过来。
+`submitRefund` 创建两个 future：`future`（工作流最终结果）与 `pauseSignal`（到达暂停点的信号，类型为 `CompletableFuture<PendingResponse<?>>`）。工作流丢到后台线程，会在 `ExecuteAgent` 读取 `managerApproval` 时阻塞（`blockingGet()`）。调用方不再忙等轮询，而是 `pauseSignal.get(timeout)`——当 `@HumanInTheLoop` 产出 `PendingResponse` 时，Step 2 挂在审批 agent 上的 listener 会在工作流线程上把**真实的 `PendingResponse`** 直接投递过来（直接携带 `PendingResponse` 还顺带规避了「listener 在 state 写入前触发」的竞态）。
 
 ```java
 public ApprovalResponse submitRefund(String orderId, String reason, double amount) {
     CompletableFuture<String> future = new CompletableFuture<>();
     running.put(orderId, future);
-    CompletableFuture<AgenticScope> pauseSignal = new CompletableFuture<>();
+    CompletableFuture<PendingResponse<?>> pauseSignal = new CompletableFuture<>();
     pauseSignals.put(orderId, pauseSignal);
 
     // 后台线程运行工作流：在 ExecuteAgent 读取 managerApproval 时阻塞
@@ -1080,9 +1088,8 @@ public ApprovalResponse submitRefund(String orderId, String reason, double amoun
         }
     });
 
-    // 事件驱动等待到达暂停点：listener 投递 scope，无需轮询
-    AgenticScope scope = pauseSignal.get(PAUSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-    // ...见 Step 4：取出 PendingResponse 序列化落库
+    // 事件驱动等待到达暂停点：挂在审批 agent 上的 listener 已把真实 PendingResponse 投递过来
+    PendingResponse<?> pending = pauseSignal.get(PAUSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 }
 ```
 
@@ -1090,16 +1097,12 @@ public ApprovalResponse submitRefund(String orderId, String reason, double amoun
 
 #### Step 4：序列化 PendingResponse 落库
 
-到达暂停点后，从 `scope.state().get("managerApproval")` 取出 **真实的 `PendingResponse`**，用 Jackson 序列化为 JSON 落库。`scope.state()` 返回原始 Map（不会阻塞），而 `readState()` 对延迟响应才会阻塞。
+到达暂停点后，listener 已把**真实的 `PendingResponse`** 直接交给我们（无需再从 `scope.state()` 读取），用 Jackson 序列化为 JSON 落库。⚠️ 序列化需使用 `FIELD, ANY` 可见性的 `ObjectMapper`（见下），因为 `PendingResponse` 只有 `responseId` 字段可序列化（其 `futureResponse` 被 `@JsonIgnore`），且其访问器名为 `responseId()` 而非 `getResponseId()`——Spring 注入的默认 `ObjectMapper` 按 getter/field(PUBLIC) 可见性会把它误判为「无属性」而抛 `InvalidDefinitionException`。
 
 ```java
-// scope 来自 Step 3 的 pauseSignal.get(...)（listener 已投递）
+// pending 来自 Step 3 的 pauseSignal.get(...)（listener 已把真实 PendingResponse 投递过来）
 
-// 取出真实 PendingResponse 并序列化
-Object stored = scope.state().get(APPROVAL_OUTPUT_KEY);   // "managerApproval"
-PendingResponse<?> pending = (stored instanceof PendingResponse<?> p)
-        ? p
-        : new PendingResponse<>(responseId(orderId));
+// 直接序列化 listener 交来的真实 PendingResponse
 String serialized = serialize(pending);   // → {"responseId":"approval:ORD-003"}
 
 // 落库（hitl_pending 表，主键 businessId = orderId）
@@ -1108,7 +1111,7 @@ HitlPendingEntity entity = HitlPendingEntity.builder()
         .responseId(pending.responseId())
         .serializedPending(serialized)
         .status(ApprovalStatus.PENDING.code())
-        .precheckResult(readQuietly(scope, "preCheckResult"))
+        .precheckResult(readScopeState(orderId, "preCheckResult"))
         .build();
 saveOrUpdate(entity);
 
@@ -1118,14 +1121,22 @@ return ApprovalResponse.from(entity, entity.getPrecheckResult(), "已暂停等�
 序列化/反序列化的实现（日志会打印全过程，是演示重点）：
 
 ```java
+// ★ 序列化必须用 FIELD, ANY 可见性的 ObjectMapper（与框架 JacksonJsonCodec 一致）：
+// PendingResponse 仅 responseId 字段可序列化（futureResponse 被 @JsonIgnore），
+// 且其访问器是 responseId()（非 getXxx）；Spring 默认 ObjectMapper 按 getter/field(PUBLIC)
+// 可见性会把它误判为「无属性」而抛 InvalidDefinitionException。
+private final ObjectMapper pendingObjectMapper = JsonMapper.builder()
+        .visibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+        .build();
+
 public String serialize(PendingResponse<?> pending) {
-    String json = objectMapper.writeValueAsString(pending);
+    String json = pendingObjectMapper.writeValueAsString(pending);
     log.info("[serialize] responseId={} → json={}", pending.responseId(), json);
-    return json;
+    return json;   // → {"responseId":"approval:ORD-003"}
 }
 
 public PendingResponse<?> deserialize(String json) {
-    PendingResponse<?> pr = objectMapper.readValue(json, PendingResponse.class);
+    PendingResponse<?> pr = pendingObjectMapper.readValue(json, PendingResponse.class);
     log.info("[deserialize] json={} → responseId={} (新 CompletableFuture 已重建, isDone={})",
             json, pr.responseId(), pr.isDone());
     return pr;
@@ -1427,7 +1438,7 @@ langchain4j:
 | outputKey 读取到 null | key 不匹配或 Agent 未执行 | 检查 outputKey 拼写、确认 Agent 执行顺序 |
 | Loop 不退出 | exitCondition 永远不满足 | 检查条件逻辑、增加 maxIterations |
 | Conditional 不匹配 | Predicate 没覆盖所有情况 | 添加兜底分支或确保分类结果在预期枚举内 |
-| HumanInTheLoop 超时 | listener 未触发或 PendingResponse 未写入 | 检查 listener 的 `inheritedBySubagents=true`、`@HumanInTheLoop` 的 `outputKey` 与 `responseId` 是否一致；确认 `pauseSignal` 超时设置 |
+| HumanInTheLoop 超时 | listener 未触发或 PendingResponse 未写入 | 确认暂停 listener 已**显式挂到审批 agent 实例**（`createBuiltInAgentExecutor(...)` + `registerInheritedParentListener`），而非仅挂在 sequence 的 `.listener(inheritedBySubagents=true)` 上——框架不会经 `setParent` 把根 listener 透传到 `NonAiAgentInstance`；检查 `@HumanInTheLoop` 的 `outputKey` 与 `responseId` 是否一致；确认 `pauseSignal` 超时设置 |
 
 ---
 
@@ -1481,7 +1492,7 @@ langchain4j:
 | Conditional | `/api/conditional/refund` | POST | orderId, reason |
 | Supervisor | `/api/supervisor/handle` | POST | orderId, complaint |
 | HumanInTheLoop | `/api/humanintheloop/refund` | POST | orderId, reason, amount |
-| HumanInTheLoop | `/api/humanintheloop/approve` | POST | requestId, decision, comment |
+| HumanInTheLoop | `/api/humanintheloop/approve` | POST | businessId, decision, comment |
 
 ---
 

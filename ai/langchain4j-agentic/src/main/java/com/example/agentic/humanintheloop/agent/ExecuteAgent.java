@@ -34,5 +34,5 @@ public interface ExecuteAgent {
             outputKey = "executionResult")
     String execute(@V("orderId") String orderId,
                    @V("preCheckResult") String preCheckResult,
-                   @V("managerApproval") String managerApproval);
+                   @V("managerApproval") Object managerApproval);
 }

@@ -2,7 +2,7 @@ package com.example.agentic.humanintheloop.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.agentic.common.tool.AfterSalesTools;
-import com.example.agentic.humanintheloop.RefundWorkflow;
+import com.example.agentic.humanintheloop.HitlRefundWorkflow;
 import com.example.agentic.humanintheloop.agent.ExecuteAgent;
 import com.example.agentic.humanintheloop.agent.PreCheckAgent;
 import com.example.agentic.humanintheloop.agent.RefundApprovalAgent;
@@ -10,8 +10,12 @@ import com.example.agentic.humanintheloop.entity.HitlPendingEntity;
 import com.example.agentic.humanintheloop.mapper.HitlPendingMapper;
 import com.example.agentic.humanintheloop.model.ApprovalResponse;
 import com.example.agentic.humanintheloop.model.ApprovalStatus;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import dev.langchain4j.agentic.AgenticServices;
+import dev.langchain4j.agentic.internal.AgentExecutor;
 import dev.langchain4j.agentic.internal.PendingResponse;
 import dev.langchain4j.agentic.observability.AgentListener;
 import dev.langchain4j.agentic.observability.AgentResponse;
@@ -68,29 +72,39 @@ public class ApprovalService {
     private static final long PAUSE_TIMEOUT_MS = 60_000L;
     private static final long RESULT_TIMEOUT_S = 120L;
 
-    private final RefundWorkflow workflow;
+    private final HitlRefundWorkflow workflow;
     private final HitlPendingMapper pendingMapper;
-    private final ObjectMapper objectMapper;
     private final ExecutorService workflowExecutor;
+
+    /**
+     * 专用于 PendingResponse 序列化/反序列化的 ObjectMapper。
+     * 关键点：PendingResponse 只有 {@code responseId} 字段可序列化（futureResponse 被 @JsonIgnore），
+     * 且其访问器命名为 {@code responseId()}（非 getXxx），Spring 注入的默认 ObjectMapper 按
+     * getter/field(PUBLIC) 可见性会把它误判为「无属性」而抛 InvalidDefinitionException。
+     * 框架内部 JacksonJsonCodec 用 {@code .visibility(FIELD, ANY)} 解决，这里保持一致。
+     */
+    private final ObjectMapper pendingObjectMapper = JsonMapper.builder()
+            .visibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+            .build();
 
     /** 业务ID → 工作流结果 future（仅存在于内存，进程重启即丢失）。 */
     private final Map<String, CompletableFuture<String>> running = new ConcurrentHashMap<>();
 
     /**
      * 业务ID → 暂停信号 future。当 @HumanInTheLoop 产出 PendingResponse 时，
-     * 由 {@link AgentListener} 在工作流线程上把对应的 AgenticScope 投递过来，
-     * 调用方 {@code pauseSignal.get(timeout)} 即可，无需轮询。
+     * 由挂在审批 agent 上的 {@link AgentListener} 在工作流线程上把真实的
+     * {@link PendingResponse} 投递过来，调用方 {@code pauseSignal.get(timeout)} 即可，无需轮询。
+     * <p>直接携带 PendingResponse（而非 AgenticScope）可避免「listener 在 state 写入前触发」
+     * 的竞态：listener 触发时 PendingResponse 已在手，序列化所需数据完整。</p>
      */
-    private final Map<String, CompletableFuture<AgenticScope>> pauseSignals = new ConcurrentHashMap<>();
+    private final Map<String, CompletableFuture<PendingResponse<?>>> pauseSignals = new ConcurrentHashMap<>();
 
     @Autowired
     public ApprovalService(ChatModel chatModel,
                            AfterSalesTools tools,
                            HitlPendingMapper pendingMapper,
-                           ObjectMapper objectMapper,
                            @Qualifier("hitlWorkflowExecutor") ExecutorService workflowExecutor) {
         this.pendingMapper = pendingMapper;
-        this.objectMapper = objectMapper;
         this.workflowExecutor = workflowExecutor;
 
         // 前置检查 / 执行 为 LLM Agent（AiServices）；审批节点用 @HumanInTheLoop 注解。
@@ -99,28 +113,36 @@ public class ApprovalService {
         ExecuteAgent executeAgent = AgenticServices.agentBuilder(ExecuteAgent.class)
                 .chatModel(chatModel).tools(tools).outputKey("executionResult").build();
 
-        // subAgents 可混用「已构建的 LLM Agent 实例」与「@HumanInTheLoop 注解类」：
-        // 前者是 InternalAgent 代理；后者由 createBuiltInAgentExecutor 识别注解装配（自身无需 chatModel）。
-        // listener(inheritedBySubagents=true) 会透传到各子 agent：当 @HumanInTheLoop 产出 PendingResponse 时，
-        // 在工作流线程上把 AgenticScope 投递给 pauseSignals，取代调用方的忙等轮询。
-        this.workflow = AgenticServices.sequenceBuilder(RefundWorkflow.class)
-                .listener(new AgentListener() {
-                    @Override
-                    public boolean inheritedBySubagents() {
-                        return true;
-                    }
+        // 审批节点用 @HumanInTheLoop 注解（自身为 NonAiAgentInstance，无需 chatModel）。
+        // 关键点：框架的 inheritedBySubagents 机制在 setParent 时【不会】把根 listener 透传到
+        // NonAiAgentInstance —— 其 setParent 仅保存 parent，并不调用 registerInheritedParentListener，
+        // 因此 afterAgentInvocation 对非 AI 子 agent 触发时只带它自己的(空) listener。
+        // 为可靠捕获 HITL 产出的 PendingResponse，这里显式把暂停监听挂到审批 agent 实例上
+        // （registerInheritedParentListener 在 NonAiAgentInstance 中正确实现：只要 inheritedBySubagents()=true
+        // 就会把该 listener 组合进审批 agent 自身的 listener；而 AgentInvoker.super.invoke 触发
+        // afterAgentInvocation 时用的正是 agent 自身的 listener）。
+        AgentExecutor approvalAgent = AgenticServices.createBuiltInAgentExecutor(RefundApprovalAgent.class);
+        approvalAgent.registerInheritedParentListener(new AgentListener() {
+            @Override
+            public boolean inheritedBySubagents() {
+                // 仅用于触发 registerInheritedParentListener 的组合逻辑；该 listener 只挂在审批 agent 自身。
+                return true;
+            }
 
-                    @Override
-                    public void afterAgentInvocation(AgentResponse resp) {
-                        if (resp.output() instanceof PendingResponse<?> pr) {
-                            onApprovalPaused(pr, resp.agenticScope());
-                        }
-                    }
-                })
-                .subAgents(preCheckAgent, RefundApprovalAgent.class, executeAgent)
+            @Override
+            public void afterAgentInvocation(AgentResponse resp) {
+                if (resp.output() instanceof PendingResponse<?> pr) {
+                    onApprovalPaused(pr);
+                }
+            }
+        });
+
+        // subAgents 混用「已构建的 LLM Agent 实例」(preCheck/execute) 与「@HumanInTheLoop 实例」(approval)。
+        this.workflow = AgenticServices.sequenceBuilder(HitlRefundWorkflow.class)
+                .subAgents(preCheckAgent, approvalAgent, executeAgent)
                 .outputKey("executionResult")
                 .build();
-        log.info("ApprovalService initialized: RefundWorkflow built (LLM precheck/execute + @HumanInTheLoop approval, event-driven pause)");
+        log.info("ApprovalService initialized: HitlRefundWorkflow built (LLM precheck/execute + @HumanInTheLoop approval, event-driven pause)");
     }
 
     // =========================================================================
@@ -136,7 +158,7 @@ public class ApprovalService {
         // 1) future：其完成标志着整条工作流跑完；pauseSignal：到达审批暂停点的信号
         CompletableFuture<String> future = new CompletableFuture<>();
         running.put(orderId, future);
-        CompletableFuture<AgenticScope> pauseSignal = new CompletableFuture<>();
+        CompletableFuture<PendingResponse<?>> pauseSignal = new CompletableFuture<>();
         pauseSignals.put(orderId, pauseSignal);
 
         // 2) 后台线程运行工作流：会在 ExecuteAgent 读取 managerApproval 时阻塞(blockingGet)
@@ -151,13 +173,15 @@ public class ApprovalService {
             }
         });
 
-        // 3) 事件驱动等待到达暂停点：listener 在 PendingResponse 产出后投递 scope，无需轮询
-        AgenticScope scope;
+        // 3) 事件驱动等待到达暂停点：挂在审批 agent 上的 listener 在 PendingResponse 产出后
+        //    把真实的 PendingResponse 投递过来，调用方 get(timeout) 即可，无需轮询。
+        PendingResponse<?> pending;
         try {
-            scope = pauseSignal.get(PAUSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            pending = pauseSignal.get(PAUSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
             saveOrUpdate(buildEntity(orderId, orderId, reason, amount, responseId(orderId),
-                    null, ApprovalStatus.ERROR.code(), null, null, "未在超时内到达审批暂停点"));
+                    serialize(new PendingResponse<>(responseId(orderId))),
+                    ApprovalStatus.ERROR.code(), null, null, "未在超时内到达审批暂停点"));
             return ApprovalResponse.notFound(orderId, "未在超时内到达审批暂停点");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -165,20 +189,17 @@ public class ApprovalService {
         } catch (ExecutionException e) {
             Throwable cause = e.getCause() != null ? e.getCause() : e;
             saveOrUpdate(buildEntity(orderId, orderId, reason, amount, responseId(orderId),
-                    null, ApprovalStatus.ERROR.code(), null, null, "工作流执行异常: " + cause.getMessage()));
+                    serialize(new PendingResponse<>(responseId(orderId))),
+                    ApprovalStatus.ERROR.code(), null, null, "工作流执行异常: " + cause.getMessage()));
             return ApprovalResponse.notFound(orderId, "工作流执行异常: " + cause.getMessage());
         } finally {
             pauseSignals.remove(orderId);
         }
 
-        // 4) 取出真实的 PendingResponse 并【序列化】落库
-        Object stored = scope.state().get(APPROVAL_OUTPUT_KEY);
-        PendingResponse<?> pending = (stored instanceof PendingResponse<?> p)
-                ? p
-                : new PendingResponse<>(responseId(orderId));
+        // 4) listener 已把真实 PendingResponse 直接交给我们，序列化为 JSON 落库
         String serialized = serialize(pending);
 
-        String precheck = readQuietly(scope, "preCheckResult");
+        String precheck = readScopeState(orderId, "preCheckResult");
         HitlPendingEntity entity = buildEntity(orderId, orderId, reason, amount,
                 pending.responseId(), serialized, ApprovalStatus.PENDING.code(), precheck, null, null);
         saveOrUpdate(entity);
@@ -248,6 +269,12 @@ public class ApprovalService {
             return ApprovalResponse.notFound(orderId, "未找到该业务的待恢复审批记录");
         }
 
+        // 该记录必须持有序列化的 PendingResponse 才能恢复；ERROR 等记录可能没有。
+        if (entity.getSerializedPending() == null) {
+            return ApprovalResponse.from(entity, entity.getPrecheckResult(),
+                    "该记录无序列化的 PendingResponse（可能之前未完成暂停），无法恢复");
+        }
+
         // ★ 反序列化演示：从 DB 中存的 JSON 还原 PendingResponse
         PendingResponse<?> restored = deserialize(entity.getSerializedPending());
         log.info("recover: deserialized PendingResponse, responseId={}", restored.responseId());
@@ -255,7 +282,7 @@ public class ApprovalService {
         // 重启后内存 scope 已丢失：重新运行工作流，到达暂停点后注入审批结论
         CompletableFuture<String> future = new CompletableFuture<>();
         running.put(orderId, future);
-        CompletableFuture<AgenticScope> pauseSignal = new CompletableFuture<>();
+        CompletableFuture<PendingResponse<?>> pauseSignal = new CompletableFuture<>();
         pauseSignals.put(orderId, pauseSignal);
         workflowExecutor.submit(() -> {
             try {
@@ -268,10 +295,10 @@ public class ApprovalService {
             }
         });
 
-        // 事件驱动等待到达暂停点（listener 投递 scope）
-        AgenticScope scope;
+        // 事件驱动等待到达暂停点（挂在审批 agent 上的 listener 投递真实 PendingResponse）
+        PendingResponse<?> paused;
         try {
-            scope = pauseSignal.get(PAUSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            paused = pauseSignal.get(PAUSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             log.error("recover: wait pause failed for businessId={}", orderId, e);
             markStatus(orderId, ApprovalStatus.ERROR.code(), decision, null, "恢复时未到达审批暂停点: " + e.getMessage());
@@ -280,9 +307,10 @@ public class ApprovalService {
             pauseSignals.remove(orderId);
         }
 
+        AgenticScope scope = ((AgenticScopeAccess) workflow).getAgenticScope(orderId);
         String approvalText = decision + (isBlank(comment) ? "" : " - " + comment);
-        // 用反序列化得到的 responseId 完成中断的审批
-        scope.completePendingResponse(restored.responseId(), approvalText);
+        // 用本次重跑产出的 PendingResponse 的 responseId 完成中断的审批（与反序列化所得一致）
+        scope.completePendingResponse(paused.responseId(), approvalText);
 
         String result;
         try {
@@ -338,7 +366,7 @@ public class ApprovalService {
      */
     public String serialize(PendingResponse<?> pending) {
         try {
-            String json = objectMapper.writeValueAsString(pending);
+            String json = pendingObjectMapper.writeValueAsString(pending);
             log.info("[serialize] PendingResponse responseId={} → json={}", pending.responseId(), json);
             return json;
         } catch (Exception ex) {
@@ -353,7 +381,7 @@ public class ApprovalService {
      */
     public PendingResponse<?> deserialize(String json) {
         try {
-            PendingResponse<?> pr = objectMapper.readValue(json, PendingResponse.class);
+            PendingResponse<?> pr = pendingObjectMapper.readValue(json, PendingResponse.class);
             log.info("[deserialize] json={} → PendingResponse responseId={} (新 CompletableFuture 已重建, isDone={})",
                     json, pr.responseId(), pr.isDone());
             return pr;
@@ -371,24 +399,31 @@ public class ApprovalService {
     }
 
     /**
-     * @HumanInTheLoop 产出 PendingResponse 时由 listener 回调（运行在工作流线程上）：
-     * 把 AgenticScope 投递给等待中的 pauseSignal，调用方即可从忙等轮询改为 get(timeout)。
+     * @HumanInTheLoop 产出 PendingResponse 时由挂在审批 agent 上的 listener 回调
+     * （运行在工作流线程上）：把真实的 PendingResponse 投递给等待中的 pauseSignal，
+     * 调用方即可从忙等轮询改为 get(timeout)。
      */
-    private void onApprovalPaused(PendingResponse<?> pending, AgenticScope scope) {
+    private void onApprovalPaused(PendingResponse<?> pending) {
         String rid = pending.responseId();
         String businessId = rid.startsWith(APPROVAL_PREFIX)
                 ? rid.substring(APPROVAL_PREFIX.length())
                 : rid;
-        CompletableFuture<AgenticScope> signal = pauseSignals.get(businessId);
+        CompletableFuture<PendingResponse<?>> signal = pauseSignals.get(businessId);
         if (signal != null) {
             log.info("onApprovalPaused: pause reached, businessId={}, responseId={}", businessId, rid);
-            signal.complete(scope);
+            signal.complete(pending);
         }
     }
 
-    private String readQuietly(AgenticScope scope, String key) {
+    /** 从运行中的 AgenticScope 读取某个键（用于取前置检查材料等上下文），异常时返回空串。 */
+    private String readScopeState(String businessId, String key) {
         try {
-            return scope.readState(key, "");
+            AgenticScope scope = ((AgenticScopeAccess) workflow).getAgenticScope(businessId);
+            if (scope == null) {
+                return "";
+            }
+            Object v = scope.readState(key, null);
+            return v == null ? "" : v.toString();
         } catch (Exception e) {
             return "";
         }

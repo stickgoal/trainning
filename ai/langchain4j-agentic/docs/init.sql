@@ -107,7 +107,7 @@ CREATE TABLE `hitl_pending` (
   `reason`             VARCHAR(512)   DEFAULT NULL COMMENT '退款原因',
   `amount`             DECIMAL(12,2)  NOT NULL DEFAULT 0.00 COMMENT '申请退款金额',
   `response_id`        VARCHAR(80)    NOT NULL COMMENT 'PendingResponse.responseId, 如 approval:ORD-003',
-  `serialized_pending` TEXT           NOT NULL COMMENT 'PendingResponse序列化JSON, 如 {"responseId":"approval:ORD-003"}',
+  `serialized_pending` TEXT           DEFAULT NULL COMMENT 'PendingResponse序列化JSON, 如 {"responseId":"approval:ORD-003"}；ERROR 等未完成暂停的记录可为 NULL',
   `precheck_result`    MEDIUMTEXT     DEFAULT NULL COMMENT '前置检查材料(供人工审批参考)',
   `status`             VARCHAR(32)    NOT NULL COMMENT '状态: PENDING/APPROVED/COMPLETED/REJECTED/RECOVERED/ERROR',
   `decision`           VARCHAR(16)    DEFAULT NULL COMMENT '审批结论: APPROVED / REJECTED',
