@@ -1035,6 +1035,8 @@ public interface RefundWorkflow {
 
 组装时 `subAgents` 混用「已构建的 LLM Agent 实例」与「`@HumanInTheLoop` 注解类」：前者是 `agentBuilder(...).chatModel(...).build()` 产出的代理，后者由 `createBuiltInAgentExecutor` 识别注解装配（审批节点自身不需要 chatModel）。
 
+同时注册一个 `AgentListener`（`inheritedBySubagents=true`，会透传到各子 agent）：当 `@HumanInTheLoop` 产出 `PendingResponse` 时，在工作流线程上把 `AgenticScope` 投递给等待中的 `pauseSignal`，**取代调用方的忙等轮询**。
+
 ```java
 PreCheckAgent preCheckAgent = AgenticServices.agentBuilder(PreCheckAgent.class)
         .chatModel(chatModel).tools(tools).outputKey("preCheckResult").build();
@@ -1042,19 +1044,31 @@ ExecuteAgent executeAgent = AgenticServices.agentBuilder(ExecuteAgent.class)
         .chatModel(chatModel).tools(tools).outputKey("executionResult").build();
 
 this.workflow = AgenticServices.sequenceBuilder(RefundWorkflow.class)
+        .listener(new AgentListener() {
+            @Override public boolean inheritedBySubagents() { return true; }
+            @Override
+            public void afterAgentInvocation(AgentResponse resp) {
+                // HITL agent 的 output 就是 PendingResponse —— 暂停点已到达
+                if (resp.output() instanceof PendingResponse<?> pr) {
+                    onApprovalPaused(pr, resp.agenticScope());
+                }
+            }
+        })
         .subAgents(preCheckAgent, RefundApprovalAgent.class, executeAgent)
         .outputKey("executionResult")
         .build();
 ```
 
-#### Step 3：ApprovalService —— 创建 CompletableFuture + 阻塞等待
+#### Step 3：ApprovalService —— 创建 CompletableFuture + 事件驱动等待暂停
 
-`submitRefund` 创建一个 `CompletableFuture`，把工作流丢到后台线程。工作流会在 `ExecuteAgent` 读取 `managerApproval` 时阻塞（`blockingGet()`），即「阻塞等待人工审批」。
+`submitRefund` 创建两个 future：`future`（工作流最终结果）与 `pauseSignal`（到达暂停点的信号）。工作流丢到后台线程，会在 `ExecuteAgent` 读取 `managerApproval` 时阻塞（`blockingGet()`）。调用方不再忙等轮询，而是 `pauseSignal.get(timeout)`——当 `@HumanInTheLoop` 产出 `PendingResponse` 时，Step 2 注册的 listener 会在工作流线程上把 `AgenticScope` 投递过来。
 
 ```java
 public ApprovalResponse submitRefund(String orderId, String reason, double amount) {
     CompletableFuture<String> future = new CompletableFuture<>();
     running.put(orderId, future);
+    CompletableFuture<AgenticScope> pauseSignal = new CompletableFuture<>();
+    pauseSignals.put(orderId, pauseSignal);
 
     // 后台线程运行工作流：在 ExecuteAgent 读取 managerApproval 时阻塞
     workflowExecutor.submit(() -> {
@@ -1062,21 +1076,24 @@ public ApprovalResponse submitRefund(String orderId, String reason, double amoun
             future.complete(workflow.process(orderId, orderId, reason, amount));
         } catch (Throwable t) {
             future.completeExceptionally(t);
+            pauseSignal.completeExceptionally(t);   // 失败也要解除调用方等待，避免等满超时
         }
     });
 
-    // 轮询等待到达暂停点
-    AgenticScope scope = awaitPause(orderId, future);
+    // 事件驱动等待到达暂停点：listener 投递 scope，无需轮询
+    AgenticScope scope = pauseSignal.get(PAUSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
     // ...见 Step 4：取出 PendingResponse 序列化落库
 }
 ```
+
+> **为什么不用 `while + Thread.sleep` 轮询？** 忙等会把 HTTP 线程挂在 precheck LLM 调用的整段时间上，还每 100ms 醒一次空转；高并发时每个在途审批都占一个线程在空转。事件驱动后，调用方线程在 `get()` 上真正挂起（OS 级阻塞，零 CPU），暂停一发生就被 listener 唤醒。
 
 #### Step 4：序列化 PendingResponse 落库
 
 到达暂停点后，从 `scope.state().get("managerApproval")` 取出 **真实的 `PendingResponse`**，用 Jackson 序列化为 JSON 落库。`scope.state()` 返回原始 Map（不会阻塞），而 `readState()` 对延迟响应才会阻塞。
 
 ```java
-AgenticScope scope = awaitPause(orderId, future);
+// scope 来自 Step 3 的 pauseSignal.get(...)（listener 已投递）
 
 // 取出真实 PendingResponse 并序列化
 Object stored = scope.state().get(APPROVAL_OUTPUT_KEY);   // "managerApproval"
@@ -1157,13 +1174,21 @@ public ApprovalResponse recover(String orderId, String decision, String comment)
     PendingResponse<?> restored = deserialize(entity.getSerializedPending());
     log.info("recover: deserialized responseId={}", restored.responseId());
 
-    // 重启后内存 scope 已丢失：重跑工作流到暂停点
+    // 重启后内存 scope 已丢失：重跑工作流，同样用 pauseSignal 事件等待到达暂停点
     CompletableFuture<String> future = new CompletableFuture<>();
     running.put(orderId, future);
-    workflowExecutor.submit(() -> future.complete(
-            workflow.process(orderId, orderId, entity.getReason(), entity.getAmount())));
+    CompletableFuture<AgenticScope> pauseSignal = new CompletableFuture<>();
+    pauseSignals.put(orderId, pauseSignal);
+    workflowExecutor.submit(() -> {
+        try {
+            future.complete(workflow.process(orderId, orderId, entity.getReason(), entity.getAmount()));
+        } catch (Throwable t) {
+            future.completeExceptionally(t);
+            pauseSignal.completeExceptionally(t);
+        }
+    });
 
-    AgenticScope scope = awaitPause(orderId, future);
+    AgenticScope scope = pauseSignal.get(PAUSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
     // 用反序列化得到的 responseId 完成中断的审批
     scope.completePendingResponse(restored.responseId(), decision);
 
@@ -1223,7 +1248,7 @@ gantt
 
     section 主线程
     提交申请 submitRefund       :active, t1, 00:00:00, 00:00:01
-    轮询等待暂停点              :t2, 00:00:01, 00:00:02
+    事件等待暂停点              :t2, 00:00:01, 00:00:02
     序列化 PendingResponse 落库 :t3, 00:00:02, 00:00:03
     返回 PENDING                :crit, t4, 00:00:03, 00:00:04
     等待人工决策 (任意时长)     :t5, 00:00:04, 00:02:00
@@ -1375,7 +1400,7 @@ public String query(String id) { ... }
 2. **会话清理**：审批完成后及时 `evictAgenticScope()`，防止内存泄漏；`simulate-restart` 也会清内存会话但保留 DB 记录。
 3. **序列化内容**：`PendingResponse` 经 Jackson 序列化只保留 `responseId`，`CompletableFuture` 不被序列化；反序列化会重建新 future。因此「重启恢复」靠的是持久化的 `responseId`，而非原线程。
 4. **responseId 必须可重放**：重启后重跑工作流会创建新的 `PendingResponse`，其 `responseId` 必须与落库时一致（本例用 `"approval:" + orderId`），`completePendingResponse` 才能匹配到。
-5. **超时机制**：`awaitPause` 与 `future.get()` 都要有超时，避免无限挂起。
+5. **超时机制**：`pauseSignal.get()` 与 `future.get()` 都要有超时，避免无限挂起；工作流在到达暂停点前失败时，应 `pauseSignal.completeExceptionally(t)` 主动解除调用方等待。
 6. **幂等性**：`completePendingResponse` 重复调用返回 `false`（框架已处理），但仍建议在 `approve` 前校验状态。
 
 ### 11.7 调试技巧
@@ -1402,7 +1427,7 @@ langchain4j:
 | outputKey 读取到 null | key 不匹配或 Agent 未执行 | 检查 outputKey 拼写、确认 Agent 执行顺序 |
 | Loop 不退出 | exitCondition 永远不满足 | 检查条件逻辑、增加 maxIterations |
 | Conditional 不匹配 | Predicate 没覆盖所有情况 | 添加兜底分支或确保分类结果在预期枚举内 |
-| HumanInTheLoop 超时 | 轮询时间不够或 PendingResponse 未写入 | 增加 awaitPause 超时、检查 `@HumanInTheLoop` 方法的 `outputKey` 与 `responseId` 是否一致 |
+| HumanInTheLoop 超时 | listener 未触发或 PendingResponse 未写入 | 检查 listener 的 `inheritedBySubagents=true`、`@HumanInTheLoop` 的 `outputKey` 与 `responseId` 是否一致；确认 `pauseSignal` 超时设置 |
 
 ---
 

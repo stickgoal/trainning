@@ -13,6 +13,8 @@ import com.example.agentic.humanintheloop.model.ApprovalStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.internal.PendingResponse;
+import dev.langchain4j.agentic.observability.AgentListener;
+import dev.langchain4j.agentic.observability.AgentResponse;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.model.chat.ChatModel;
@@ -26,8 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * HumanInTheLoop 审批模拟服务（基于 LangChain4j 官方默认机制）。
@@ -57,6 +61,9 @@ public class ApprovalService {
     /** HumanInTheLoop 暂停点在 AgenticScope 中的输出键。 */
     public static final String APPROVAL_OUTPUT_KEY = "managerApproval";
 
+    /** PendingResponse.responseId 的前缀，responseId = 前缀 + 业务ID。 */
+    public static final String APPROVAL_PREFIX = "approval:";
+
     /** 等待工作流到达暂停点 / 等待恢复执行结果的最大时长。 */
     private static final long PAUSE_TIMEOUT_MS = 60_000L;
     private static final long RESULT_TIMEOUT_S = 120L;
@@ -68,6 +75,13 @@ public class ApprovalService {
 
     /** 业务ID → 工作流结果 future（仅存在于内存，进程重启即丢失）。 */
     private final Map<String, CompletableFuture<String>> running = new ConcurrentHashMap<>();
+
+    /**
+     * 业务ID → 暂停信号 future。当 @HumanInTheLoop 产出 PendingResponse 时，
+     * 由 {@link AgentListener} 在工作流线程上把对应的 AgenticScope 投递过来，
+     * 调用方 {@code pauseSignal.get(timeout)} 即可，无需轮询。
+     */
+    private final Map<String, CompletableFuture<AgenticScope>> pauseSignals = new ConcurrentHashMap<>();
 
     @Autowired
     public ApprovalService(ChatModel chatModel,
@@ -87,11 +101,26 @@ public class ApprovalService {
 
         // subAgents 可混用「已构建的 LLM Agent 实例」与「@HumanInTheLoop 注解类」：
         // 前者是 InternalAgent 代理；后者由 createBuiltInAgentExecutor 识别注解装配（自身无需 chatModel）。
+        // listener(inheritedBySubagents=true) 会透传到各子 agent：当 @HumanInTheLoop 产出 PendingResponse 时，
+        // 在工作流线程上把 AgenticScope 投递给 pauseSignals，取代调用方的忙等轮询。
         this.workflow = AgenticServices.sequenceBuilder(RefundWorkflow.class)
+                .listener(new AgentListener() {
+                    @Override
+                    public boolean inheritedBySubagents() {
+                        return true;
+                    }
+
+                    @Override
+                    public void afterAgentInvocation(AgentResponse resp) {
+                        if (resp.output() instanceof PendingResponse<?> pr) {
+                            onApprovalPaused(pr, resp.agenticScope());
+                        }
+                    }
+                })
                 .subAgents(preCheckAgent, RefundApprovalAgent.class, executeAgent)
                 .outputKey("executionResult")
                 .build();
-        log.info("ApprovalService initialized: RefundWorkflow built (LLM precheck/execute + @HumanInTheLoop approval)");
+        log.info("ApprovalService initialized: RefundWorkflow built (LLM precheck/execute + @HumanInTheLoop approval, event-driven pause)");
     }
 
     // =========================================================================
@@ -104,28 +133,42 @@ public class ApprovalService {
     public ApprovalResponse submitRefund(String orderId, String reason, double amount) {
         log.info("submitRefund: businessId={}, reason={}, amount={}", orderId, reason, amount);
 
-        // 1) 创建 CompletableFuture：其完成标志着整条工作流跑完
+        // 1) future：其完成标志着整条工作流跑完；pauseSignal：到达审批暂停点的信号
         CompletableFuture<String> future = new CompletableFuture<>();
         running.put(orderId, future);
+        CompletableFuture<AgenticScope> pauseSignal = new CompletableFuture<>();
+        pauseSignals.put(orderId, pauseSignal);
 
         // 2) 后台线程运行工作流：会在 ExecuteAgent 读取 managerApproval 时阻塞(blockingGet)
         workflowExecutor.submit(() -> {
             try {
-                String result = workflow.process(orderId, orderId, reason, amount);
-                future.complete(result);
+                future.complete(workflow.process(orderId, orderId, reason, amount));
             } catch (Throwable t) {
                 log.error("submitRefund: workflow failed for businessId={}", orderId, t);
                 future.completeExceptionally(t);
+                // 工作流在到达暂停点前就失败：解除调用方对 pauseSignal 的等待，避免等满超时
+                pauseSignal.completeExceptionally(t);
             }
         });
 
-        // 3) 等待工作流到达暂停点（PendingResponse 已写入 AgenticScope）
-        AgenticScope scope = awaitPause(orderId, future);
-        if (scope == null || future.isDone()) {
-            String err = future.isCompletedExceptionally() ? "工作流执行异常" : "未在超时内到达审批暂停点";
+        // 3) 事件驱动等待到达暂停点：listener 在 PendingResponse 产出后投递 scope，无需轮询
+        AgenticScope scope;
+        try {
+            scope = pauseSignal.get(PAUSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
             saveOrUpdate(buildEntity(orderId, orderId, reason, amount, responseId(orderId),
-                    null, ApprovalStatus.ERROR.code(), null, null, err));
-            return ApprovalResponse.notFound(orderId, err);
+                    null, ApprovalStatus.ERROR.code(), null, null, "未在超时内到达审批暂停点"));
+            return ApprovalResponse.notFound(orderId, "未在超时内到达审批暂停点");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ApprovalResponse.notFound(orderId, "等待暂停点被中断");
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause() != null ? e.getCause() : e;
+            saveOrUpdate(buildEntity(orderId, orderId, reason, amount, responseId(orderId),
+                    null, ApprovalStatus.ERROR.code(), null, null, "工作流执行异常: " + cause.getMessage()));
+            return ApprovalResponse.notFound(orderId, "工作流执行异常: " + cause.getMessage());
+        } finally {
+            pauseSignals.remove(orderId);
         }
 
         // 4) 取出真实的 PendingResponse 并【序列化】落库
@@ -212,6 +255,8 @@ public class ApprovalService {
         // 重启后内存 scope 已丢失：重新运行工作流，到达暂停点后注入审批结论
         CompletableFuture<String> future = new CompletableFuture<>();
         running.put(orderId, future);
+        CompletableFuture<AgenticScope> pauseSignal = new CompletableFuture<>();
+        pauseSignals.put(orderId, pauseSignal);
         workflowExecutor.submit(() -> {
             try {
                 future.complete(workflow.process(orderId, orderId, entity.getReason(),
@@ -219,13 +264,20 @@ public class ApprovalService {
             } catch (Throwable t) {
                 log.error("recover: workflow failed for businessId={}", orderId, t);
                 future.completeExceptionally(t);
+                pauseSignal.completeExceptionally(t);
             }
         });
 
-        AgenticScope scope = awaitPause(orderId, future);
-        if (scope == null) {
-            markStatus(orderId, ApprovalStatus.ERROR.code(), decision, null, "恢复时未到达审批暂停点");
+        // 事件驱动等待到达暂停点（listener 投递 scope）
+        AgenticScope scope;
+        try {
+            scope = pauseSignal.get(PAUSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            log.error("recover: wait pause failed for businessId={}", orderId, e);
+            markStatus(orderId, ApprovalStatus.ERROR.code(), decision, null, "恢复时未到达审批暂停点: " + e.getMessage());
             return ApprovalResponse.from(pendingMapper.selectById(orderId), null, "恢复失败：未到达审批暂停点");
+        } finally {
+            pauseSignals.remove(orderId);
         }
 
         String approvalText = decision + (isBlank(comment) ? "" : " - " + comment);
@@ -315,25 +367,23 @@ public class ApprovalService {
     // =========================================================================
 
     private String responseId(String orderId) {
-        return "approval:" + orderId;
+        return APPROVAL_PREFIX + orderId;
     }
 
-    /** 轮询等待工作流到达审批暂停点：pendingResponseIds 含 responseId，或工作流提前结束。 */
-    private AgenticScope awaitPause(String orderId, CompletableFuture<String> future) {
-        AgenticScopeAccess access = (AgenticScopeAccess) workflow;
-        long deadline = System.currentTimeMillis() + PAUSE_TIMEOUT_MS;
-        while (System.currentTimeMillis() < deadline) {
-            if (future.isDone()) {
-                return access.getAgenticScope(orderId);
-            }
-            AgenticScope scope = access.getAgenticScope(orderId);
-            if (scope != null && scope.pendingResponseIds().contains(responseId(orderId))) {
-                return scope;
-            }
-            sleep(100);
+    /**
+     * @HumanInTheLoop 产出 PendingResponse 时由 listener 回调（运行在工作流线程上）：
+     * 把 AgenticScope 投递给等待中的 pauseSignal，调用方即可从忙等轮询改为 get(timeout)。
+     */
+    private void onApprovalPaused(PendingResponse<?> pending, AgenticScope scope) {
+        String rid = pending.responseId();
+        String businessId = rid.startsWith(APPROVAL_PREFIX)
+                ? rid.substring(APPROVAL_PREFIX.length())
+                : rid;
+        CompletableFuture<AgenticScope> signal = pauseSignals.get(businessId);
+        if (signal != null) {
+            log.info("onApprovalPaused: pause reached, businessId={}, responseId={}", businessId, rid);
+            signal.complete(scope);
         }
-        log.warn("awaitPause: timed out for businessId={}", orderId);
-        return access.getAgenticScope(orderId);
     }
 
     private String readQuietly(AgenticScope scope, String key) {
@@ -399,13 +449,5 @@ public class ApprovalService {
 
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
-    }
-
-    private void sleep(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 }
