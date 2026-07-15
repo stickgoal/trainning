@@ -1,16 +1,19 @@
 package com.example.agentic.common.service;
 
 import com.example.agentic.common.model.*;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * 模拟数据服务，提供电商售后场景所需的测试数据。
+ * 模拟数据服务，提供电商售后场景所需的测试数据（内存实现）。
+ * 作为 {@link DataService} 的默认（@Primary）实现，便于 Demo 与测试开箱即用。
  */
 @Service
-public class MockDataService {
+@Primary
+public class MockDataService implements DataService {
 
     private final Map<String, Order> orders = Map.of(
         "ORD-001", Order.builder()

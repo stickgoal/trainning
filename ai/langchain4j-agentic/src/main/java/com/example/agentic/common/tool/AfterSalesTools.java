@@ -3,7 +3,7 @@ package com.example.agentic.common.tool;
 import com.example.agentic.common.model.Order;
 import com.example.agentic.common.model.Product;
 import com.example.agentic.common.model.User;
-import com.example.agentic.common.service.MockDataService;
+import com.example.agentic.common.service.DataService;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +18,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AfterSalesTools {
 
-    private final MockDataService mockDataService;
+    private final DataService dataService;
 
     @Tool("查询订单信息，包括订单号、商品、状态、金额等")
     public String queryOrder(@P("订单ID，如 ORD-001") String orderId) {
         log.info("[Tool] queryOrder called: orderId={}", orderId);
-        Order order = mockDataService.getOrder(orderId);
+        Order order = dataService.getOrder(orderId);
         if (order == null) {
             return "未找到订单: " + orderId;
         }
@@ -36,7 +36,7 @@ public class AfterSalesTools {
     @Tool("查询商品信息，包括名称、分类、价格、库存")
     public String queryProduct(@P("商品ID，如 PRD-001") String productId) {
         log.info("[Tool] queryProduct called: productId={}", productId);
-        Product product = mockDataService.getProduct(productId);
+        Product product = dataService.getProduct(productId);
         if (product == null) {
             return "未找到商品: " + productId;
         }
@@ -48,7 +48,7 @@ public class AfterSalesTools {
     @Tool("查询用户信息，包括VIP等级、历史订单数、历史退款次数")
     public String queryUser(@P("用户ID，如 USR-001") String userId) {
         log.info("[Tool] queryUser called: userId={}", userId);
-        User user = mockDataService.getUser(userId);
+        User user = dataService.getUser(userId);
         if (user == null) {
             return "未找到用户: " + userId;
         }
@@ -60,7 +60,7 @@ public class AfterSalesTools {
     @Tool("根据订单ID查询下单用户的信息")
     public String queryUserByOrder(@P("订单ID") String orderId) {
         log.info("[Tool] queryUserByOrder called: orderId={}", orderId);
-        User user = mockDataService.getUserByOrderId(orderId);
+        User user = dataService.getUserByOrderId(orderId);
         if (user == null) {
             return "未找到该订单对应的用户";
         }
