@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HumanInTheLoop 极简教学版</title>
+<style>
+  :root {
+    --primary: #2563eb; --primary-dark: #1d4ed8; --bg: #f6f8fb;
+    --card: #ffffff; --border: #e3e8ef; --text: #1f2937; --text-secondary: #64748b;
+    --ok: #16a34a; --warn: #d97706; --err: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6; }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  .sub { color: var(--text-secondary); margin-bottom: 24px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 22px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(16,24,40,.04); }
+  .card h2 { font-size: 1.1rem; margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+  .step-badge { background: var(--primary); color: #fff; border-radius: 999px;
+    font-size: .8rem; padding: 2px 10px; }
+  label { display: block; font-size: .85rem; color: var(--text-secondary); margin: 12px 0 4px; }
+  input, select, textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: .95rem; font-family: inherit; background: #fff; color: var(--text); }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); border-color: var(--primary); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 160px; }
+  .btn { margin-top: 16px; background: var(--primary); color: #fff; border: none;
+    padding: 10px 18px; border-radius: 9px; font-size: .95rem; cursor: pointer; font-weight: 600; }
+  .btn:hover { background: var(--primary-dark); }
+  .btn:disabled { opacity: .6; cursor: not-allowed; }
+  .btn-ghost { background: #eef2ff; color: var(--primary); }
+  .btn-ghost:hover { background: #e0e7ff; }
+  .btn-sm { margin-top: 0; padding: 5px 10px; font-size: .8rem; }
+  pre { background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 10px;
+    overflow: auto; font-size: .82rem; font-family: Consolas, "Courier New", monospace; margin: 14px 0 0; }
+  .status { display: inline-block; padding: 2px 10px; border-radius: 999px;
+    font-size: .78rem; font-weight: 600; margin-left: 6px; }
+  .status.PENDING { background: #fef3c7; color: var(--warn); }
+  .status.APPROVED { background: #dcfce7; color: var(--ok); }
+  .status.REJECTED { background: #fee2e2; color: var(--err); }
+  .status.NOT_FOUND { background: #e5e7eb; color: #374151; }
+  .explain { background: #f0f7ff; border-left: 4px solid var(--primary); border-radius: 8px;
+    padding: 12px 16px; font-size: .9rem; color: #334155; margin: 12px 0; }
+  .explain code { background: #dbeafe; padding: 1px 6px; border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; margin-top: 10px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-secondary); font-weight: 600; }
+  .pill { font-family: Consolas, monospace; background: #f1f5f9; padding: 1px 7px; border-radius: 6px; }
+  .flow { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; margin: 10px 0; }
+  .flow .box { flex: 1; min-width: 130px; border: 1px dashed var(--border); border-radius: 10px;
+    padding: 12px; text-align: center; font-size: .85rem; background: #fff; }
+  .flow .arrow { display: flex; align-items: center; color: var(--text-secondary); padding: 0 6px; }
+  .flow .box b { display: block; color: var(--primary); margin-bottom: 4px; }
+  .muted { color: var(--text-secondary); font-size: .82rem; }
+  a.back { color: var(--primary); text-decoration: none; font-size: .85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>HumanInTheLoop 极简教学版</h1>
+  <div class="sub">不依赖任何 Agent 框架 / 数据库，只为把「挂起 → 人工 → 恢复」讲清楚。
+    <a class="back" href="/">← 返回主看板</a></div>
+
+  <div class="card">
+    <h2>🧠 核心原理（记住三样东西）</h2>
+    <div class="explain">
+      HITL 把一条流程<b>切成两段</b>，用「挂起状态 + 关联令牌」接起来，因为 HTTP 不能在等人工时一直占着线程：
+      <div class="flow" style="margin-top:12px">
+        <div class="box"><b>① 提交</b>自动跑「审批前」步骤 → 冻结状态，返回 requestId</div>
+        <div class="arrow">→</div>
+        <div class="box"><b>② 人工</b>在别处看到 requestId，做出审批决策</div>
+        <div class="arrow">→</div>
+        <div class="box"><b>③ 恢复</b>凭 requestId 找回状态，自动跑「审批后」步骤</div>
+      </div>
+    </div>
+    <ul style="font-size:.9rem;margin:6px 0 0;padding-left:20px">
+      <li><b>挂起状态</b>：暂停时保存的上下文（本例用内存 Map 存 <code>PendingRequest</code>）。</li>
+      <li><b>关联令牌</b>：<code>requestId</code>，连接「提交」和「审批」两条 HTTP 请求。</li>
+      <li><b>人工决策通道</b>：独立的 <code>/approve</code> 接口，专门接收人的输入。</li>
+    </ul>
+    <p class="muted" style="margin-bottom:0">对比官方版：LangChain4j 的 <code>@HumanInTheLoop</code> 用 <code>PendingResponse</code>+<code>AgenticScope</code> 隐式做同样的事，
+      并用线程阻塞在一个调用里串起挂起-恢复；这里拆成两条请求，更直观，也更适合 Web 场景。</p>
+  </div>
+
+  <!-- 第一段：提交 -->
+  <div class="card">
+    <h2><span class="step-badge">步骤 1</span> 提交退款申请（跑到审批点挂起）</h2>
+    <div class="row">
+      <div><label>订单号 orderId</label><input id="s-orderId" value="ORD-003"></div>
+      <div><label>退款金额</label><input id="s-amount" type="number" value="918"></div>
+    </div>
+    <label>退款原因</label>
+    <input id="s-reason" value="收到商品破损，要求全额退款">
+    <div>
+      <button class="btn" id="btn-submit" onclick="doSubmit()">🚀 提交（挂起并返回 requestId）</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyCurl('submit')">📋 复制 curl</button>
+    </div>
+    <pre id="out-submit" style="display:none"></pre>
+  </div>
+
+  <!-- 第二段：审批 -->
+  <div class="card">
+    <h2><span class="step-badge">步骤 2</span> 人工审批（恢复执行）</h2>
+    <label>requestId（步骤1返回，会随提交自动填入）</label>
+    <input id="a-requestId" placeholder="HITL-xxxxxxxx">
+    <div class="row">
+      <div>
+        <label>审批决策</label>
+        <select id="a-decision">
+          <option value="APPROVED">APPROVED（通过）</option>
+          <option value="REJECTED">REJECTED（驳回）</option>
+        </select>
+      </div>
+      <div><label>审批备注（可选）</label><input id="a-comment" placeholder="如：金额核实无误"></div>
+    </div>
+    <div>
+      <button class="btn" id="btn-approve" onclick="doApprove()">✅ 提交审批（恢复工作流）</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyCurl('approve')">📋 复制 curl</button>
+    </div>
+    <pre id="out-approve" style="display:none"></pre>
+  </div>
+
+  <!-- 辅助：查询 -->
+  <div class="card">
+    <h2>🔎 辅助：查看状态 / 待审批列表</h2>
+    <div class="row">
+      <div>
+        <label>requestId</label>
+        <input id="q-requestId" placeholder="HITL-xxxxxxxx">
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <button class="btn btn-ghost" onclick="doStatus()">查状态</button>
+        <button class="btn btn-ghost" onclick="doPending()">刷新待审批</button>
+      </div>
+    </div>
+    <pre id="out-status" style="display:none"></pre>
+    <table id="pending-table" style="display:none">
+      <thead><tr><th>requestId</th><th>订单</th><th>金额</th><th>风控</th><th>状态</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <p class="muted">提示：本实现用内存 Map 存挂起状态，<b>重启服务后数据会清空</b>，请演示完及时审批。
+    需要崩溃恢复请参考官方的 <code>/api/humanintheloop</code> 持久化版本。</p>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  function show(el, obj) {
+    el.style.display = 'block';
+    el.textContent = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
+  }
+  async function api(method, url, params) {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    const res = await fetch(url + qs, { method });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
+  }
+  async function doSubmit() {
+    const r = await api('POST', '/api/hitls/submit', {
+      orderId: $('s-orderId').value,
+      reason: $('s-reason').value,
+      amount: $('s-amount').value
+    });
+    show($('out-submit'), r.data);
+    if (r.data.requestId) {
+      $('a-requestId').value = r.data.requestId;
+      $('q-requestId').value = r.data.requestId;
+    }
+    doPending();
+  }
+  async function doApprove() {
+    const r = await api('POST', '/api/hitls/approve', {
+      requestId: $('a-requestId').value,
+      decision: $('a-decision').value,
+      comment: $('a-comment').value
+    });
+    show($('out-approve'), r.data);
+    doPending();
+  }
+  async function doStatus() {
+    const r = await api('GET', '/api/hitls/status', { requestId: $('q-requestId').value });
+    show($('out-status'), r.data);
+  }
+  async function doPending() {
+    const r = await api('GET', '/api/hitls/pending', null);
+    const list = Array.isArray(r.data) ? r.data : [];
+    const tbody = $('pending-table').querySelector('tbody');
+    tbody.innerHTML = list.map(p => `<tr>
+      <td><span class="pill">${p.requestId}</span></td>
+      <td>${p.orderId}</td><td>${p.amount}</td><td>${p.level || '-'}</td>
+      <td><span class="status ${p.status}">${p.status}</span></td></tr>`).join('');
+    $('pending-table').style.display = list.length ? 'table' : 'none';
+  }
+  function copyCurl(which) {
+    let cmd;
+    if (which === 'submit') {
+      cmd = `curl -X POST '${location.origin}/api/hitls/submit' \\\n  -d 'orderId=${encodeURIComponent($('s-orderId').value)}' \\\n  -d 'reason=${encodeURIComponent($('s-reason').value)}' \\\n  -d 'amount=${$('s-amount').value}'`;
+    } else {
+      cmd = `curl -X POST '${location.origin}/api/hitls/approve' \\\n  -d 'requestId=${encodeURIComponent($('a-requestId').value)}' \\\n  -d 'decision=${$('a-decision').value}' \\\n  -d 'comment=${encodeURIComponent($('a-comment').value)}'`;
+    }
+    navigator.clipboard?.writeText(cmd).then(() => alert('已复制 curl 到剪贴板'));
+  }
+  // 首次进入刷新一次待审批列表
+  doPending();
+</script>
+</body>
+</html>

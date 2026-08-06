@@ -170,6 +170,9 @@
         .btn-primary { background: var(--primary); color: #fff; }
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+        .btn-ghost { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
+        .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-ghost:disabled { opacity: .8; cursor: default; }
 
         /* ── Result ── */
         .result-box {
@@ -251,6 +254,13 @@
             font-family: 'Consolas','Courier New',monospace; font-size: .76rem;
             color: var(--text-secondary); margin-bottom: 8px; word-break: break-all;
         }
+        .debug-copy {
+            margin-left: auto; padding: 3px 12px; font-size: .74rem; cursor: pointer;
+            border: 1px solid var(--border); border-radius: 12px;
+            background: var(--card-bg); color: var(--text-secondary); transition: all .2s; white-space: nowrap;
+        }
+        .debug-copy:hover { border-color: var(--primary); color: var(--primary); }
+        .debug-copy:disabled { opacity: .8; cursor: default; }
 
         /* ── Responsive ── */
         @media (max-width: 640px) {
@@ -353,6 +363,7 @@ flowchart LR
             <button class="btn btn-primary" onclick="callAPI('sequential')">
                 <span id="seq-spinner" style="display:none" class="spinner"></span> 发送
             </button>
+            <button class="btn btn-ghost" onclick="copyRequest('sequential', this)">📋 复制请求</button>
         </div>
         <div class="result-box" id="seq-result"></div>
     </div>
@@ -386,6 +397,7 @@ flowchart TD
             <button class="btn btn-primary" onclick="callAPI('parallel')">
                 <span id="par-spinner" style="display:none" class="spinner"></span> 发送
             </button>
+            <button class="btn btn-ghost" onclick="copyRequest('parallel', this)">📋 复制请求</button>
         </div>
         <div class="result-box" id="par-result"></div>
     </div>
@@ -418,6 +430,7 @@ flowchart TD
             <button class="btn btn-primary" onclick="callAPI('loop')">
                 <span id="loop-spinner" style="display:none" class="spinner"></span> 发送
             </button>
+            <button class="btn btn-ghost" onclick="copyRequest('loop', this)">📋 复制请求</button>
         </div>
         <div class="result-box" id="loop-result"></div>
     </div>
@@ -451,6 +464,7 @@ flowchart TD
             <button class="btn btn-primary" onclick="callAPI('conditional')">
                 <span id="cond-spinner" style="display:none" class="spinner"></span> 发送
             </button>
+            <button class="btn btn-ghost" onclick="copyRequest('conditional', this)">📋 复制请求</button>
         </div>
         <div class="result-box" id="cond-result"></div>
     </div>
@@ -486,6 +500,7 @@ flowchart TD
             <button class="btn btn-primary" onclick="callAPI('supervisor')">
                 <span id="sup-spinner" style="display:none" class="spinner"></span> 发送
             </button>
+            <button class="btn btn-ghost" onclick="copyRequest('supervisor', this)">📋 复制请求</button>
         </div>
         <div class="result-box" id="sup-result"></div>
     </div>
@@ -523,6 +538,7 @@ flowchart TD
             <button class="btn btn-primary" onclick="callAPI('hitl-submit')">
                 <span id="hitl-submit-spinner" style="display:none" class="spinner"></span> ① 提交退款
             </button>
+            <button class="btn btn-ghost" onclick="copyRequest('hitl-submit', this)">📋 复制请求</button>
         </div>
         <div class="form-row">
             <span class="api-label">POST .../approve</span>
@@ -534,6 +550,7 @@ flowchart TD
             <button class="btn btn-primary" onclick="callAPI('hitl-approve')">
                 <span id="hitl-approve-spinner" style="display:none" class="spinner"></span> ② 人工审批
             </button>
+            <button class="btn btn-ghost" onclick="copyRequest('hitl-approve', this)">📋 复制请求</button>
         </div>
         <div class="result-box" id="hitl-result"></div>
     </div>
@@ -571,6 +588,7 @@ flowchart TD
             <button class="btn btn-primary" onclick="callPlannerAPI()">
                 <span id="planner-spinner" style="display:none" class="spinner"></span> 发送批量工单
             </button>
+            <button class="btn btn-ghost" onclick="copyRequest('planner', this)">📋 复制请求</button>
         </div>
         <div class="result-box" id="planner-result"></div>
     </div>
@@ -647,7 +665,7 @@ flowchart TD
         log.innerHTML = '<div class="debug-empty" id="debug-empty">暂无请求记录，点击上方卡片的「发送」按钮开始测试</div>';
     }
 
-    function logDebug({ time, method, url, status, statusClass, durationMs, body }) {
+    function logDebug({ time, method, url, status, statusClass, durationMs, body, reqBody }) {
         const log = document.getElementById('debug-log');
         if (!log) return;
         const empty = document.getElementById('debug-empty');
@@ -664,6 +682,12 @@ flowchart TD
             + '<span class="debug-url">' + escapeHtml(url) + '</span>'
             + '<span class="status-tag ' + statusClass + '">' + escapeHtml(status) + '</span>'
             + '<span class="debug-duration">⏱ ' + durationMs + ' ms</span>';
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'debug-copy';
+        copyBtn.textContent = '📋 复制请求';
+        copyBtn.onclick = () => copyToClipboard(curlFromRequest(method, url, reqBody), copyBtn);
+        header.appendChild(copyBtn);
 
         const bodyEl = document.createElement('pre');
         bodyEl.className = 'debug-body';
@@ -718,7 +742,7 @@ flowchart TD
                     + '<pre>' + escapeHtml(dataText) + '</pre>';
             }
 
-            logDebug({ time: timeStr, method, url, status: statusText, statusClass, durationMs, body: dataText });
+            logDebug({ time: timeStr, method, url, status: statusText, statusClass, durationMs, body: dataText, reqBody: body });
 
             if (typeof onParsed === 'function') onParsed(parsed, resultEl);
             return { res, parsed, dataText };
@@ -730,17 +754,16 @@ flowchart TD
                     + '<div class="req-info">🔗 ' + escapeHtml(url) + ' · ⏱ ' + durationMs + ' ms</div>'
                     + '<pre>' + escapeHtml(err.message) + '</pre>';
             }
-            logDebug({ time: timeStr, method, url, status: 'Network Error', statusClass: 'err', durationMs, body: err.message });
+            logDebug({ time: timeStr, method, url, status: 'Network Error', statusClass: 'err', durationMs, body: err.message, reqBody: body });
             return { res: null, parsed: null, dataText: err.message };
         } finally {
             if (spinnerEl) spinnerEl.style.display = 'none';
         }
     }
 
-    // ── API Call dispatcher ──
-    function callAPI(mode) {
-        let url = '', spinnerId = '', resultId = '';
-
+    // ── Build request descriptor (shared by send + copy) ──
+    function buildRequest(mode) {
+        let url = '', body = null, spinnerId = '', resultId = '';
         switch (mode) {
             case 'sequential':
                 url = '/api/sequential/refund?orderId=' + encodeURIComponent(__val('seq-orderId'))
@@ -778,10 +801,62 @@ flowchart TD
                     + '&decision=' + encodeURIComponent(__val('hitl-decision'));
                 spinnerId = 'hitl-approve-spinner'; resultId = 'hitl-result';
                 break;
+            case 'planner':
+                url = '/api/planner/plan';
+                body = JSON.stringify({
+                    tickets: [
+                        {orderId: 'ORD-003', issue: '收到商品破损，要求全额退款并赔偿'},
+                        {orderId: 'ORD-001', issue: '蓝牙耳机连接不稳定，要求换货'},
+                        {orderId: 'ORD-002', issue: '不喜欢键盘手感，申请退款'},
+                        {orderId: 'ORD-004', issue: '咨询发货时间'}
+                    ]
+                });
+                spinnerId = 'planner-spinner'; resultId = 'planner-result';
+                break;
         }
+        return { method: 'POST', url, body, spinnerId, resultId };
+    }
 
+    // ── Render a ready-to-run curl command (absolute URL) for use in other clients ──
+    function curlFromRequest(method, url, body) {
+        const full = url.startsWith('/') ? location.origin + url : url;
+        let curl = 'curl -X ' + method + " '" + full + "'";
+        if (body !== null && body !== undefined) {
+            curl += " \\\n  -H 'Content-Type: application/json' \\\n  -d '" + String(body).replace(/'/g, "'\\''") + "'";
+        }
+        return curl;
+    }
+
+    // ── Copy helper with transient button feedback ──
+    async function copyToClipboard(text, btn) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (e) {
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.focus(); ta.select();
+            try { document.execCommand('copy'); } catch (e2) {}
+            document.body.removeChild(ta);
+        }
+        if (btn) {
+            const old = btn.textContent;
+            btn.textContent = '✅ 已复制';
+            btn.disabled = true;
+            setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 1500);
+        }
+    }
+
+    // ── Copy current card's request as a curl command ──
+    function copyRequest(mode, btn) {
+        const req = buildRequest(mode);
+        copyToClipboard(curlFromRequest(req.method, req.url, req.body), btn);
+    }
+
+    // ── API Call dispatcher ──
+    function callAPI(mode) {
+        const req = buildRequest(mode);
         sendRequest({
-            method: 'POST', url, spinnerId, resultId,
+            method: req.method, url: req.url, body: req.body, spinnerId: req.spinnerId, resultId: req.resultId,
             onParsed: (parsed, resultEl) => {
                 if (mode === 'hitl-submit' && parsed && parsed.requestId) {
                     document.getElementById('hitl-requestId').value = parsed.requestId;
@@ -796,16 +871,7 @@ flowchart TD
 
     // ── Planner API ──
     function callPlannerAPI() {
-        const url = '/api/planner/plan';
-        const body = JSON.stringify({
-            tickets: [
-                {orderId: 'ORD-003', issue: '收到商品破损，要求全额退款并赔偿'},
-                {orderId: 'ORD-001', issue: '蓝牙耳机连接不稳定，要求换货'},
-                {orderId: 'ORD-002', issue: '不喜欢键盘手感，申请退款'},
-                {orderId: 'ORD-004', issue: '咨询发货时间'}
-            ]
-        });
-        sendRequest({ method: 'POST', url, body, spinnerId: 'planner-spinner', resultId: 'planner-result' });
+        callAPI('planner');
     }
 </script>
 
