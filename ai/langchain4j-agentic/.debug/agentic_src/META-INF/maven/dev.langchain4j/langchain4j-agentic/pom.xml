@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>dev.langchain4j</groupId>
+  <artifactId>langchain4j-agentic</artifactId>
+  <version>1.16.0-beta26</version>
+  <name>LangChain4j :: Agentic Framework</name>
+  <description>LangChain4j :: Agentic Framework</description>
+  <url>https://github.com/langchain4j/langchain4j/tree/main/langchain4j-agentic</url>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>mariofusco</id>
+      <email>mario.fusco@gmail.com</email>
+      <url>https://github.com/mariofusco</url>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:git://github.com/langchain4j/langchain4j.git/langchain4j-agentic</connection>
+    <developerConnection>scm:git:git@github.com:langchain4j/langchain4j.git/langchain4j-agentic</developerConnection>
+    <url>https://github.com/langchain4j/langchain4j/tree/main/langchain4j-agentic</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>dev.langchain4j</groupId>
+      <artifactId>langchain4j</artifactId>
+      <version>1.16.0</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>

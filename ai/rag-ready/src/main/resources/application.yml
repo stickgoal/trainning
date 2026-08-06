@@ -1,0 +1,93 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: rag-ready
+  data:
+    redis:
+      host: 192.168.1.241
+      port: 6379
+      password: abc123
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+          max-wait: 3000ms
+
+# LangChain4j 配置
+langchain4j:
+  # 百炼 Embedding 模型（通过 OpenAI 兼容接口）
+  embedding:
+    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api-key: ${DASHSCOPE_API_KEY}
+    model-name: text-embedding-v3
+    # 百炼 text-embedding-v3 输出维度：1024
+    dimension: 1024
+  # 百炼 LLM
+  chat:
+    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api-key: ${DASHSCOPE_API_KEY}
+    model-name: qwen-plus
+
+# 知识库配置
+knowledge-base:
+  bases:
+    hr-policy:
+      index-name: idx:kb_hr
+      scope: hr
+      description: 人力资源制度文档库
+      dimension: 1024
+    finance-ops:
+      index-name: idx:kb_finance
+      scope: finance
+      description: 财务操作手册文档库
+      dimension: 1024
+    general:
+      index-name: idx:kb_general
+      scope: general
+      description: 通用知识文档库
+      dimension: 1024
+
+# RAG 配置
+rag:
+  # 分块参数
+  chunk-size: 300
+  overlap-tokens: 50
+  # 检索参数
+  top-k: 5
+  min-score: 0.6
+  # HNSW 参数
+  hnsw:
+    ef-construction: 200
+    m: 16
+    ef-search: 10
+  # RRF 融合参数
+  rrf:
+    k: 60
+  # 混合检索权重（向量 vs BM25）
+  hybrid:
+    vector-weight: 0.7
+    bm25-weight: 0.3
+
+# 测试配置
+test:
+  test-docs-path: src/test/resources/test-docs
+  evaluation-output-path: target/rag-evaluation
+  # 评估目标值
+  targets:
+    recall-at-5: 0.85
+    mrr: 0.8
+    ndcg-at-5: 0.75
+    answer-match-rate: 0.7
+  # 自动调优最大轮次
+  max-optimization-rounds: 3
+
+logging:
+  level:
+    com.yourproject: DEBUG
+    dev.langchain4j: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

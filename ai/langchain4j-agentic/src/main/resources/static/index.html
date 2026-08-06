@@ -129,6 +129,7 @@
         .card-number.c4 { background: var(--accent-2); }
         .card-number.c5 { background: #ec4899; }
         .card-number.c6 { background: var(--danger); }
+        .card-number.c7 { background: #10b981; }
 
         .card-title { font-size: 1.1rem; font-weight: 700; }
         .card-subtitle { font-size: .85rem; color: var(--text-secondary); margin-top: 2px; }
@@ -236,7 +237,7 @@
 <!-- Hero -->
 <div class="hero">
     <h1>🤖 LangChain4j Agentic Workflow Demo</h1>
-    <p>电商智能售后处理平台 — 使用 LangChain4j Agentic API 实现六种 AI Agent 工作流模式，提供交互式测试体验</p>
+    <p>电商智能售后处理平台 — 使用 LangChain4j Agentic API 实现七种 AI Agent 工作流模式，提供交互式测试体验</p>
     <div class="badges">
         <span class="badge">Spring Boot 3.5.3</span>
         <span class="badge">LangChain4j 1.16.0-beta26</span>
@@ -257,7 +258,7 @@
 graph TD
     subgraph API["REST API Layer"]
         DASH["Web Dashboard"]
-        REST["8 Endpoints"]
+        REST["9 Endpoints"]
     end
     subgraph WF["Workflow Layer"]
         S1["① Sequential<br/>顺序链"]
@@ -266,26 +267,28 @@ graph TD
         S4["④ Conditional<br/>条件分流"]
         S5["⑤ Supervisor<br/>主管调度"]
         S6["⑥ HumanInTheLoop<br/>人工介入"]
+        S7["⑦ Planner<br/>规划执行"]
     end
     subgraph INFRA["Infrastructure"]
         LLM["Agnes AI<br/>agnes-2.0-flash"]
         TOOLS["AfterSalesTools<br/>@Tool 工具"]
         DATA["MockDataService<br/>模拟数据"]
     end
-    DASH --> REST --> S1 & S2 & S3 & S4 & S5 & S6
-    S1 & S2 & S3 & S4 & S5 & S6 --> LLM & TOOLS & DATA
+    DASH --> REST --> S1 & S2 & S3 & S4 & S5 & S6 & S7
+    S1 & S2 & S3 & S4 & S5 & S6 & S7 --> LLM & TOOLS & DATA
     style S1 fill:#3b82f6,color:#fff
     style S2 fill:#06b6d4,color:#fff
     style S3 fill:#8b5cf6,color:#fff
     style S4 fill:#f97316,color:#fff
     style S5 fill:#ec4899,color:#fff
     style S6 fill:#ef4444,color:#fff
+    style S7 fill:#10b981,color:#fff
     </div>
 </div>
 
 <!-- Workflow Cards -->
 <div class="section-title">
-    <h2>🧪 六种工作流模式</h2>
+    <h2>🧪 七种工作流模式</h2>
     <p>点击下方卡片中的「发送请求」按钮，实时调用后端 API 查看效果</p>
 </div>
 
@@ -506,6 +509,42 @@ flowchart TD
 
 </div><!-- /cards-grid -->
 
+<!-- Planner Card -->
+<div class="cards-grid">
+<div class="card" style="grid-column: 1 / -1;">
+    <div class="card-header">
+        <div class="card-number c7">⑦</div>
+        <div>
+            <div class="card-title">Planner — 规划执行（Plan-then-Execute）</div>
+            <div class="card-subtitle">PlanAgent 制定计划 → ExecuteAgent/ProgressAgent 循环执行</div>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="desc">批量售后工单的"先规划，后执行"模式。PlanAgent 分析所有工单生成结构化 JSON 计划（含优先级排序和处理策略），然后 ExecuteAgent 按计划逐步处理，ProgressAgent 跟踪进度，全部完成后输出执行报告。<br/>
+        <b>与 Supervisor 的区别：</b>Supervisor 是运行时动态决策（黑盒），Planner 是事先生成完整计划（白盒可审查）。</p>
+        <div class="card-diagram">
+            <div class="mermaid">
+flowchart TD
+    A["4个工单"] --> B["PlanAgent<br/>制定计划"]
+    B --> C{计划 JSON}
+    C --> D["ExecuteAgent<br/>处理第1个"]
+    D --> E["ProgressAgent<br/>检查进度"]
+    E -->|"CONTINUE"| F["ExecuteAgent<br/>处理下一个"]
+    F --> E
+    E -->|"ALL_COMPLETED"| G["执行报告"]
+            </div>
+        </div>
+        <div class="form-row">
+            <span class="api-label">POST /api/planner/plan</span>
+            <button class="btn btn-primary" onclick="callPlannerAPI()">
+                <span id="planner-spinner" style="display:none" class="spinner"></span> 发送批量工单
+            </button>
+        </div>
+        <div class="result-box" id="planner-result"></div>
+    </div>
+</div>
+</div><!-- /cards-grid -->
+
 <!-- API Table -->
 <div class="section-title">
     <h2>📡 API 端点总览</h2>
@@ -525,6 +564,7 @@ flowchart TD
         <tr><td class="method post">POST</td><td class="endpoint">/api/supervisor/handle</td><td>主管调度</td><td>orderId, complaint</td></tr>
         <tr><td class="method post">POST</td><td class="endpoint">/api/humanintheloop/refund</td><td>人工介入-提交</td><td>orderId, reason, amount</td></tr>
         <tr><td class="method post">POST</td><td class="endpoint">/api/humanintheloop/approve</td><td>人工介入-审批</td><td>requestId, decision, comment</td></tr>
+        <tr><td class="method post">POST</td><td class="endpoint">/api/planner/plan</td><td>规划执行</td><td>JSON Body: tickets[]</td></tr>
     </tbody>
 </table>
 </div>
@@ -625,6 +665,48 @@ flowchart TD
 
     function __val(id) { return document.getElementById(id)?.value || ''; }
     function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+
+    // ── Planner API ──
+    async function callPlannerAPI() {
+        const label = 'planner';
+        const url = '/api/planner/plan';
+        const body = JSON.stringify({
+            tickets: [
+                {orderId: 'ORD-003', issue: '收到商品破损，要求全额退款并赔偿'},
+                {orderId: 'ORD-001', issue: '蓝牙耳机连接不稳定，要求换货'},
+                {orderId: 'ORD-002', issue: '不喜欢键盘手感，申请退款'},
+                {orderId: 'ORD-004', issue: '咨询发货时间'}
+            ]
+        });
+
+        const spinnerEl = document.getElementById(label + '-spinner');
+        const resultEl = document.getElementById(label + '-result');
+
+        if (spinnerEl) spinnerEl.style.display = 'inline-block';
+        if (resultEl) { resultEl.classList.add('visible'); resultEl.innerHTML = '<span style="color:var(--text-secondary)">⏳ Planner 正在分析规划并逐步执行（可能需要1-2分钟）...</span>'; }
+
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: body
+            });
+            const data = await res.json();
+            const pretty = JSON.stringify(data, null, 2);
+
+            if (resultEl) {
+                resultEl.innerHTML =
+                    '<span class="status-tag ok">200 OK</span>'
+                    + '<pre>' + escapeHtml(pretty) + '</pre>';
+            }
+        } catch (err) {
+            if (resultEl) {
+                resultEl.innerHTML = '<span class="status-tag err">Network Error</span><pre>' + escapeHtml(err.message) + '</pre>';
+            }
+        } finally {
+            if (spinnerEl) spinnerEl.style.display = 'none';
+        }
+    }
 </script>
 
 </body>
