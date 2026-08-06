@@ -220,6 +220,38 @@
         /* ── Footer ── */
         .footer { text-align: center; padding: 32px 24px; color: var(--text-secondary); font-size: .85rem; border-top: 1px solid var(--border); }
 
+        /* ── Debug Console ── */
+        .debug-section { margin-bottom: 48px; }
+        .debug-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
+        .debug-clear {
+            padding: 6px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--card-bg); color: var(--text); font-size: .82rem; cursor: pointer; transition: all .2s;
+        }
+        .debug-clear:hover { border-color: var(--danger); color: var(--danger); }
+        .debug-log {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 12px; max-height: 440px; overflow-y: auto;
+        }
+        .debug-entry { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 10px; overflow: hidden; background: var(--bg); }
+        .debug-entry:last-child { margin-bottom: 0; }
+        .debug-header {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--card-bg); font-size: .8rem;
+        }
+        .debug-time { color: var(--text-secondary); font-family: 'Consolas','Courier New',monospace; }
+        .debug-method { font-weight: 700; color: var(--primary); font-family: 'Consolas','Courier New',monospace; }
+        .debug-url { flex: 1; min-width: 200px; word-break: break-all; font-family: 'Consolas','Courier New',monospace; color: var(--text); }
+        .debug-duration { color: var(--text-secondary); font-size: .76rem; white-space: nowrap; }
+        .debug-body {
+            margin: 0; padding: 12px; max-height: 300px; overflow: auto;
+            font-family: 'Consolas','Courier New',monospace; font-size: .8rem; white-space: pre-wrap; word-break: break-all; color: var(--text);
+        }
+        .debug-empty { padding: 24px; text-align: center; color: var(--text-secondary); font-size: .9rem; }
+        .req-info {
+            font-family: 'Consolas','Courier New',monospace; font-size: .76rem;
+            color: var(--text-secondary); margin-bottom: 8px; word-break: break-all;
+        }
+
         /* ── Responsive ── */
         @media (max-width: 640px) {
             .hero h1 { font-size: 1.6rem; }
@@ -569,6 +601,21 @@ flowchart TD
 </table>
 </div>
 
+<!-- Debug Console -->
+<div class="section-title">
+    <h2>🐞 调试控制台</h2>
+    <p>所有测试请求的 URL、状态码、耗时与完整响应都会记录在此，方便调试</p>
+</div>
+<div class="debug-section">
+    <div class="debug-toolbar">
+        <span style="font-size:.82rem;color:var(--text-secondary)">点击「发送」后会自动追加记录，最新显示在上方</span>
+        <button class="debug-clear" onclick="clearDebug()">🗑️ 清空日志</button>
+    </div>
+    <div class="debug-log" id="debug-log">
+        <div class="debug-empty" id="debug-empty">暂无请求记录，点击上方卡片的「发送」按钮开始测试</div>
+    </div>
+</div>
+
 </div><!-- /container -->
 
 <div class="footer">
@@ -589,86 +636,166 @@ flowchart TD
         localStorage.setItem('theme', next);
     }
 
-    // ── API Call ──
-    async function callAPI(mode) {
-        let url = '', label = mode;
+    // ── Helpers ──
+    function __val(id) { return document.getElementById(id)?.value || ''; }
+    function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
 
-        switch (mode) {
-            case 'sequential':
-                url = '/api/sequential/refund?orderId=' + encodeURIComponent(__val('seq-orderId'))
-                    + '&reason=' + encodeURIComponent(__val('seq-reason'));
-                break;
-            case 'parallel':
-                url = '/api/parallel/check?orderId=' + encodeURIComponent(__val('par-orderId'))
-                    + '&reason=' + encodeURIComponent(__val('par-reason'));
-                break;
-            case 'loop':
-                url = '/api/loop/reply?orderId=' + encodeURIComponent(__val('loop-orderId'))
-                    + '&reason=' + encodeURIComponent(__val('loop-reason'));
-                break;
-            case 'conditional':
-                url = '/api/conditional/refund?orderId=' + encodeURIComponent(__val('cond-orderId'))
-                    + '&reason=' + encodeURIComponent(__val('cond-reason'));
-                break;
-            case 'supervisor':
-                url = '/api/supervisor/handle?orderId=' + encodeURIComponent(__val('sup-orderId'))
-                    + '&complaint=' + encodeURIComponent(__val('sup-complaint'));
-                break;
-            case 'hitl-submit':
-                url = '/api/humanintheloop/refund?orderId=' + encodeURIComponent(__val('hitl-orderId'))
-                    + '&reason=' + encodeURIComponent(__val('hitl-reason'))
-                    + '&amount=' + encodeURIComponent(__val('hitl-amount'));
-                break;
-            case 'hitl-approve':
-                url = '/api/humanintheloop/approve?requestId=' + encodeURIComponent(__val('hitl-requestId'))
-                    + '&decision=' + encodeURIComponent(__val('hitl-decision'));
-                break;
+    // ── Debug Console ──
+    function clearDebug() {
+        const log = document.getElementById('debug-log');
+        if (!log) return;
+        log.innerHTML = '<div class="debug-empty" id="debug-empty">暂无请求记录，点击上方卡片的「发送」按钮开始测试</div>';
+    }
+
+    function logDebug({ time, method, url, status, statusClass, durationMs, body }) {
+        const log = document.getElementById('debug-log');
+        if (!log) return;
+        const empty = document.getElementById('debug-empty');
+        if (empty) empty.remove();
+
+        const entry = document.createElement('div');
+        entry.className = 'debug-entry';
+
+        const header = document.createElement('div');
+        header.className = 'debug-header';
+        header.innerHTML =
+            '<span class="debug-time">' + time + '</span>'
+            + '<span class="debug-method">' + method + '</span>'
+            + '<span class="debug-url">' + escapeHtml(url) + '</span>'
+            + '<span class="status-tag ' + statusClass + '">' + escapeHtml(status) + '</span>'
+            + '<span class="debug-duration">⏱ ' + durationMs + ' ms</span>';
+
+        const bodyEl = document.createElement('pre');
+        bodyEl.className = 'debug-body';
+        bodyEl.textContent = body;
+
+        entry.appendChild(header);
+        entry.appendChild(bodyEl);
+        log.prepend(entry);
+    }
+
+    // ── Core request sender: writes result back to the page + logs to debug console ──
+    async function sendRequest({ method, url, body = null, spinnerId, resultId, onParsed }) {
+        const spinnerEl = spinnerId ? document.getElementById(spinnerId) : null;
+        const resultEl = resultId ? document.getElementById(resultId) : null;
+        const startTime = performance.now();
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false })
+            + '.' + String(now.getMilliseconds()).padStart(3, '0');
+
+        if (spinnerEl) spinnerEl.style.display = 'inline-block';
+        if (resultEl) {
+            resultEl.classList.add('visible');
+            resultEl.innerHTML = '<span style="color:var(--text-secondary)">⏳ 请求中...</span>';
         }
 
-        const spinnerEl = document.getElementById(label + '-spinner');
-        const resultEl = document.getElementById(label === 'hitl-submit' || label === 'hitl-approve' ? 'hitl-result' : label + '-result');
-
-        // Show spinner
-        if (spinnerEl) spinnerEl.style.display = 'inline-block';
-        if (resultEl) { resultEl.classList.add('visible'); resultEl.innerHTML = '<span style="color:var(--text-secondary)">⏳ 请求中...</span>'; }
-
         try {
-            const res = await fetch(url, { method: 'POST' });
-            const data = await res.json();
-            const pretty = JSON.stringify(data, null, 2);
+            const init = { method };
+            if (body !== null) {
+                init.headers = { 'Content-Type': 'application/json' };
+                init.body = body;
+            }
+            const res = await fetch(url, init);
+            const isJson = (res.headers.get('content-type') || '').includes('application/json');
+            let parsed = null, dataText;
+            if (isJson) {
+                try { parsed = await res.json(); dataText = JSON.stringify(parsed, null, 2); }
+                catch (e) { dataText = await res.text(); }
+            } else {
+                dataText = await res.text();
+            }
+            const durationMs = Math.round(performance.now() - startTime);
 
             let statusClass = 'ok';
-            if (data.status === 'PENDING_APPROVAL') statusClass = 'pending';
-            if (data.status === 'ERROR' || data.status === 'NOT_FOUND') statusClass = 'err';
+            if (res.status >= 400) statusClass = 'err';
+            else if (parsed && parsed.status === 'PENDING_APPROVAL') statusClass = 'pending';
+            const statusText = res.status + (res.ok ? ' OK' : ' Error');
 
             if (resultEl) {
                 resultEl.innerHTML =
-                    '<span class="status-tag ' + statusClass + '">' + (res.ok ? '200 OK' : res.status + ' Error') + '</span>'
-                    + '<pre>' + escapeHtml(pretty) + '</pre>';
+                    '<span class="status-tag ' + statusClass + '">' + statusText + '</span>'
+                    + '<div class="req-info">🔗 ' + escapeHtml(url) + ' · ⏱ ' + durationMs + ' ms</div>'
+                    + '<pre>' + escapeHtml(dataText) + '</pre>';
             }
 
-            // Auto-fill requestId for HumanInTheLoop
-            if (mode === 'hitl-submit' && data.requestId) {
-                document.getElementById('hitl-requestId').value = data.requestId;
-                if (resultEl) {
-                    resultEl.innerHTML += '<div style="margin-top:8px;font-size:.85rem;color:var(--primary);font-weight:600">✅ requestId 已自动填入下方审批表单，点击「人工审批」继续</div>';
-                }
-            }
+            logDebug({ time: timeStr, method, url, status: statusText, statusClass, durationMs, body: dataText });
+
+            if (typeof onParsed === 'function') onParsed(parsed, resultEl);
+            return { res, parsed, dataText };
         } catch (err) {
+            const durationMs = Math.round(performance.now() - startTime);
             if (resultEl) {
-                resultEl.innerHTML = '<span class="status-tag err">Network Error</span><pre>' + escapeHtml(err.message) + '</pre>';
+                resultEl.innerHTML =
+                    '<span class="status-tag err">Network Error</span>'
+                    + '<div class="req-info">🔗 ' + escapeHtml(url) + ' · ⏱ ' + durationMs + ' ms</div>'
+                    + '<pre>' + escapeHtml(err.message) + '</pre>';
             }
+            logDebug({ time: timeStr, method, url, status: 'Network Error', statusClass: 'err', durationMs, body: err.message });
+            return { res: null, parsed: null, dataText: err.message };
         } finally {
             if (spinnerEl) spinnerEl.style.display = 'none';
         }
     }
 
-    function __val(id) { return document.getElementById(id)?.value || ''; }
-    function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+    // ── API Call dispatcher ──
+    function callAPI(mode) {
+        let url = '', spinnerId = '', resultId = '';
+
+        switch (mode) {
+            case 'sequential':
+                url = '/api/sequential/refund?orderId=' + encodeURIComponent(__val('seq-orderId'))
+                    + '&reason=' + encodeURIComponent(__val('seq-reason'));
+                spinnerId = 'seq-spinner'; resultId = 'seq-result';
+                break;
+            case 'parallel':
+                url = '/api/parallel/check?orderId=' + encodeURIComponent(__val('par-orderId'))
+                    + '&reason=' + encodeURIComponent(__val('par-reason'));
+                spinnerId = 'par-spinner'; resultId = 'par-result';
+                break;
+            case 'loop':
+                url = '/api/loop/reply?orderId=' + encodeURIComponent(__val('loop-orderId'))
+                    + '&reason=' + encodeURIComponent(__val('loop-reason'));
+                spinnerId = 'loop-spinner'; resultId = 'loop-result';
+                break;
+            case 'conditional':
+                url = '/api/conditional/refund?orderId=' + encodeURIComponent(__val('cond-orderId'))
+                    + '&reason=' + encodeURIComponent(__val('cond-reason'));
+                spinnerId = 'cond-spinner'; resultId = 'cond-result';
+                break;
+            case 'supervisor':
+                url = '/api/supervisor/handle?orderId=' + encodeURIComponent(__val('sup-orderId'))
+                    + '&complaint=' + encodeURIComponent(__val('sup-complaint'));
+                spinnerId = 'sup-spinner'; resultId = 'sup-result';
+                break;
+            case 'hitl-submit':
+                url = '/api/humanintheloop/refund?orderId=' + encodeURIComponent(__val('hitl-orderId'))
+                    + '&reason=' + encodeURIComponent(__val('hitl-reason'))
+                    + '&amount=' + encodeURIComponent(__val('hitl-amount'));
+                spinnerId = 'hitl-submit-spinner'; resultId = 'hitl-result';
+                break;
+            case 'hitl-approve':
+                url = '/api/humanintheloop/approve?requestId=' + encodeURIComponent(__val('hitl-requestId'))
+                    + '&decision=' + encodeURIComponent(__val('hitl-decision'));
+                spinnerId = 'hitl-approve-spinner'; resultId = 'hitl-result';
+                break;
+        }
+
+        sendRequest({
+            method: 'POST', url, spinnerId, resultId,
+            onParsed: (parsed, resultEl) => {
+                if (mode === 'hitl-submit' && parsed && parsed.requestId) {
+                    document.getElementById('hitl-requestId').value = parsed.requestId;
+                    const note = document.createElement('div');
+                    note.style.cssText = 'margin-top:8px;font-size:.85rem;color:var(--primary);font-weight:600';
+                    note.textContent = '✅ requestId 已自动填入下方审批表单，点击「人工审批」继续';
+                    resultEl.appendChild(note);
+                }
+            }
+        });
+    }
 
     // ── Planner API ──
-    async function callPlannerAPI() {
-        const label = 'planner';
+    function callPlannerAPI() {
         const url = '/api/planner/plan';
         const body = JSON.stringify({
             tickets: [
@@ -678,34 +805,7 @@ flowchart TD
                 {orderId: 'ORD-004', issue: '咨询发货时间'}
             ]
         });
-
-        const spinnerEl = document.getElementById(label + '-spinner');
-        const resultEl = document.getElementById(label + '-result');
-
-        if (spinnerEl) spinnerEl.style.display = 'inline-block';
-        if (resultEl) { resultEl.classList.add('visible'); resultEl.innerHTML = '<span style="color:var(--text-secondary)">⏳ Planner 正在分析规划并逐步执行（可能需要1-2分钟）...</span>'; }
-
-        try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: body
-            });
-            const data = await res.json();
-            const pretty = JSON.stringify(data, null, 2);
-
-            if (resultEl) {
-                resultEl.innerHTML =
-                    '<span class="status-tag ok">200 OK</span>'
-                    + '<pre>' + escapeHtml(pretty) + '</pre>';
-            }
-        } catch (err) {
-            if (resultEl) {
-                resultEl.innerHTML = '<span class="status-tag err">Network Error</span><pre>' + escapeHtml(err.message) + '</pre>';
-            }
-        } finally {
-            if (spinnerEl) spinnerEl.style.display = 'none';
-        }
+        sendRequest({ method: 'POST', url, body, spinnerId: 'planner-spinner', resultId: 'planner-result' });
     }
 </script>
 
