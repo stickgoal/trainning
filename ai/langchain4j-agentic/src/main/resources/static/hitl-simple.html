@@ -61,7 +61,7 @@
 <body>
 <div class="wrap">
   <h1>HumanInTheLoop 极简教学版</h1>
-  <div class="sub">不依赖任何 Agent 框架 / 数据库，只为把「挂起 → 人工 → 恢复」讲清楚。
+  <div class="sub">挂起/恢复机制最简单直观，但「审批前分析」和「审批后执行」<b>由真实 LLM Agent（LangChain4j AiServices）完成</b>，不是模拟。
     <a class="back" href="/">← 返回主看板</a></div>
 
   <div class="card">
@@ -69,11 +69,11 @@
     <div class="explain">
       HITL 把一条流程<b>切成两段</b>，用「挂起状态 + 关联令牌」接起来，因为 HTTP 不能在等人工时一直占着线程：
       <div class="flow" style="margin-top:12px">
-        <div class="box"><b>① 提交</b>自动跑「审批前」步骤 → 冻结状态，返回 requestId</div>
+        <div class="box"><b>① 提交</b>AI Agent 跑「审批前」分析 → 冻结状态，返回 requestId</div>
         <div class="arrow">→</div>
         <div class="box"><b>② 人工</b>在别处看到 requestId，做出审批决策</div>
         <div class="arrow">→</div>
-        <div class="box"><b>③ 恢复</b>凭 requestId 找回状态，自动跑「审批后」步骤</div>
+        <div class="box"><b>③ 恢复</b>AI Agent 按人决策跑「审批后」执行，返回结果</div>
       </div>
     </div>
     <ul style="font-size:.9rem;margin:6px 0 0;padding-left:20px">

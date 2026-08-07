@@ -317,12 +317,12 @@ args.add("COSINE");
 
 ## 七、下一步待办清单
 
-### 🔴 P0 - 阻塞项（必须修复才能跑通测试）
+### ✅ P0 - 阻塞项（已修复）
 
-- [ ] **修复 RedisHybridRetriever.createIndex() 的 VECTOR HNSW 参数**
+- [x] **修复 RedisHybridRetriever.createIndex() 的 VECTOR HNSW 参数**
   - 在 `VECTOR HNSW` 后添加参数个数 `6`
   - 删除 `EFCONSTRUCTION` 和 `M` 参数
-  - 详见第五章修复方案
+  - commit: 44e1cd4
 
 ### 🟡 P1 - 验证项（修复 P0 后可能暴露）
 

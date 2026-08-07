@@ -511,8 +511,8 @@ flowchart TD
     <div class="card-header">
         <div class="card-number c6">⑥</div>
         <div>
-            <div class="card-title">HumanInTheLoop — 人工介入</div>
-            <div class="card-subtitle">PreCheck → 暂停等待审批 → Execute</div>
+            <div class="card-title">HumanInTheLoop — 人工介入（极简 Agent 版）</div>
+            <div class="card-subtitle">PreCheck → 暂停等待审批 → Execute（真实 LLM Agent 执行）</div>
         </div>
     </div>
     <div class="card-body">
@@ -528,10 +528,11 @@ flowchart TD
             </div>
         </div>
         <div style="border-left:3px solid var(--primary); padding:6px 12px; margin-bottom:12px; font-size:.85rem; color:var(--text-secondary)">
-            ⚠️ 两步操作：先点 <b>提交退款</b> 获取 requestId，再点 <b>人工审批</b> 完成流程
+            ⚠️ 两步操作：先点 <b>提交退款</b> 获取 requestId，再点 <b>人工审批</b> 完成流程。
+            <a href="/hitl-simple.html" style="color:var(--primary);text-decoration:none">📘 极简 Agent 教学版原理页 →</a>
         </div>
         <div class="form-row">
-            <span class="api-label">POST .../refund</span>
+            <span class="api-label">POST /api/hitls/submit</span>
             <input type="text" id="hitl-orderId" value="ORD-003" placeholder="订单ID">
             <input type="text" id="hitl-reason" value="不喜欢了" placeholder="退款原因">
             <input type="number" id="hitl-amount" value="918" placeholder="金额" style="max-width:100px">
@@ -541,7 +542,7 @@ flowchart TD
             <button class="btn btn-ghost" onclick="copyRequest('hitl-submit', this)">📋 复制请求</button>
         </div>
         <div class="form-row">
-            <span class="api-label">POST .../approve</span>
+            <span class="api-label">POST /api/hitls/approve</span>
             <input type="text" id="hitl-requestId" value="" placeholder="从上一步结果获取 requestId">
             <select id="hitl-decision" style="padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:.9rem">
                 <option value="APPROVED">APPROVED</option>
@@ -612,8 +613,8 @@ flowchart TD
         <tr><td class="method post">POST</td><td class="endpoint">/api/loop/reply</td><td>迭代优化</td><td>orderId, reason</td></tr>
         <tr><td class="method post">POST</td><td class="endpoint">/api/conditional/refund</td><td>条件分流</td><td>orderId, reason</td></tr>
         <tr><td class="method post">POST</td><td class="endpoint">/api/supervisor/handle</td><td>主管调度</td><td>orderId, complaint</td></tr>
-        <tr><td class="method post">POST</td><td class="endpoint">/api/humanintheloop/refund</td><td>人工介入-提交</td><td>orderId, reason, amount</td></tr>
-        <tr><td class="method post">POST</td><td class="endpoint">/api/humanintheloop/approve</td><td>人工介入-审批</td><td>requestId, decision, comment</td></tr>
+        <tr><td class="method post">POST</td><td class="endpoint">/api/hitls/submit</td><td>人工介入-提交（极简Agent版）</td><td>orderId, reason, amount</td></tr>
+        <tr><td class="method post">POST</td><td class="endpoint">/api/hitls/approve</td><td>人工介入-审批（极简Agent版）</td><td>requestId, decision, comment</td></tr>
         <tr><td class="method post">POST</td><td class="endpoint">/api/planner/plan</td><td>规划执行</td><td>JSON Body: tickets[]</td></tr>
     </tbody>
 </table>
@@ -732,7 +733,7 @@ flowchart TD
 
             let statusClass = 'ok';
             if (res.status >= 400) statusClass = 'err';
-            else if (parsed && parsed.status === 'PENDING_APPROVAL') statusClass = 'pending';
+            else if (parsed && (parsed.status === 'PENDING_APPROVAL' || parsed.status === 'PENDING')) statusClass = 'pending';
             const statusText = res.status + (res.ok ? ' OK' : ' Error');
 
             if (resultEl) {
@@ -791,13 +792,13 @@ flowchart TD
                 spinnerId = 'sup-spinner'; resultId = 'sup-result';
                 break;
             case 'hitl-submit':
-                url = '/api/humanintheloop/refund?orderId=' + encodeURIComponent(__val('hitl-orderId'))
+                url = '/api/hitls/submit?orderId=' + encodeURIComponent(__val('hitl-orderId'))
                     + '&reason=' + encodeURIComponent(__val('hitl-reason'))
                     + '&amount=' + encodeURIComponent(__val('hitl-amount'));
                 spinnerId = 'hitl-submit-spinner'; resultId = 'hitl-result';
                 break;
             case 'hitl-approve':
-                url = '/api/humanintheloop/approve?requestId=' + encodeURIComponent(__val('hitl-requestId'))
+                url = '/api/hitls/approve?requestId=' + encodeURIComponent(__val('hitl-requestId'))
                     + '&decision=' + encodeURIComponent(__val('hitl-decision'));
                 spinnerId = 'hitl-approve-spinner'; resultId = 'hitl-result';
                 break;

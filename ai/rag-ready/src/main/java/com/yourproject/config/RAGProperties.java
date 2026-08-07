@@ -30,8 +30,7 @@ public class RAGProperties {
 
     @Data
     public static class HnswConfig {
-        private int efConstruction = 200;
-        private int m = 16;
+        // 注：RediSearch v2.10.20 不支持 EFCONSTRUCTION/M 参数，FT.CREATE 时仅使用 TYPE/DIM/DISTANCE_METRIC
         private int efSearch = 10;
     }
 
