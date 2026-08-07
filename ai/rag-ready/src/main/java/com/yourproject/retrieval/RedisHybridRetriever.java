@@ -244,21 +244,16 @@ public class RedisHybridRetriever {
             args.add("embedding");
             args.add("VECTOR");
             args.add("HNSW");
+            args.add("6"); // 参数个数：3 对 name-value (TYPE/DIM/DISTANCE_METRIC)
             args.add("TYPE");
             args.add("FLOAT32");
             args.add("DIM");
             args.add(String.valueOf(dimension));
             args.add("DISTANCE_METRIC");
             args.add("COSINE");
-            args.add("EFCONSTRUCTION");
-            args.add(String.valueOf(ragProperties.getHnsw().getEfConstruction()));
-            args.add("M");
-            args.add(String.valueOf(ragProperties.getHnsw().getM()));
+            // 注意：RediSearch v2.10.20 不支持 EFCONSTRUCTION/M 参数
 
-            log.info("创建索引: {}, 维度: {}, HNSW: efConstruction={}, M={}",
-                    indexName, dimension,
-                    ragProperties.getHnsw().getEfConstruction(),
-                    ragProperties.getHnsw().getM());
+            log.info("创建索引: {}, 维度: {}, HNSW (minimal params)", indexName, dimension);
 
             jedis.sendCommand(cmd("FT.CREATE"), args.toArray(new String[0]));
 
