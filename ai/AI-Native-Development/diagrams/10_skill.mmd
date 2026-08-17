@@ -1,0 +1,43 @@
+%% 第10章 · Agent Skill
+%% Skill = Prompt + Tool + 使用说明 + 触发条件（能力级封装）
+graph TB
+    TASK["用户任务"] --> AGENT["Agent<br/>(决策中枢)"]
+
+    subgraph Skill库["Skill 库（能力级）"]
+        SK1["Coding Skill<br/>读文件/改码/跑测试"]
+        SK2["Database Skill<br/>写SQL/评审/执行"]
+        SK3["Testing Skill<br/>生成用例/执行"]
+        SK4["Deployment Skill<br/>构建/部署/回滚"]
+    end
+
+    AGENT -->|"根据任务选 Skill"| SK1
+    AGENT --> SK2
+    AGENT --> SK3
+    AGENT --> SK4
+
+    subgraph Skill内部["一个 Skill 的内部结构"]
+        P["Prompt 模板<br/>(专家提示词)"]
+        T["Tool 集<br/>(函数)"]
+        DOC["使用说明<br/>(何时用/怎么用)"]
+        TRIG["触发条件<br/>(自动激活规则)"]
+    end
+
+    SK2 -.-> P
+    SK2 -.-> T
+    SK2 -.-> DOC
+    SK2 -.-> TRIG
+
+    subgraph 对比["粒度对比"]
+        TOOL_LV["Tool = 函数级<br/>(一个方法)"]
+        PROMPT_LV["Prompt = 文本级<br/>(一段话)"]
+        SKILL_LV["Skill = 能力级<br/>(带文档的 Spring Bean)"]
+    end
+
+    classDef agent fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef skill fill:#fef3c7,stroke:#d97706,color:#333
+    classDef inner fill:#dcfce7,stroke:#16a34a,color:#333
+    classDef cmp fill:#f3e8ff,stroke:#9333ea,color:#333
+    class AGENT agent
+    class SK1,SK2,SK3,SK4 skill
+    class P,T,DOC,TRIG inner
+    class TOOL_LV,PROMPT_LV,SKILL_LV cmp

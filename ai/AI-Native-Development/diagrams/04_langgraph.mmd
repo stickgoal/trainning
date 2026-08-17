@@ -1,0 +1,27 @@
+%% 第4章 · LangGraph 架构
+%% Graph / Node / Edge / State —— 显式状态机
+graph TB
+    START((START)) --> N1["Node: call_model<br/>调用 LLM"]
+
+    N1 --> ED1{"Edge: should_continue<br/>(条件边)"}
+    ED1 -->|"需要工具"| N2["Node: call_tool<br/>执行 Tool"]
+    ED1 -->|"可结束"| N3["Node: human_review<br/>(人工介入)"]
+
+    N2 -->|"工具结果回灌"| N1
+    N3 --> ED2{"Edge: approved?"}
+    ED2 -->|"批准"| N4["Node: finalize"]
+    ED2 -->|"打回"| N1
+
+    N4 --> END((END))
+
+    STATE["State (共享状态)<br/>messages / tool_calls / step"] -.-> N1
+    STATE -.-> N2
+    STATE -.-> N3
+    STATE -.-> N4
+
+    classDef st fill:#fef3c7,stroke:#d97706,color:#333
+    classDef node fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef edge fill:#dcfce7,stroke:#16a34a,color:#333
+    class STATE st
+    class N1,N2,N3,N4 node
+    class ED1,ED2 edge

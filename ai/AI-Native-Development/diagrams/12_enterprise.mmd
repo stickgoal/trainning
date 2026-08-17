@@ -1,0 +1,54 @@
+%% 第11章 · 企业级 Agent 架构
+%% User → Agent App → {LLM/Memory/Knowledge/Tools/MCP/A2A} → {Workflow/Eval/Observability} → Enterprise Systems
+graph TB
+    U["User / 业务前端"] --> APP["Agent Application<br/>(编排入口)"]
+
+    subgraph 能力层["能力层（被 Agent 调用）"]
+        LLM["LLM<br/>推理"]
+        MEM["Memory<br/>会话+持久"]
+        KNOW["Knowledge<br/>RAG/Vector"]
+        TOOL["Tools<br/>函数"]
+        MCP["MCP<br/>工具协议"]
+        A2A["A2A<br/>多Agent"]
+    end
+
+    APP --> LLM
+    APP --> MEM
+    APP --> KNOW
+    APP --> TOOL
+    APP --> MCP
+    APP --> A2A
+
+    subgraph 工程层["工程治理层"]
+        WF["Workflow<br/>LangGraph 流程"]
+        EVL["Evaluation<br/>质量评估"]
+        OBS["Observability<br/>监控/追溯"]
+    end
+
+    APP -.-> WF
+    APP -.-> EVL
+    APP -.-> OBS
+
+    subgraph 企业系统["Enterprise Systems"]
+        DB[("DB")]
+        ERP["ERP/CRM"]
+        GIT["代码库/CI"]
+        DOC_SYS["文档系统"]
+    end
+
+    MCP --> DB
+    MCP --> ERP
+    A2A --> GIT
+    KNOW --> DOC_SYS
+    OBS --> LOG[("日志/指标")]
+
+    classDef user fill:#fef3c7,stroke:#d97706,color:#333
+    classDef app fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef cap fill:#dcfce7,stroke:#16a34a,color:#333
+    classDef eng fill:#f3e8ff,stroke:#9333ea,color:#333
+    classDef ent fill:#fee2e2,stroke:#dc2626,color:#333
+    class U user
+    class APP app
+    class LLM,MEM,KNOW,TOOL,MCP,A2A cap
+    class WF,EVL,OBS eng
+    class DB,ERP,GIT,DOC_SYS,LOG ent

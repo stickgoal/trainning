@@ -1,0 +1,34 @@
+%% 第11章 · 主流框架选型与生态进阶
+%% Agent / RAG 框架全景与选型决策
+graph TB
+    Root["你的需求：搭一个 LLM Agent / RAG 应用"]
+
+    Root --> Q1{"要多人协作<br/>还是单人流程？"}
+
+    Q1 -->|"单人 / 可控流程"| Single["单 Agent 编排"]
+    Q1 -->|"多角色协作"| Multi["多 Agent 协作"]
+
+    Single --> LCG["LangChain / LCEL<br/>通用编排（万能胶）"]
+    Single --> LG["LangGraph<br/>状态机 / 循环 / 人机介入"]
+    Single --> Rag["RAG 专用"]
+    Rag --> Llama["LlamaIndex<br/>索引/检索精细控制"]
+    Rag --> Hay["Haystack<br/>Pipeline 化 RAG"]
+
+    Multi --> Crew["CrewAI<br/>角色+目标+后设故事"]
+    Multi --> Auto["AutoGen<br/>对话式多 Agent"]
+    Multi --> OA["OpenAI Agents SDK<br/>官方轻量多 Agent"]
+
+    Root --> Prog["编程式优化（不给 Prompt 调参，<br/>让优化器找最优 Pipeline）"]
+    Prog --> DSPy["DSPy<br/>LM 编译器"]
+
+    Root --> Ent["企业 / 跨语言栈"]
+    Ent --> SK["Semantic Kernel<br/>微软，.NET/Java/Python 通吃"]
+
+    Root --> Light["轻量新秀（2024-2025）"]
+    Light --> PA["Pydantic AI<br/>类型安全 Agent"]
+    Light --> Agno["Agno / smolagents<br/>极简 Agent 原语"]
+
+    classDef cat fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef fw fill:#fef3c7,stroke:#d97706,color:#333
+    class Root,Q1 cat
+    class LCG,LG,Llama,Hay,Crew,Auto,OA,DSPy,SK,PA,Agno fw

@@ -1,0 +1,41 @@
+%% 第3章 · LangChain 架构
+%% 9 大组件：ChatModel / PromptTemplate / Runnable / Chain / Retriever / VectorStore / Memory / Tool / Agent
+graph TB
+    subgraph 输入["输入层"]
+        PT["PromptTemplate<br/>变量插值"]
+        MEM["Memory<br/>历史对话"]
+    end
+
+    PT --> RUN["Runnable (LCEL)<br/>统一抽象，可用 | 串联"]
+    MEM --> RUN
+
+    subgraph 核心执行["核心执行（LCEL 链）"]
+        RUN --> CM["ChatModel<br/>统一LLM接口"]
+        CM --> PARSER["OutputParser<br/>解析输出"]
+    end
+
+    PARSER --> OUT["结构化输出"]
+
+    subgraph 检索["知识检索"]
+        VS["VectorStore<br/>Chroma/FAISS"]
+        VS --> RET["Retriever"]
+        RET -->|"相关片段"| RUN
+    end
+
+    subgraph 工具["工具与Agent"]
+        TOOL["Tool<br/>@tool 装饰的函数"]
+        AGENT["Agent<br/>LLM + Tool + 决策循环"]
+        CM --> AGENT
+        AGENT -->|"选工具"| TOOL
+        TOOL -->|"结果"| AGENT
+        AGENT --> PARSER
+    end
+
+    classDef in fill:#fef3c7,stroke:#d97706,color:#333
+    classDef core fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef ext fill:#dcfce7,stroke:#16a34a,color:#333
+    classDef tool fill:#f3e8ff,stroke:#9333ea,color:#333
+    class PT,MEM in
+    class RUN,CM,PARSER core
+    class VS,RET ext
+    class TOOL,AGENT tool

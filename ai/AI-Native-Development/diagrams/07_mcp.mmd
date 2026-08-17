@@ -1,0 +1,42 @@
+%% 第7章 · MCP Model Context Protocol
+%% LLM → MCP Client → MCP Server → Database/API/File
+graph TB
+    subgraph Agent侧["Agent / LLM 侧"]
+        LLM["LLM"]
+        CLIENT["MCP Client<br/>发现 + 调用工具"]
+        LLM <--> CLIENT
+    end
+
+    PROTO["MCP 协议<br/>(标准化 JSON-RPC)"]
+
+    subgraph Server侧["MCP Server 侧（可多个）"]
+        SERVER1["MCP Server A<br/>@mcp.tool 暴露"]
+        SERVER2["MCP Server B"]
+        SERVER3["MCP Server C"]
+    end
+
+    CLIENT <-->|"JSON-RPC over<br/>stdio/SSE"| PROTO
+    PROTO <--> SERVER1
+    PROTO <--> SERVER2
+    PROTO <--> SERVER3
+
+    SERVER1 --> DB[("Database")]
+    SERVER2 --> API["REST API"]
+    SERVER3 --> FILE["文件系统"]
+
+    subgraph 痛点对比["MCP 出现前 vs 后"]
+        BEFORE["前: N Agent × M 工具 = N×M 适配"]
+        AFTER["后: N + M（统一协议）"]
+        BEFORE -.->|"标准化"| AFTER
+    end
+
+    classDef agent fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef proto fill:#fef3c7,stroke:#d97706,color:#333
+    classDef srv fill:#dcfce7,stroke:#16a34a,color:#333
+    classDef sys fill:#f3e8ff,stroke:#9333ea,color:#333
+    classDef cmp fill:#fee2e2,stroke:#dc2626,color:#333
+    class LLM,CLIENT agent
+    class PROTO proto
+    class SERVER1,SERVER2,SERVER3 srv
+    class DB,API,FILE sys
+    class BEFORE,AFTER cmp

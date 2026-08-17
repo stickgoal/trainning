@@ -1,0 +1,24 @@
+%% 第2章 · LLM Application 开发基础
+%% 完整数据流：User → Application → LLM → Tools → Knowledge → Memory
+graph LR
+    U["User 输入"] --> APP["Application<br/>(FastAPI)"]
+
+    APP -->|"1. 构造 Prompt"| LLM["LLM<br/>(推理)"]
+    LLM -->|"2. 决定调用"| TOOLS["Tools<br/>(函数/API)"]
+    TOOLS -->|"3. 返回结果"| LLM
+    LLM -->|"4. 需要知识"| RET["Retrieval"]
+    RET --> VDB["Knowledge<br/>(Vector DB)"]
+    VDB --> RET
+    RET --> LLM
+    LLM -->|"5. 最终回答"| APP
+    APP -->|"6. 存对话状态"| MEM["Memory<br/>(会话/持久)"]
+    APP -->|"7. 返回"| U
+
+    MEM -.->|"下一轮带入"| APP
+
+    classDef io fill:#fef3c7,stroke:#d97706,color:#333
+    classDef core fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef ext fill:#dcfce7,stroke:#16a34a,color:#333
+    class U,APP io
+    class LLM core
+    class TOOLS,RET,VDB,MEM ext

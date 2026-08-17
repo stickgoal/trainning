@@ -1,0 +1,25 @@
+%% 第5章 · RAG 技术体系
+%% Document → Chunk → Embedding → VectorDB → Retriever → LLM
+graph LR
+    DOC["Document<br/>PDF/HTML/DB"] --> SPLIT["Chunk<br/>RecursiveCharacterTextSplitter"]
+    SPLIT --> EMB["Embedding<br/>sentence-transformers / BAAI/bge"]
+    EMB --> VDB[("Vector DB<br/>Milvus/Chroma/FAISS")]
+
+    U["User 提问"] --> QEMB["Query Embedding"]
+    QEMB --> RETRIEVE["Retriever<br/>相似度检索"]
+    VDB --> RETRIEVE
+
+    RETRIEVE --> HYBRID["Hybrid Search<br/>向量+关键词"]
+    HYBRID --> RERANK["Rerank<br/>精排 Top-K"]
+    RERANK --> CTX["构造 Context"]
+    CTX --> LLM["LLM 生成回答"]
+    LLM --> U
+
+    classDef data fill:#fef3c7,stroke:#d97706,color:#333
+    classDef proc fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef store fill:#dcfce7,stroke:#16a34a,color:#333
+    classDef io fill:#f3e8ff,stroke:#9333ea,color:#333
+    class DOC,EMB,QEMB data
+    class SPLIT,RETRIEVE,HYBRID,RERANK,CTX,LLM proc
+    class VDB store
+    class U io

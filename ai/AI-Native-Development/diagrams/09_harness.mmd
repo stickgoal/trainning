@@ -1,0 +1,42 @@
+%% 第9章 · Harness Engineering
+%% Agent 稳定运行的 7 大工程基础设施
+graph TB
+    subgraph Agent["Agent 核心"]
+        LLM["LLM 推理"]
+        TOOLS["Tool 执行"]
+        LLM <--> TOOLS
+    end
+
+    subgraph Harness["Harness (Agent Runtime 工程基础设施)"]
+        CTX["Context Management<br/>长会话压缩/超窗口管理"]
+        MEM["Memory<br/>跨会话持久记忆"]
+        TRT["Tool Runtime<br/>沙箱/超时/重试"]
+        PERM["Permission<br/>危险操作人工审批"]
+        EVL["Evaluation<br/>自动测输出质量"]
+        MON["Monitoring<br/>每次决策可追溯"]
+        FB["Feedback<br/>人/线上反馈回灌"]
+    end
+
+    LLM --> CTX
+    LLM --> MEM
+    TOOLS --> TRT
+    TOOLS --> PERM
+    LLM --> EVL
+    LLM --> MON
+    MON --> FB
+    FB -.->|"改进"| LLM
+
+    subgraph 真实案例["真实 Coding Agent"]
+        CC["Claude Code<br/>CLI + 工具沙箱 + 上下文管理"]
+        CX["Codex<br/>代码库操作 + 评估闭环"]
+    end
+
+    TRT -.-> CC
+    EVL -.-> CX
+
+    classDef agent fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef h fill:#fef3c7,stroke:#d97706,color:#333
+    classDef real fill:#dcfce7,stroke:#16a34a,color:#333
+    class LLM,TOOLS agent
+    class CTX,MEM,TRT,PERM,EVL,MON,FB h
+    class CC,CX real

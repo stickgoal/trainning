@@ -1,0 +1,57 @@
+%% 第1章 · Python AI 生态概览
+%% Java 工程师视角：把 Python AI 栈按层对照 Spring 生态
+graph TB
+    subgraph 用户与业务["用户 / 业务系统"]
+        U["Java 工程师"]
+    end
+
+    subgraph Web层["Web 框架层"]
+        FA["FastAPI"]
+        PY["Pydantic"]
+        AS["asyncio"]
+    end
+
+    subgraph 编排层["LLM 编排层"]
+        LC["LangChain"]
+        LG["LangGraph"]
+        LI["LlamaIndex"]
+        AG["AutoGen / CrewAI"]
+    end
+
+    subgraph 能力层["能力层"]
+        LLM["LLM SDK<br/>DeepSeek/通义千问"]
+        SK["Skill 能力封装"]
+        MCP["MCP 工具协议"]
+        A2A["A2A 多Agent通信"]
+    end
+
+    subgraph 知识层["知识层"]
+        RAG["RAG"]
+        EMB["Embedding"]
+        VDB["Vector DB<br/>Milvus/Chroma/FAISS"]
+    end
+
+    subgraph 运行时["Harness 运行时"]
+        CTX["Context"]
+        MEM["Memory"]
+        PERM["Permission"]
+        EVL["Evaluation"]
+        MON["Monitoring"]
+    end
+
+    U --> Web层
+    Web层 --> 编排层
+    编排层 --> 能力层
+    编排层 --> 知识层
+    能力层 --> 运行时
+    知识层 --> 运行时
+    运行时 --> ENT["企业系统<br/>DB/API/文件"]
+
+    classDef py fill:#ffe4b5,stroke:#d97706,color:#333
+    classDef cap fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef know fill:#dcfce7,stroke:#16a34a,color:#333
+    classDef run fill:#f3e8ff,stroke:#9333ea,color:#333
+    class Web层,编排层 py
+    class 能力层 cap
+    class 知识层 know
+    class 运行时 run

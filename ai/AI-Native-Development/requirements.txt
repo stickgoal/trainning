@@ -1,0 +1,55 @@
+# Python AI Agent 课程 · 依赖清单
+# 安装：pip install -r requirements.txt
+
+# --- LLM SDK ---
+openai>=1.30.0
+
+# --- Web 框架与数据校验 ---
+fastapi>=0.110.0
+pydantic>=2.6.0
+uvicorn>=0.29.0
+
+# --- LangChain 生态 ---
+langchain>=0.2.0
+langchain-core>=0.2.0
+langchain-deepseek>=0.1.0   # DeepSeek 的 LangChain 集成（国内可用，OpenAI 兼容）
+langchain-community>=0.2.0
+langchain-text-splitters>=0.2.0
+
+# --- LangGraph（Agent 工作流）---
+langgraph>=0.2.0
+
+# --- RAG / 向量检索 ---
+chromadb>=0.5.0
+faiss-cpu>=1.8.0
+sentence-transformers>=3.0.0
+
+# --- LlamaIndex（RAG 专用框架，第6章）---
+llama-index>=0.12,<0.13
+llama-index-embeddings-huggingface>=0.3
+llama-index-llms-openai-like>=0.3
+
+# --- 多路召回 / Rerank 辅助（第5章）---
+rank-bm25>=0.2.2        # BM25 关键词检索（稀疏路）
+
+# --- MCP（工具协议）---
+mcp>=0.1.0
+langchain-mcp-adapters>=0.0.9   # LangChain 接入 MCP Server 的适配器（第7章 Agent 接 MCP 示例用）
+
+# --- 文档加载辅助 ---
+pypdf>=4.0.0
+unstructured>=0.14.0
+
+# --- RAG 评估（第5章 5.4.3）---
+ragas>=0.1.9
+deepeval>=0.21.0
+
+# --- 可观测与护栏（第9章 9.8）---
+langsmith>=0.1.0          # LangChain 官方观测/评估平台（云端 SaaS，有免费额度）
+langfuse>=2.0.0           # 开源可观测，可自托管（数据不出内网）
+opik>=1.0.0               # Comet 开源 LLM 评估，与 RAGAS 集成好
+guardrails-ai>=0.5.0      # 输出结构/内容护栏，防注入、锁格式
+
+# --- 多 Agent 框架（第11章）---
+crewai>=0.30.0            # 角色化多 Agent 协作（需 API Key 才能真跑）
+

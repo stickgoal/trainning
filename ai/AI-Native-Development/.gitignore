@@ -1,0 +1,14 @@
+# Python virtual environments (heavy, reproducible via requirements.txt)
+.venv/
+venv/
+env/
+
+# IDE config (regenerable)
+.idea/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Project memory / local config (not source)
+.workbuddy/

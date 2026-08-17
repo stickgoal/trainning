@@ -1,0 +1,34 @@
+%% 第12章 · 综合案例
+%% 左：企业知识库 Agent | 右：软件研发 Agent
+graph TB
+    subgraph 案例1["案例1：企业知识库 Agent"]
+        U1["User 提问"] --> LC1["LangChain 编排"]
+        LC1 --> RAG1["RAG 检索"]
+        RAG1 --> CHROMA[("Chroma 向量库")]
+        RAG1 --> LLM1["LLM"]
+        LLM1 --> MCP1["MCP 暴露企业DB工具"]
+        MCP1 --> EDB[("企业DB")]
+        LLM1 --> ANS1["结构化答案"]
+    end
+
+    subgraph 案例2["案例2：软件研发 Agent"]
+        U2["研发任务"] --> LG["LangGraph 工作流"]
+        LG --> SK1["Coding Skill"]
+        LG --> SK2["Testing Skill"]
+        LG --> SK3["Deployment Skill"]
+        SK1 --> TOOL2["Tool Calling"]
+        SK2 --> TOOL2
+        SK3 --> TOOL2
+        TOOL2 --> HAR["Harness<br/>(上下文/权限/监控)"]
+        HAR --> GIT2["代码库/CI"]
+        LG --> RESULT2["交付：PR + 测试报告"]
+    end
+
+    classDef u fill:#fef3c7,stroke:#d97706,color:#333
+    classDef core fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef cap fill:#dcfce7,stroke:#16a34a,color:#333
+    classDef sys fill:#fee2e2,stroke:#dc2626,color:#333
+    class U1,U2 u
+    class LC1,LLM1,ANS1,LC1 core
+    class RAG1,CHROMA,MCP1,SK1,SK2,SK3,TOOL2,HAR cap
+    class EDB,GIT2 sys

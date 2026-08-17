@@ -1,0 +1,37 @@
+%% 第6章 · LlamaIndex 与检索增强进阶
+%% 索引阶段 / 查询阶段 / 多路召回与 Rerank
+graph TB
+    subgraph 索引阶段["索引阶段（建库，一次性/增量）"]
+        DOC["Document<br/>PDF/HTML/DB/API"]
+        NODE["Node 切分<br/>SentenceSplitter"]
+        IDX["Index 索引<br/>VectorStoreIndex / SummaryIndex"]
+        DOC --> NODE --> IDX
+    end
+
+    subgraph 查询阶段["查询阶段（实时）"]
+        Q["User 提问"]
+        QE["QueryEngine<br/>检索 + 合成回答"]
+        ROUTE["RouterQueryEngine<br/>路由到不同索引"]
+        Q --> ROUTE --> QE
+        IDX --> QE
+    end
+
+    subgraph 精排["多路召回 + 重排序"]
+        MR["多路召回<br/>向量 + BM25 + 多索引"]
+        FUSE["融合<br/>RRF / Router"]
+        RK["Rerank<br/>交叉编码器精排 Top-N"]
+        SYN["ResponseSynthesizer<br/>拼接上下文生成"]
+        MR --> FUSE --> RK --> SYN
+    end
+
+    QE --> MR
+    SYN --> LLM["LLM 生成回答"]
+    LLM --> Q
+
+    classDef data fill:#fef3c7,stroke:#d97706,color:#333
+    classDef proc fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef store fill:#dcfce7,stroke:#16a34a,color:#333
+    classDef io fill:#f3e8ff,stroke:#9333ea,color:#333
+    class DOC,NODE,MR,FUSE,RK,SYN proc
+    class IDX store
+    class Q,LLM io

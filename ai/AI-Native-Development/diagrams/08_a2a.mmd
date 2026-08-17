@@ -1,0 +1,37 @@
+%% 第8章 · A2A Agent To Agent 协作
+%% Research → Coding → Testing 三 Agent 流水线 + Orchestrator 监督
+graph TB
+    USER["User / 任务"] --> ORCH["Orchestrator<br/>(任务分发)"]
+
+    ORCH -->|"子任务1: 调研"| R["Research Agent"]
+    ORCH -->|"子任务2: 编码"| C["Coding Agent"]
+    ORCH -->|"子任务3: 测试"| T["Testing Agent"]
+
+    R -->|"方案/上下文"| MSG[("消息总线<br/>Agent Discovery")]
+    C -->|"代码产物"| MSG
+    T -->|"测试报告"| MSG
+    MSG -.->|"反馈"| R
+    MSG -.->|"反馈"| C
+    MSG -.->|"完成"| ORCH
+    ORCH --> RESULT["最终结果交付"]
+
+    subgraph 三大问题["A2A 三大问题"]
+        COMM["Communication<br/>消息格式/协议"]
+        DISC["Discovery<br/>注册/查找"]
+        DEL["Task Delegation<br/>任务拆分与委派"]
+    end
+
+    MSG --- COMM
+    MSG --- DISC
+    ORCH --- DEL
+
+    classDef user fill:#fef3c7,stroke:#d97706,color:#333
+    classDef orch fill:#dbeafe,stroke:#2563eb,color:#333
+    classDef agent fill:#dcfce7,stroke:#16a34a,color:#333
+    classDef bus fill:#f3e8ff,stroke:#9333ea,color:#333
+    classDef prob fill:#fee2e2,stroke:#dc2626,color:#333
+    class USER,RESULT user
+    class ORCH orch
+    class R,C,T agent
+    class MSG bus
+    class COMM,DISC,DEL prob
