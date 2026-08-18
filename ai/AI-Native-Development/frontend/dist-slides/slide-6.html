@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python AI Agent 开发前沿技术快速扫盲</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3B82F6;
+            --accent-color-1: #22D3EE;
+            --accent-color-2: #8B5CF6;
+            --neutral-color: #94A3B8;
+            --slide-background: #FFFFFF;
+            --font-title: 'Montserrat', 'Noto Sans SC', sans-serif;
+            --font-body: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+    </style>
+    <style>
+        .nav-btn, .page-indicator {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="slide-page" style="position: relative; height: 810px; width: 1440px; overflow: hidden; background-color: rgb(255 255 255 / 1); font-family: 'Noto Sans SC',sans-serif">
+    <div style="padding-left: 4rem; padding-right: 4rem; padding-top: 3rem">
+      <div style="display: flex; align-items: center; gap: 0.75rem">
+        <span style="border-radius: 0.25rem; padding-left: 0.75rem; padding-right: 0.75rem; padding-top: 0.25rem; padding-bottom: 0.25rem; font-size: 13px; font-weight: 600; background: #E2E8F0; color: #2563EB">第 1 章 · 代码</span>
+        <span style="font-size: 13px; color: #64748B">examples/00_setup.py</span>
+      </div>
+      <h2 style="margin-top: 0.75rem; font-size: 38px; font-weight: 700; color: #0F172A; font-family: 'Montserrat','Noto Sans SC',sans-serif">8 行代码调通 LLM</h2>
+    </div>
+
+    <div style="margin-top: 1.75rem; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.5rem; padding-left: 4rem; padding-right: 4rem">
+      <div style="grid-column: span 3 / span 3">
+        <div style="overflow: hidden; border-radius: 0.5rem; background: #F8FAFC; border: 1px solid #E2E8F0">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-left: 1.25rem; padding-right: 1.25rem; padding-top: 0.625rem; padding-bottom: 0.625rem; background: #F1F5F9; border-bottom: 1px solid #E2E8F0">
+            <div style="display: flex; align-items: center; gap: 0.5rem">
+              <span style="height: 0.75rem; width: 0.75rem; border-radius: 9999px; background: #F87171"></span>
+              <span style="height: 0.75rem; width: 0.75rem; border-radius: 9999px; background: #D97706"></span>
+              <span style="height: 0.75rem; width: 0.75rem; border-radius: 9999px; background: #059669"></span>
+              <span style="margin-left: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 13px; color: #64748B">00_setup.py</span>
+            </div>
+            <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 12px; color: #0891B2">Python · OpenAI 兼容</span>
+          </div>
+          <pre style="font-feature-settings: normal; font-variation-settings: normal; padding-left: 1.5rem; padding-right: 1.5rem; padding-top: 1.25rem; padding-bottom: 1.25rem; font-size: 15px; line-height: 1.75; font-family: Consolas,'Courier New',monospace; color: #1E293B"><span style="color: #64748B"> 1</span>  <span style="color: #7C3AED">from</span> <span style="color: #2563EB">openai</span> <span style="color: #7C3AED">import</span> <span style="color: #D97706">OpenAI</span>
+<span style="color: #64748B"> 2</span>
+<span style="color: #64748B"> 3</span>  <span style="color: #334155">client</span> = <span style="color: #D97706">OpenAI</span>(
+<span style="color: #64748B"> 4</span>      <span style="color: #334155">api_key</span>=<span style="color: #2563EB">os</span>.<span style="color: #0891B2">getenv</span>(<span style="color: #15803D">"DEEPSEEK_API_KEY"</span>),
+<span style="color: #64748B"> 5</span>      <span style="color: #334155">base_url</span>=<span style="color: #15803D">"https://api.deepseek.com"</span>,
+<span style="color: #64748B"> 6</span>  )
+<span style="color: #64748B"> 7</span>
+<span style="color: #64748B"> 8</span>  <span style="color: #334155">response</span> = <span style="color: #334155">client</span>.<span style="color: #334155">chat</span>.<span style="color: #334155">completions</span>.<span style="color: #0891B2">create</span>(
+<span style="color: #64748B"> 9</span>      <span style="color: #334155">model</span>=<span style="color: #15803D">"deepseek-chat"</span>,
+<span style="color: #64748B">10</span>      <span style="color: #334155">messages</span>=[{<span style="color: #15803D">"role"</span>: <span style="color: #15803D">"user"</span>, <span style="color: #15803D">"content"</span>: <span style="color: #15803D">"你好"</span>}],
+<span style="color: #64748B">11</span>  )
+<span style="color: #64748B">12</span>  <span style="color: #2563EB">print</span>(<span style="color: #334155">response</span>.<span style="color: #334155">choices</span>[<span style="color: #C2410C">0</span>].<span style="color: #334155">message</span>.<span style="color: #334155">content</span>)</pre>
+        </div>
+      </div>
+
+      <div style="grid-column: span 2 / span 2">
+        <div style="border-radius: 0.5rem; padding: 1.25rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+          <div style="margin-bottom: 0.5rem; font-size: 15px; font-weight: 600; color: #0891B2">这是整个生态的 Hello World</div>
+          <p style="font-size: 15px; line-height: 1.625; color: #64748B">相当于 Spring Boot 的启动类——先确认环境、跑通最简调用。</p>
+        </div>
+        <div style="border-radius: 0.5rem; padding: 1.25rem; margin-top: calc(1rem * calc(1 - 0)); margin-bottom: calc(1rem * 0); background: #F1F5F9; border: 1px solid #E2E8F0">
+          <div style="margin-bottom: 0.5rem; font-size: 15px; font-weight: 600; color: #2563EB">Python 语法要点（Java 类比）</div>
+          <ul style="list-style: none; font-size: 15px; color: #334155">
+            <li><span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 13px; color: #D97706">from X import Y</span> → import</li>
+            <li style="margin-top: calc(0.5rem * calc(1 - 0)); margin-bottom: calc(0.5rem * 0)"><span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 13px; color: #D97706">f"..."</span> → String.format</li>
+            <li style="margin-top: calc(0.5rem * calc(1 - 0)); margin-bottom: calc(0.5rem * 0)"><span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 13px; color: #D97706">chat.completions</span> → 链式属性</li>
+          </ul>
+        </div>
+        <div style="border-radius: 0.5rem; padding: 1.25rem; margin-top: calc(1rem * calc(1 - 0)); margin-bottom: calc(1rem * 0); background: #EFF6FF; border-left: 3px solid #2563EB">
+          <p style="font-size: 15px; line-height: 1.625; color: #334155">💡 换通义千问 / 智谱：只改 <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: #15803D">base_url</span> 即可，代码不变。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

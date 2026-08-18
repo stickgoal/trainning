@@ -84,15 +84,26 @@ def call_model(state: AgentState) -> dict:
 
 
 def call_tool(state: AgentState) -> dict:
-    """节点2：执行 LLM 选定的工具。"""
-    last_msg: AIMessage = state["messages"][-1]
-    tool_call = last_msg.tool_calls[0]  # 取 LLM 决定的第一个工具调用
-    tool_fn = tool_map[tool_call["name"]]
-    result = tool_fn.invoke(tool_call["args"])
+    """节点2：执行 LLM 选定的工具。
 
-    # 把工具结果包成 message 回灌
+    注意：LLM 一次可能返回多个 tool_calls（并行工具调用）。
+    必须为每一个 tool_call 都生成一个对应的 ToolMessage，否则回灌给
+    LLM 时会触发 400 错误：
+        "An assistant message with 'tool_calls' must be followed by
+         tool messages responding to each 'tool_call_id'"
+    """
+    last_msg: AIMessage = state["messages"][-1]
     from langchain_core.messages import ToolMessage
-    return {"messages": [ToolMessage(content=str(result), tool_call_id=tool_call["id"])]}
+
+    tool_messages = []
+    for tool_call in last_msg.tool_calls:  # 遍历全部工具调用
+        tool_fn = tool_map[tool_call["name"]]
+        result = tool_fn.invoke(tool_call["args"])
+        # 每个 tool_call 都要有对应的 ToolMessage（用 tool_call_id 关联）
+        tool_messages.append(
+            ToolMessage(content=str(result), tool_call_id=tool_call["id"])
+        )
+    return {"messages": tool_messages}
 
 
 def human_review(state: AgentState) -> dict:

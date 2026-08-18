@@ -23,7 +23,7 @@ mybatis-plus:
 langchain4j:
   open-ai:
     chat-model:
-      api-key: sk-JPIHxsZKulPYjtoQlFff4ZXtVpl15wYtcMgqiven7XqB9Avh
+      api-key: ${AGENS_API_KEY}
       base-url: https://apihub.agnes-ai.com/v1
       model-name: agnes-2.0-flash
       temperature: 0.7

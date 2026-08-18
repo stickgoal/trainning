@@ -120,12 +120,16 @@ graph TB
     STATE -.-> N3
     STATE -.-> N4
 
+    N2NOTE["⚠️ 并行工具调用<br/>遍历 tool_calls<br/>每个 tc 都要有配对 ToolMessage"] -.-> N2
+
     classDef st fill:#fef3c7,stroke:#d97706,color:#333
     classDef node fill:#dbeafe,stroke:#2563eb,color:#333
     classDef edge fill:#dcfce7,stroke:#16a34a,color:#333
+    classDef warn fill:#fee2e2,stroke:#dc2626,color:#333
     class STATE st
     class N1,N2,N3,N4 node
     class ED1,ED2 edge
+    class N2NOTE warn
 ```
 
 
@@ -164,10 +168,12 @@ def call_model(state: AgentState) -> dict:
     return {"messages": [response], "step": state["step"] + 1}
 
 def call_tool(state: AgentState) -> dict:
-    """执行 LLM 决定调用的工具。"""
+    """执行 LLM 决定调用的工具（可能一次多个）。"""
     last_msg = state["messages"][-1]
-    tool_msg = execute_tool(last_msg.tool_calls[0])
-    return {"messages": [tool_msg], "step": state["step"] + 1}
+    tool_messages = []
+    for tc in last_msg.tool_calls:       # ⚠️ 遍历全部，不能只取 [0]
+        tool_messages.append(execute_tool(tc))
+    return {"messages": tool_messages, "step": state["step"] + 1}
 
 def human_review(state: AgentState) -> dict:
     """人工评审节点。"""
@@ -178,7 +184,7 @@ def human_review(state: AgentState) -> dict:
 **精讲**：
 - 每个 Node 接收完整 `state`，返回**要更新的字段**（不必返回全量）。
 - `call_model` 把 LLM 响应 append 到 `messages`（靠 reducer 拼接）。
-- `call_tool` 取最后一条消息的 `tool_calls`，执行后把工具结果也 append。
+- `call_tool` 遍历最后一条消息的 `tool_calls`，**为每个工具调用都生成一条 ToolMessage** 再 append。注意这里必须用 `for` 遍历全部，不能只取 `tool_calls[0]`——原因见 4.7 陷阱 5。
 - `human_review` 是占位，真实场景这里暂停等人输入。
 
 ### 部分 3：条件边
@@ -288,6 +294,36 @@ Node 只需返回**要更新的字段**。返回全量既啰嗦又容易出错�
 
 **陷阱 4：条件边返回的节点名拼错**
 `should_continue` 返回 `"tool"`，但映射表里是 `"tools"`，会报错。用 `Literal["tools", "human_review"]` 类型提示能提前发现。
+
+**陷阱 5：并行工具调用 —— 每个 `tool_call` 必须有配对的 `ToolMessage`**（本教程示例真实踩坑）
+LLM 一次可能返回**多个** `tool_calls`（例如用户说"查资料并写代码"，模型同时决定调 `search_docs` 和 `write_code`）。如果你在 `call_tool` 里只处理 `tool_calls[0]`：
+
+```python
+# ❌ 错误写法：只处理第一个工具调用
+tool_call = last_msg.tool_calls[0]
+return {"messages": [ToolMessage(content=..., tool_call_id=tool_call["id"])]}
+```
+
+那只有第一个 `tool_call_id` 有对应 `ToolMessage`，第二个 `tool_call` 没有响应。当这些消息回灌给 LLM 时，OpenAI 兼容 API 会直接拒绝（HTTP 400）：
+
+```
+openai.BadRequestError: Error code: 400 -
+'An assistant message with 'tool_calls' must be followed by
+ tool messages responding to each 'tool_call_id'.'
+```
+
+**正确写法**：遍历 `tool_calls`，为每个 `tool_call` 都生成一条 `ToolMessage`，用 `tool_call_id` 关联：
+
+```python
+# ✅ 正确写法：遍历全部工具调用
+tool_messages = []
+for tc in last_msg.tool_calls:
+    result = tool_map[tc["name"]].invoke(tc["args"])
+    tool_messages.append(ToolMessage(content=str(result), tool_call_id=tc["id"]))
+return {"messages": tool_messages}
+```
+
+> 一句话记住：**带 `tool_calls` 的 assistant 消息，后面必须有等量的 `ToolMessage` 一一配对（靠 `tool_call_id`）。** 这是 LangGraph + OpenAI 兼容接口的硬约束，跟是否用了 `ToolNode` 无关。对应可运行示例已修复：[examples/03_langgraph_demo.py](../examples/03_langgraph_demo.py)。
 
 **最佳实践：用 Checkpointer 持久化**
 ```python

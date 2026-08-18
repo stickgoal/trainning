@@ -19,9 +19,13 @@ graph TB
     STATE -.-> N3
     STATE -.-> N4
 
+    N2NOTE["⚠️ 并行工具调用<br/>遍历 tool_calls<br/>每个 tc 都要有配对 ToolMessage"] -.-> N2
+
     classDef st fill:#fef3c7,stroke:#d97706,color:#333
     classDef node fill:#dbeafe,stroke:#2563eb,color:#333
     classDef edge fill:#dcfce7,stroke:#16a34a,color:#333
+    classDef warn fill:#fee2e2,stroke:#dc2626,color:#333
     class STATE st
     class N1,N2,N3,N4 node
     class ED1,ED2 edge
+    class N2NOTE warn

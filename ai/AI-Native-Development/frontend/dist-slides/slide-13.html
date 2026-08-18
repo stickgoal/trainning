@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python AI Agent 开发前沿技术快速扫盲</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3B82F6;
+            --accent-color-1: #22D3EE;
+            --accent-color-2: #8B5CF6;
+            --neutral-color: #94A3B8;
+            --slide-background: #FFFFFF;
+            --font-title: 'Montserrat', 'Noto Sans SC', sans-serif;
+            --font-body: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+    </style>
+    <style>
+        .nav-btn, .page-indicator {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="slide-page" style="position: relative; height: 810px; width: 1440px; overflow: hidden; background-color: rgb(255 255 255 / 1); font-family: 'Noto Sans SC',sans-serif">
+    <div style="padding-left: 4rem; padding-right: 4rem; padding-top: 3rem">
+      <div style="display: flex; align-items: center; gap: 0.75rem">
+        <span style="border-radius: 0.25rem; padding-left: 0.75rem; padding-right: 0.75rem; padding-top: 0.25rem; padding-bottom: 0.25rem; font-size: 13px; font-weight: 600; background: #E2E8F0; color: #2563EB">第 3 章 · 代码</span>
+        <span style="font-size: 13px; color: #64748B">examples/02_langchain_demo.py</span>
+      </div>
+      <h2 style="margin-top: 0.75rem; font-size: 38px; font-weight: 700; color: #0F172A; font-family: 'Montserrat','Noto Sans SC',sans-serif">LCEL 管道符 <span style="color: #0891B2">|</span></h2>
+    </div>
+
+    <div style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1.5rem; padding-left: 4rem; padding-right: 4rem">
+      <div style="grid-column: span 3 / span 3">
+        <div style="overflow: hidden; border-radius: 0.5rem; background: #F8FAFC; border: 1px solid #E2E8F0">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-left: 1.25rem; padding-right: 1.25rem; padding-top: 0.625rem; padding-bottom: 0.625rem; background: #F1F5F9; border-bottom: 1px solid #E2E8F0">
+            <div style="display: flex; align-items: center; gap: 0.5rem">
+              <span style="height: 0.75rem; width: 0.75rem; border-radius: 9999px; background: #F87171"></span>
+              <span style="height: 0.75rem; width: 0.75rem; border-radius: 9999px; background: #D97706"></span>
+              <span style="height: 0.75rem; width: 0.75rem; border-radius: 9999px; background: #059669"></span>
+              <span style="margin-left: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 13px; color: #64748B">02_langchain_demo.py</span>
+            </div>
+            <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 12px; color: #0891B2">LCEL</span>
+          </div>
+          <pre style="font-feature-settings: normal; font-variation-settings: normal; padding-left: 1.5rem; padding-right: 1.5rem; padding-top: 1.25rem; padding-bottom: 1.25rem; font-size: 15px; line-height: 1.7; font-family: Consolas,'Courier New',monospace; color: #1E293B"><span style="color: #64748B"> 1</span>  <span style="color: #7C3AED">from</span> <span style="color: #2563EB">langchain_deepseek</span> <span style="color: #7C3AED">import</span> <span style="color: #D97706">ChatDeepSeek</span>
+<span style="color: #64748B"> 2</span>  <span style="color: #7C3AED">from</span> <span style="color: #2563EB">langchain_core.prompts</span> <span style="color: #7C3AED">import</span> <span style="color: #D97706">ChatPromptTemplate</span>
+<span style="color: #64748B"> 3</span>  <span style="color: #7C3AED">from</span> <span style="color: #2563EB">langchain_core.output_parsers</span> <span style="color: #7C3AED">import</span> <span style="color: #D97706">StrOutputParser</span>
+<span style="color: #64748B"> 4</span>
+<span style="color: #64748B"> 5</span>  <span style="color: #334155">prompt</span> = <span style="color: #D97706">ChatPromptTemplate</span>.<span style="color: #0891B2">from_template</span>(<span style="color: #15803D">"用一句话解释 {concept}。"</span>)
+<span style="color: #64748B"> 6</span>  <span style="color: #334155">model</span> = <span style="color: #D97706">ChatDeepSeek</span>(<span style="color: #334155">model</span>=<span style="color: #15803D">"deepseek-chat"</span>)
+<span style="color: #64748B"> 7</span>
+<span style="color: #64748B"> 8</span>  <span style="color: #64748B"># ★ LCEL：用 | 把 prompt → model → parser 串成一条链</span>
+<span style="color: #64748B"> 9</span>  <span style="color: #334155">chain</span> = <span style="color: #334155">prompt</span> | <span style="color: #334155">model</span> | <span style="color: #D97706">StrOutputParser</span>()
+<span style="color: #64748B">10</span>
+<span style="color: #64748B">11</span>  <span style="color: #64748B"># 数据流：{concept} → 填模板 → 发 LLM → 解析成纯字符串</span>
+<span style="color: #64748B">12</span>  <span style="color: #334155">result</span> = <span style="color: #334155">chain</span>.<span style="color: #0891B2">invoke</span>({<span style="color: #15803D">"concept"</span>: <span style="color: #15803D">"RAG"</span>})
+<span style="color: #64748B">13</span>  <span style="color: #2563EB">print</span>(<span style="color: #334155">result</span>)</pre>
+        </div>
+      </div>
+
+      <div style="grid-column: span 2 / span 2">
+        <div style="border-radius: 0.5rem; padding: 1.25rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+          <div style="margin-bottom: 0.5rem; font-size: 15px; font-weight: 600; color: #0891B2">| 是什么？</div>
+          <p style="font-size: 15px; line-height: 1.625; color: #334155">Python 的 <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: #D97706">|</span> 被 LangChain 重载为 Runnable 串联（运算符重载）。</p>
+        </div>
+        <div style="border-radius: 0.5rem; padding: 1.25rem; margin-top: calc(1rem * calc(1 - 0)); margin-bottom: calc(1rem * 0); background: #F1F5F9; border: 1px solid #E2E8F0">
+          <div style="margin-bottom: 0.5rem; font-size: 15px; font-weight: 600; color: #2563EB">统一入口</div>
+          <p style="font-size: 15px; line-height: 1.625; color: #334155">所有组件共享 <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: #D97706">invoke / ainvoke / batch / stream</span> 四种调用方式。</p>
+        </div>
+        <div style="border-radius: 0.5rem; padding: 1.25rem; margin-top: calc(1rem * calc(1 - 0)); margin-bottom: calc(1rem * 0); background: #F1F5F9; border: 1px solid #E2E8F0">
+          <div style="margin-bottom: 0.5rem; font-size: 15px; font-weight: 600; color: #7C3AED">换模型只改一处</div>
+          <p style="font-size: 15px; line-height: 1.625; color: #334155">OpenAI / Anthropic / 通义 / DeepSeek 都实现同一抽象。</p>
+        </div>
+        <div style="border-radius: 0.5rem; padding: 1.25rem; margin-top: calc(1rem * calc(1 - 0)); margin-bottom: calc(1rem * 0); background: #EFF6FF; border-left: 3px solid #2563EB">
+          <p style="font-size: 15px; color: #334155">💡 80% 的"LLM + 提示词 + 检索"场景，默认起点就是 LangChain。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

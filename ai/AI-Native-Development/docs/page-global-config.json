@@ -1,0 +1,15 @@
+{
+  "slideStyle": "tech",
+  "colorScheme": "White Tech",
+  "primaryColor": "#3B82F6",
+  "accentColor1": "#22D3EE",
+  "accentColor2": "#8B5CF6",
+  "neutralColor": "#94A3B8",
+  "background": {
+    "type": "color",
+    "value": "#FFFFFF"
+  },
+  "fontTitle": "'Montserrat', 'Noto Sans SC', sans-serif",
+  "fontBody": "'Inter', 'Noto Sans SC', sans-serif",
+  "codeFont": "Consolas, 'Courier New', monospace"
+}

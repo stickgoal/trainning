@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python AI Agent 开发前沿技术快速扫盲</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3B82F6;
+            --accent-color-1: #22D3EE;
+            --accent-color-2: #8B5CF6;
+            --neutral-color: #94A3B8;
+            --slide-background: #FFFFFF;
+            --font-title: 'Montserrat', 'Noto Sans SC', sans-serif;
+            --font-body: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+    </style>
+    <style>
+        .nav-btn, .page-indicator {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="slide-page" style="position: relative; height: 810px; width: 1440px; overflow: hidden; background-color: rgb(255 255 255 / 1); font-family: 'Noto Sans SC',sans-serif">
+    <div style="padding-left: 4rem; padding-right: 4rem; padding-top: 3rem">
+      <div style="display: flex; align-items: center; gap: 0.75rem">
+        <span style="border-radius: 0.25rem; padding-left: 0.75rem; padding-right: 0.75rem; padding-top: 0.25rem; padding-bottom: 0.25rem; font-size: 13px; font-weight: 600; background: #E2E8F0; color: #2563EB">第 10 章 · 阶段 C</span>
+        <span style="font-size: 13px; color: #64748B">Agent Skill</span>
+      </div>
+      <h2 style="margin-top: 0.75rem; font-size: 38px; font-weight: 700; color: #0F172A; font-family: 'Montserrat','Noto Sans SC',sans-serif">Skill：把专家经验封装成能力</h2>
+    </div>
+
+    <div style="margin-top: 1.75rem; padding-left: 4rem; padding-right: 4rem">
+      <div style="margin-bottom: 0.75rem; font-size: 15px; font-weight: 600; letter-spacing: 0.025em; color: #64748B">三层递进 · Java 类比</div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem">
+        <div style="border-radius: 0.5rem; padding: 1.5rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+          <div style="font-size: 16px; font-weight: 600; color: #2563EB">Tool · 方法</div>
+          <p style="margin-top: 0.5rem; font-size: 14.5px; line-height: 1.625; color: #334155">一个函数，最小执行单元。</p>
+          <div style="margin-top: 0.75rem; font-size: 13px; color: #64748B">类比：一个方法</div>
+        </div>
+        <div style="border-radius: 0.5rem; padding: 1.5rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+          <div style="font-size: 16px; font-weight: 600; color: #0891B2">Prompt · 注释</div>
+          <p style="margin-top: 0.5rem; font-size: 14.5px; line-height: 1.625; color: #334155">一段文本指令，指导如何做。</p>
+          <div style="margin-top: 0.75rem; font-size: 13px; color: #64748B">类比：一段注释</div>
+        </div>
+        <div style="border-radius: 0.5rem; padding: 1.5rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+          <div style="font-size: 16px; font-weight: 600; color: #7C3AED">Skill · 能力</div>
+          <p style="margin-top: 0.5rem; font-size: 14.5px; line-height: 1.625; color: #334155">Prompt + Tool + 说明 + 触发条件。</p>
+          <div style="margin-top: 0.75rem; font-size: 13px; color: #64748B">类比：带文档的 Spring Bean</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 1.75rem; padding-left: 4rem; padding-right: 4rem">
+      <div style="border-radius: 0.5rem; padding: 1.5rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+        <div style="margin-bottom: 0.75rem; font-size: 15px; font-weight: 600; color: #2563EB">Skill 的组成</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; text-align: center">
+          <div style="flex: 1 1 0%"><div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 15px; font-weight: 700; color: #2563EB">Prompt</div><div style="margin-top: 0.25rem; font-size: 13px; color: #64748B">做什么</div></div>
+          <div style="padding-left: 0.25rem; padding-right: 0.25rem; font-size: 20px; color: #475569">+</div>
+          <div style="flex: 1 1 0%"><div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 15px; font-weight: 700; color: #0891B2">Tool</div><div style="margin-top: 0.25rem; font-size: 13px; color: #64748B">用什么做</div></div>
+          <div style="padding-left: 0.25rem; padding-right: 0.25rem; font-size: 20px; color: #475569">+</div>
+          <div style="flex: 1 1 0%"><div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 15px; font-weight: 700; color: #7C3AED">说明</div><div style="margin-top: 0.25rem; font-size: 13px; color: #64748B">怎么用</div></div>
+          <div style="padding-left: 0.25rem; padding-right: 0.25rem; font-size: 20px; color: #475569">+</div>
+          <div style="flex: 1 1 0%"><div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 15px; font-weight: 700; color: #059669">触发条件</div><div style="margin-top: 0.25rem; font-size: 13px; color: #64748B">何时用</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 1.75rem; padding-left: 4rem; padding-right: 4rem">
+      <div style="margin-bottom: 0.75rem; font-size: 15px; font-weight: 600; letter-spacing: 0.025em; color: #64748B">典型 Skill 清单</div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem">
+        <div style="border-radius: 0.5rem; padding: 1rem; text-align: center; background: #F1F5F9; border: 1px solid #E2E8F0"><div style="font-size: 15px; font-weight: 600; color: #2563EB">Coding</div></div>
+        <div style="border-radius: 0.5rem; padding: 1rem; text-align: center; background: #F1F5F9; border: 1px solid #E2E8F0"><div style="font-size: 15px; font-weight: 600; color: #0891B2">Database</div></div>
+        <div style="border-radius: 0.5rem; padding: 1rem; text-align: center; background: #F1F5F9; border: 1px solid #E2E8F0"><div style="font-size: 15px; font-weight: 600; color: #7C3AED">Testing</div></div>
+        <div style="border-radius: 0.5rem; padding: 1rem; text-align: center; background: #F1F5F9; border: 1px solid #E2E8F0"><div style="font-size: 15px; font-weight: 600; color: #059669">Deployment</div></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

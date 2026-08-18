@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python AI Agent 开发前沿技术快速扫盲</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3B82F6;
+            --accent-color-1: #22D3EE;
+            --accent-color-2: #8B5CF6;
+            --neutral-color: #94A3B8;
+            --slide-background: #FFFFFF;
+            --font-title: 'Montserrat', 'Noto Sans SC', sans-serif;
+            --font-body: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+    </style>
+    <style>
+        .nav-btn, .page-indicator {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="slide-page" style="position: relative; height: 810px; width: 1440px; overflow: hidden; background-color: rgb(255 255 255 / 1); font-family: 'Noto Sans SC',sans-serif">
+    <div style="padding-left: 4rem; padding-right: 4rem; padding-top: 3.5rem">
+      <div style="display: flex; align-items: center; gap: 0.75rem">
+        <span style="border-radius: 0.25rem; padding-left: 0.75rem; padding-right: 0.75rem; padding-top: 0.25rem; padding-bottom: 0.25rem; font-size: 13px; font-weight: 600; background: #E2E8F0; color: #2563EB">课程定位</span>
+      </div>
+      <h2 style="margin-top: 1rem; font-size: 40px; font-weight: 700; color: #0F172A; font-family: 'Montserrat','Noto Sans SC',sans-serif">这门课是什么 / 不是什么</h2>
+    </div>
+
+    <div style="margin-top: 2.5rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; padding-left: 4rem; padding-right: 4rem">
+      <div style="border-radius: 0.5rem; padding: 1.75rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+        <div style="margin-bottom: 1rem; font-size: 14px; font-weight: 600; letter-spacing: 0.025em; color: #0891B2">目标听众</div>
+        <ul style="list-style: none; font-size: 16px; line-height: 1.625; color: #334155">
+          <li>· 3 年以上 Java 后端经验</li>
+          <li style="margin-top: calc(0.75rem * calc(1 - 0)); margin-bottom: calc(0.75rem * 0)">· 能读 Python，不熟 asyncio / decorator</li>
+          <li style="margin-top: calc(0.75rem * calc(1 - 0)); margin-bottom: calc(0.75rem * 0)">· 用过 ChatGPT，没搭过 LLM 应用</li>
+          <li style="margin-top: calc(0.75rem * calc(1 - 0)); margin-bottom: calc(0.75rem * 0)">· 不需要机器学习 / 数学背景</li>
+        </ul>
+      </div>
+
+      <div style="border-radius: 0.5rem; padding: 1.75rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+        <div style="margin-bottom: 1rem; font-size: 14px; font-weight: 600; letter-spacing: 0.025em; color: #F87171">这门课不是</div>
+        <ul style="list-style: none; font-size: 16px; line-height: 1.625; color: #334155">
+          <li>✕ 不是 Python 语法课</li>
+          <li style="margin-top: calc(0.75rem * calc(1 - 0)); margin-bottom: calc(0.75rem * 0)">✕ 不是机器学习原理课</li>
+          <li style="margin-top: calc(0.75rem * calc(1 - 0)); margin-bottom: calc(0.75rem * 0)">✕ 不训练模型，不碰梯度下降</li>
+          <li style="margin-top: calc(0.75rem * calc(1 - 0)); margin-bottom: calc(0.75rem * 0)">✕ 不设固定时长，按需跳读</li>
+        </ul>
+      </div>
+
+      <div style="border-radius: 0.5rem; padding: 1.75rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+        <div style="margin-bottom: 1rem; font-size: 14px; font-weight: 600; letter-spacing: 0.025em; color: #059669">这门课是</div>
+        <ul style="list-style: none; font-size: 16px; line-height: 1.625; color: #334155">
+          <li>✓ 生态认知教程：建立技术地图</li>
+          <li style="margin-top: calc(0.75rem * calc(1 - 0)); margin-bottom: calc(0.75rem * 0)">✓ 看懂组件边界与数据流</li>
+          <li style="margin-top: calc(0.75rem * calc(1 - 0)); margin-bottom: calc(0.75rem * 0)">✓ 知道何时用 / 何时别用</li>
+          <li style="margin-top: calc(0.75rem * calc(1 - 0)); margin-bottom: calc(0.75rem * 0)">✓ 学完能画出企业级架构图</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-top: 2.25rem; padding-left: 4rem; padding-right: 4rem">
+      <div style="display: flex; align-items: flex-start; gap: 1rem; border-radius: 0.5rem; padding-left: 1.75rem; padding-right: 1.75rem; padding-top: 1.25rem; padding-bottom: 1.25rem; background: #EFF6FF; border-left: 3px solid #2563EB">
+        <span style="margin-top: 0.125rem; font-size: 20px; color: #2563EB">💡</span>
+        <p style="font-size: 17px; line-height: 1.625; color: #334155">
+          对 Java 工程师的关键提示：把 <span style="font-weight: 600; color: #2563EB">LLM 当作"通过 HTTP 调用的、会推理的外部服务"</span>，
+          把 <span style="font-weight: 600; color: #0891B2">Agent 当作"用 LLM 做决策、会调用工具的 Spring Service"</span>。
+          剩下的问题只是"用什么框架把这两件事拼起来"。
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

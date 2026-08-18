@@ -26,6 +26,21 @@
 
 import os
 
+# =================================================================
+# 国内网络环境适配（HuggingFace 官方域名常被墙）
+# - 若本机已缓存该 Embedding 模型 → 强制离线模式，不再联网探测，避免卡死超时
+# - 若未缓存（首次运行）→ 走国内镜像 hf-mirror.com 下载权重
+# 说明：SentenceTransformerEmbeddings 在加载时会联网探测 adapter_config.json，
+#       即使模型已缓存、国内无法访问 huggingface.co 也会一直重试直到超时。
+# =================================================================
+_HF_CACHE = os.path.join(
+    os.getenv("HF_HOME", os.path.expanduser("~/.cache/huggingface")), "hub"
+)
+if os.path.isdir(os.path.join(_HF_CACHE, "models--BAAI--bge-small-zh-v1.5")):
+    os.environ["HF_HUB_OFFLINE"] = "1"          # 已有缓存：纯离线，零网络
+else:
+    os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")  # 首次：国内镜像下载
+
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import SentenceTransformerEmbeddings

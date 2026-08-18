@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python AI Agent 开发前沿技术快速扫盲</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3B82F6;
+            --accent-color-1: #22D3EE;
+            --accent-color-2: #8B5CF6;
+            --neutral-color: #94A3B8;
+            --slide-background: #FFFFFF;
+            --font-title: 'Montserrat', 'Noto Sans SC', sans-serif;
+            --font-body: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+    </style>
+    <style>
+        .nav-btn, .page-indicator {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="slide-page" style="position: relative; height: 810px; width: 1440px; overflow: hidden; background-color: rgb(255 255 255 / 1); font-family: 'Noto Sans SC',sans-serif">
+    <div style="padding-left: 4rem; padding-right: 4rem; padding-top: 3rem">
+      <div style="display: flex; align-items: center; gap: 0.75rem">
+        <span style="border-radius: 0.25rem; padding-left: 0.75rem; padding-right: 0.75rem; padding-top: 0.25rem; padding-bottom: 0.25rem; font-size: 13px; font-weight: 600; background: #E2E8F0; color: #2563EB">第 5 章 · 阶段 B</span>
+        <span style="font-size: 13px; color: #64748B">RAG 技术体系</span>
+      </div>
+      <h2 style="margin-top: 0.75rem; font-size: 38px; font-weight: 700; color: #0F172A; font-family: 'Montserrat','Noto Sans SC',sans-serif">RAG：让 LLM 用上私有知识</h2>
+    </div>
+
+    <div style="margin-top: 1.5rem; padding-left: 4rem; padding-right: 4rem">
+      <div style="margin-bottom: 0.75rem; font-size: 15px; font-weight: 600; letter-spacing: 0.025em; color: #64748B">6 步管线</div>
+      <div style="border-radius: 0.5rem; padding: 1.25rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+        <div style="display: flex; align-items: center; justify-content: space-between; text-align: center">
+          <div style="flex: 1 1 0%"><div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 14px; font-weight: 700; color: #2563EB">Document</div><div style="margin-top: 0.25rem; font-size: 12.5px; color: #64748B">加载文档</div></div>
+          <div style="padding-left: 0.25rem; padding-right: 0.25rem; font-size: 20px; color: #475569">→</div>
+          <div style="flex: 1 1 0%"><div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 14px; font-weight: 700; color: #2563EB">Chunk</div><div style="margin-top: 0.25rem; font-size: 12.5px; color: #64748B">切分片段</div></div>
+          <div style="padding-left: 0.25rem; padding-right: 0.25rem; font-size: 20px; color: #475569">→</div>
+          <div style="flex: 1 1 0%"><div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 14px; font-weight: 700; color: #0891B2">Embedding</div><div style="margin-top: 0.25rem; font-size: 12.5px; color: #64748B">文本转向量</div></div>
+          <div style="padding-left: 0.25rem; padding-right: 0.25rem; font-size: 20px; color: #475569">→</div>
+          <div style="flex: 1 1 0%"><div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 14px; font-weight: 700; color: #0891B2">VectorDB</div><div style="margin-top: 0.25rem; font-size: 12.5px; color: #64748B">向量入库</div></div>
+          <div style="padding-left: 0.25rem; padding-right: 0.25rem; font-size: 20px; color: #475569">→</div>
+          <div style="flex: 1 1 0%"><div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 14px; font-weight: 700; color: #7C3AED">Retriever</div><div style="margin-top: 0.25rem; font-size: 12.5px; color: #64748B">检索 Top-K</div></div>
+          <div style="padding-left: 0.25rem; padding-right: 0.25rem; font-size: 20px; color: #475569">→</div>
+          <div style="flex: 1 1 0%"><div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 14px; font-weight: 700; color: #059669">LLM</div><div style="margin-top: 0.25rem; font-size: 12.5px; color: #64748B">生成回答</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; padding-left: 4rem; padding-right: 4rem">
+      <div style="border-radius: 0.5rem; padding: 1.5rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+        <div style="margin-bottom: 0.5rem; font-size: 16px; font-weight: 600; color: #0891B2">多路召回</div>
+        <p style="font-size: 14.5px; line-height: 1.625; color: #334155">向量 + BM25 双路，用 <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: #D97706">RRF</span> 融合排序，互补召回。</p>
+      </div>
+      <div style="border-radius: 0.5rem; padding: 1.5rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+        <div style="margin-bottom: 0.5rem; font-size: 16px; font-weight: 600; color: #7C3AED">Rerank 精排</div>
+        <p style="font-size: 14.5px; line-height: 1.625; color: #334155">召回 50 条 → 交叉编码器精排 Top-K，<span style="font-weight: 600; color: #7C3AED">生产必加</span>。</p>
+      </div>
+      <div style="border-radius: 0.5rem; padding: 1.5rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+        <div style="margin-bottom: 0.5rem; font-size: 16px; font-weight: 600; color: #059669">防幻觉</div>
+        <p style="font-size: 14.5px; line-height: 1.625; color: #334155">Prompt 约束"没有答案就说未找到"，拒绝编造。</p>
+      </div>
+    </div>
+
+    <div style="margin-top: 1.5rem; padding-left: 4rem; padding-right: 4rem">
+      <div style="border-radius: 0.5rem; padding-left: 1.5rem; padding-right: 1.5rem; padding-top: 1rem; padding-bottom: 1rem; background: #EFF6FF; border-left: 3px solid #2563EB">
+        <p style="font-size: 15.5px; line-height: 1.625; color: #334155">
+          <span style="font-weight: 600; color: #2563EB">工具对照：</span>
+          框架 LangChain RAG / LlamaIndex ｜ 向量库 Chroma / FAISS / Milvus / Qdrant / pgvector ｜ Embedding 用本地 <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: #15803D">bge-small-zh</span>（国产 LLM 不提供 Embedding 接口）。
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

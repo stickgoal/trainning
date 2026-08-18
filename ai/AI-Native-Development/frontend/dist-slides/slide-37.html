@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python AI Agent 开发前沿技术快速扫盲</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3B82F6;
+            --accent-color-1: #22D3EE;
+            --accent-color-2: #8B5CF6;
+            --neutral-color: #94A3B8;
+            --slide-background: #FFFFFF;
+            --font-title: 'Montserrat', 'Noto Sans SC', sans-serif;
+            --font-body: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+    </style>
+    <style>
+        .nav-btn, .page-indicator {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="slide-page" style="position: relative; height: 810px; width: 1440px; overflow: hidden; background-color: rgb(255 255 255 / 1); font-family: 'Noto Sans SC',sans-serif">
+    <div style="padding-left: 4rem; padding-right: 4rem; padding-top: 3rem">
+      <div style="display: flex; align-items: center; gap: 0.75rem">
+        <span style="border-radius: 0.25rem; padding-left: 0.75rem; padding-right: 0.75rem; padding-top: 0.25rem; padding-bottom: 0.25rem; font-size: 13px; font-weight: 600; background: #E2E8F0; color: #2563EB">第 13 章 · 阶段 D</span>
+        <span style="font-size: 13px; color: #64748B">综合案例</span>
+      </div>
+      <h2 style="margin-top: 0.75rem; font-size: 38px; font-weight: 700; color: #0F172A; font-family: 'Montserrat','Noto Sans SC',sans-serif">两个端到端案例串起前 12 章</h2>
+    </div>
+
+    <div style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; padding-left: 4rem; padding-right: 4rem">
+      <div style="border-radius: 0.5rem; padding: 1.75rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+        <div style="margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.75rem">
+          <span style="border-radius: 0.25rem; padding-left: 0.625rem; padding-right: 0.625rem; padding-top: 0.25rem; padding-bottom: 0.25rem; font-size: 13px; font-weight: 700; background: #E2E8F0; color: #2563EB">案例 1</span>
+          <div style="font-size: 19px; font-weight: 600; color: #1E293B">企业知识库 Agent</div>
+        </div>
+        <p style="margin-bottom: 1rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 14px; color: #64748B">Python + LangChain + RAG + Chroma + MCP</p>
+        <ul style="list-style: none; font-size: 15px; color: #334155">
+          <li>· 问制度 → 调 <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 13px; color: #15803D">search_policy</span></li>
+          <li style="margin-top: calc(0.5rem * calc(1 - 0)); margin-bottom: calc(0.5rem * 0)">· 问员工 → 调 <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 13px; color: #15803D">query_employee_db</span></li>
+          <li style="margin-top: calc(0.5rem * calc(1 - 0)); margin-bottom: calc(0.5rem * 0)">· 偏 <span style="font-weight: 600; color: #0891B2">知识 + 检索</span> 场景</li>
+        </ul>
+      </div>
+
+      <div style="border-radius: 0.5rem; padding: 1.75rem; background: #F1F5F9; border: 1px solid #E2E8F0">
+        <div style="margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.75rem">
+          <span style="border-radius: 0.25rem; padding-left: 0.625rem; padding-right: 0.625rem; padding-top: 0.25rem; padding-bottom: 0.25rem; font-size: 13px; font-weight: 700; background: #E2E8F0; color: #7C3AED">案例 2</span>
+          <div style="font-size: 19px; font-weight: 600; color: #1E293B">软件研发 Agent</div>
+        </div>
+        <p style="margin-bottom: 1rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 14px; color: #64748B">Python + LangGraph + Skill + Tool Calling + Harness</p>
+        <ul style="list-style: none; font-size: 15px; color: #334155">
+          <li>· 测试失败 → 回环 coding 节点</li>
+          <li style="margin-top: calc(0.5rem * calc(1 - 0)); margin-bottom: calc(0.5rem * 0)">· 带人工审批的研发流水线</li>
+          <li style="margin-top: calc(0.5rem * calc(1 - 0)); margin-bottom: calc(0.5rem * 0)">· 偏 <span style="font-weight: 600; color: #7C3AED">流程 + 工具</span> 场景</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-top: 1.5rem; padding-left: 4rem; padding-right: 4rem">
+      <div style="border-radius: 0.5rem; padding: 1.5rem; background: #EFF6FF; border-left: 3px solid #059669">
+        <div style="margin-bottom: 0.5rem; font-size: 15px; font-weight: 600; color: #059669">选型原则</div>
+        <p style="font-size: 16px; line-height: 1.625; color: #334155">
+          <span style="font-weight: 600; color: #0891B2">检索为主</span> → LangChain + RAG ｜
+          <span style="font-weight: 600; color: #7C3AED">流程复杂</span> → LangGraph。两个案例分别对应两类最典型的 Agent 需求。
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
