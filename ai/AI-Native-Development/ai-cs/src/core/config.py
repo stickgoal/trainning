@@ -38,8 +38,8 @@ class Config:
     # ---------- 运行开关 ----------
     # TOOLS_MODE: inprocess(默认) | mcp（M7 独立进程形态）
     TOOLS_MODE = os.getenv("TOOLS_MODE", "inprocess")
-    # RETRIEVER_MODE: basic | hybrid（M3 起生效）
-    RETRIEVER_MODE = os.getenv("RETRIEVER_MODE", "hybrid")
+    # RETRIEVER_MODE: basic | hybrid（M3 起切换对比）
+    RETRIEVER_MODE = os.getenv("RETRIEVER_MODE", "basic")
 
     # ---------- 服务 ----------
     API_HOST = os.getenv("API_HOST", "0.0.0.0")

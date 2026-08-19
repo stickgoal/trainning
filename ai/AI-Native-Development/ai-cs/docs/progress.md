@@ -42,3 +42,29 @@ python -m pytest tests/test_m1_data.py -v   # 6 passed in 0.07s ✓
 
 **遗留问题**
 - 无。
+
+---
+
+## M2 · RAG 基础管线 ✅ 2026-08-19
+
+**做了什么**
+- `src/rag/loader.py`：load_documents/split_documents/load_and_split，遍历 knowledge_docs 注入 metadata（source/domain/doc/seq），中文分隔符切分 400/60；
+- `src/rag/vectorstore.py`：build_vectorstore（Chroma 持久化到 chroma_db/）+ load_vectorstore（已存在时直连，共用同一 embedding 实例）；
+- `src/rag/retriever.py`：按 RETRIEVER_MODE 分派，basic=纯向量 k=3；hybrid 分支预置（M3 填充）；config 默认 basic；
+- `src/rag/chain.py`：LCEL 问答链（itemgetter 抽字符串防 dict 坑）+ format_docs_with_sources（内联来源行）+ 防幻觉 Prompt；
+- `scripts/ingest.py`：一键建库，输出文档/chunk/各域统计；
+- `tests/test_rag_offline.py`：离线检索测试（不调 LLM）。
+
+**验收结果**
+```bash
+python scripts/ingest.py
+# 文档数 6 / chunk 数 13；admin 5 / finance 4 / hr 4 ✓
+python -m pytest tests/test_rag_offline.py -s
+# 检索命中率 7/7 = 1.00 ≥ 0.8 ✓（2 passed）
+# 冒烟（需 Key）：
+#   问"入职5年有几天年假" → 10 天/年（来源 leave_policy.txt）✓
+#   问"食堂几点开饭"     → 知识库中未找到相关内容 ✓（防幻觉）
+```
+
+**遗留问题**
+- 无。P0 纯向量命中率已达 1.00；M3 hybrid 预期维持/提升（尤其单号/专有名词类 query）。
