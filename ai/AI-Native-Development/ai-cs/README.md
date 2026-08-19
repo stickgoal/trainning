@@ -7,18 +7,18 @@
 
 ## 项目状态
 
-**当前阶段：规划完成，待实施。**
+**已实施（M0~M6 完成并提交，M7 可选未做）。** 当前实现：
 
-后续实施 Agent 请按顺序阅读：
+- ✅ M0 环境与骨架：config / logging / 目录结构
+- ✅ M1 语料与模拟数据：6 份制度文档 + mock_data + 测试集 12 条
+- ✅ M2 RAG 基础管线：Chroma 建库 + LCEL 问答链（离线检索命中率 1.00）
+- ✅ M3 多路召回 + Rerank：BM25 + Ensemble + Rerank（当前环境 rerank 受磁盘空间限制，自动降级为多路融合，见 [docs/progress.md](docs/progress.md)）
+- ✅ M4 工具 + Agent 组装：三个工具 + create_agent，S1~S5 场景测试全过
+- ✅ M5 FastAPI 服务 + Web 聊天页
+- ✅ M6 评估基线：faithfulness/tool_accuracy 1.00，防幻觉一票否决通过
+- ⏭ M7（可选）MCP Server 独立进程形态：未实施
 
-| # | 文档 | 内容 |
-|---|---|---|
-| 1 | [docs/01_系统分析.md](docs/01_系统分析.md) | 业务背景、场景（S1~S6）、功能清单（FR/NFR）、技术选型依据 |
-| 2 | [docs/02_架构设计.md](docs/02_架构设计.md) | 架构图、目录蓝图、模块接口契约、数据流 |
-| 3 | [docs/03_开发计划.md](docs/03_开发计划.md) | 里程碑 M0~M7、任务分解、验收标准、执行纪律 |
-| 4 | [docs/04_实施注意事项.md](docs/04_实施注意事项.md) | **动手前必读**：API 陷阱、环境坑、报错速查、红线 |
-
-实施进度记录：`docs/progress.md`（实施过程中自建）。
+实施进度记录：`docs/progress.md`。
 
 ---
 
@@ -56,7 +56,7 @@ ai-cs/
 └── requirements.txt
 ```
 
-## 快速开始（实施完成后）
+## 快速开始
 
 ```bash
 # 0. 环境：复用课程根 venv，设 Key 与 HF 镜像
