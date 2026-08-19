@@ -112,3 +112,26 @@ Ensemble 命中率: 7/7 = 1.00 ≥ 0.9 ✓
 - ⚠️ **rerank 精排未在当前环境验证**：C 盘仅剩 0.21GB，Windows 页面文件无法扩展，加载 1.1GB 的 bge-reranker-base 触发 `os error 1455`（提交限制不足），且表现为**进程级崩溃**（try/except 无法捕获）。
 - 决策：默认 `RETRIEVER_MODE=basic` 保证全链路可跑（当前环境 14 项测试全过）；环境改善后（清理 C 盘 / 页面文件移 D 盘）设 `RETRIEVER_MODE=hybrid` 即可启用 rerank，无需改代码。
 - hybrid 的 BM25 路对"单号/专有名词"类 query 增益显著，但当前测试集制度类用例（均为自然语言）命中率本就 1.00，该增益待补充精确 token 类用例后体现。
+
+---
+
+## M5 · FastAPI 服务 + Web 页 ✅ 2026-08-19
+
+**做了什么**
+- `src/api/schemas.py`：ChatRequest（question 长度 1~500）/ ChatResponse（answer/sources/tool_calls/elapsed_ms）；
+- `src/api/app.py`：POST /api/chat（agent 单例 lru_cache + 解析 messages 提取 sources/tool_calls）、POST /api/rebuild（串行加锁 + 失效缓存）、GET /health；503 当 Key 缺失；
+- `web/index.html`：极简单页（输入框 + 对话气泡 + 来源展示，fetch 调 /api/chat）；
+- 聊天日志落盘 logs/chat.log（question/tools/sources/耗时）。
+
+**验收结果**
+```bash
+uvicorn src.api.app:app --port 8100 &
+curl -s localhost:8100/health                       # {"status":"ok"} ✓
+curl -X POST localhost:8100/api/chat -d '{"question":"年假满3年有几天？"}'
+# → {"answer":"...年假 10 天/年...", "sources":["knowledge_docs/hr/leave_policy.txt",...],
+#    "tool_calls":["search_policy"], "elapsed_ms":27415} ✓
+# Web 页 GET / → HTTP 200 ✓
+```
+
+**遗留问题**
+- 无。

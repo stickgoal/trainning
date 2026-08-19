@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>企业智能客服</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; height: 100vh; display: flex; flex-direction: column; }
+  header { background: #2563eb; color: #fff; padding: 14px 20px; font-size: 16px; font-weight: 600; }
+  main { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { max-width: 72%; padding: 10px 14px; border-radius: 12px; line-height: 1.6; font-size: 14px; white-space: pre-wrap; word-break: break-word; }
+  .user { align-self: flex-end; background: #2563eb; color: #fff; }
+  .bot { align-self: flex-start; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .sources { font-size: 12px; color: #94a3b8; margin-top: 6px; }
+  .sources b { color: #64748b; }
+  footer { display: flex; gap: 10px; padding: 14px 20px; background: #fff; border-top: 1px solid #e2e8f0; }
+  input { flex: 1; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
+  input:focus { border-color: #2563eb; }
+  button { padding: 10px 22px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+  button:disabled { background: #94a3b8; }
+</style>
+</head>
+<body>
+<header>🏢 企业智能客服（制度问答 + 员工/工单查询）</header>
+<main id="chat"></main>
+<footer>
+  <input id="q" placeholder="例如：年假满 3 年有几天？ / 查一下 E001 / RB2024001 什么状态？" />
+  <button id="send">发送</button>
+</footer>
+
+<script>
+const chatEl = document.getElementById("chat");
+const input = document.getElementById("q");
+const sendBtn = document.getElementById("send");
+
+function append(text, cls, extra = "") {
+  const div = document.createElement("div");
+  div.className = `msg ${cls}`;
+  div.textContent = text;
+  if (extra) div.insertAdjacentHTML("beforeend", extra);
+  chatEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+async function send() {
+  const q = input.value.trim();
+  if (!q) return;
+  append(q, "user");
+  input.value = "";
+  sendBtn.disabled = true;
+
+  try {
+    const resp = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: q }),
+    });
+    const data = await resp.json();
+    let extra = "";
+    if (data.sources?.length) {
+      extra = `<div class="sources"><b>来源：</b>${data.sources.join("、")}</div>`;
+    }
+    append(data.answer, "bot", extra);
+  } catch (e) {
+    append("请求失败：" + e, "bot");
+  } finally {
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+sendBtn.onclick = send;
+input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+</script>
+</body>
+</html>
