@@ -24,8 +24,9 @@
 import os
 
 from langchain_community.retrievers import BM25Retriever
-from langchain.retrievers import EnsembleRetriever, ContextualCompressionRetriever
-from langchain.retrievers.document_compressors import CrossEncoderReranker
+# langchain>=0.3 起，这些 retriever 从 langchain.retrievers 迁到了 langchain_classic.retrievers
+from langchain_classic.retrievers import EnsembleRetriever, ContextualCompressionRetriever
+from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -125,7 +126,8 @@ def main() -> None:
             "根据以下上下文回答问题，上下文没有就说\"未找到\"。\n上下文：{context}\n问题：{question}"
         )
         chain = (
-            {"context": rerank_retriever | (lambda d: "\n\n".join(x.page_content for x in d)),
+            {"context": (lambda x: x["question"]) | rerank_retriever
+                       | (lambda d: "\n\n".join(x.page_content for x in d)),
              "question": lambda x: x["question"]}
             | prompt | model | StrOutputParser()
         )

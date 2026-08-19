@@ -31,6 +31,7 @@
 
 import os
 import operator
+import re
 from dataclasses import dataclass, field
 from typing import Annotated, TypedDict, Literal
 
@@ -174,9 +175,11 @@ def node_deploy(state: DevState) -> dict:
 def after_testing(state: DevState) -> Literal["human_review", "coding"]:
     """测试通过 → 人工评审；测试失败 → 回到 coding 修。"""
     last = state["artifacts"][-1] if state["artifacts"] else ""
-    if "失败" in last:
-        return "coding"   # 回环：修代码
-    return "human_review"
+    # 报告形如 "3 用例通过 / 0 失败"。只有真正存在失败用例（失败数 > 0）才回环修代码。
+    # 注意：不能用 `if "失败" in last` 简单判定——"0 失败" 也含 "失败" 二字，会误判通过为失败。
+    m = re.search(r"(\d+)\s*失败", last)
+    failed = int(m.group(1)) if m else 0
+    return "coding" if failed > 0 else "human_review"
 
 
 def after_human(state: DevState) -> Literal["deploy", "__end__"]:

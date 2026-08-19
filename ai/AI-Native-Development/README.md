@@ -227,6 +227,14 @@ pip install -r requirements.txt
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 > `requirements.txt` 已含 `langchain-deepseek`，无需再单装 `langchain-openai`。
+>
+> ⚠️ **可选依赖（opik / guardrails-ai / crewai）**：它们依赖 litellm（要求 openai>=2.x），
+> 与 llama-index 0.12（要求 openai<2.0）冲突，**不能与核心依赖装在同一 venv**。
+> 如需使用（第 9 章 9.8 / 第 11 章），请单独建环境：
+> ```bash
+> python -m venv .venv-opt
+> .venv\Scripts\pip install -r requirements-optional.txt -i https://pypi.org/simple
+> ```
 
 ### 4. 配置 DeepSeek API Key
 LLM 调用需 DeepSeek Key（于 https://platform.deepseek.com 申请）：

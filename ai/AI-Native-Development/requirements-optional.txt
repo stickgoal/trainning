@@ -1,0 +1,24 @@
+# Python AI Agent 课程 · 可选依赖（须在【独立 venv】中安装）
+#
+# ⚠️ 为什么独立：
+#   这些包依赖 litellm，而 litellm 要求 openai>=2.x；
+#   核心环境里的 llama-index 0.12 则要求 openai<2.0。
+#   两者在当前版本下不可共存于同一 venv，故拆分为独立环境。
+#
+# 用法（Windows PowerShell）：
+#   python -m venv .venv-opt
+#   .\.venv-opt\Scripts\pip install -r requirements-optional.txt
+#
+# 涉及章节：第 9 章 9.8（护栏 Opik / Guardrails）、第 11 章（多 Agent 框架 CrewAI）
+
+# --- LLM 网关（litellm 生态公共依赖）---
+litellm==1.97.0           # ⚠️ 锁版本：1.94 之前的某些版本在 Windows+Py3.12 下无预编译 wheel，pip 会用 Rust 从源码编译而失败
+
+# --- 可观测与护栏（第9章 9.8）---
+opik>=1.0.0               # Comet 开源 LLM 评估，与 RAGAS 集成好
+guardrails-ai>=0.5.0      # 输出结构/内容护栏，防注入、锁格式
+                          # ⚠️ 清华镜像上此包索引过期（只到 2.18.0 且要求 Py<3.12），安装时必须指定官方源：
+                          #    pip install "guardrails-ai>=0.5.0" -i https://pypi.org/simple
+
+# --- 多 Agent 框架（第11章）---
+crewai>=0.30.0            # 角色化多 Agent 协作（需 API Key 才能真跑）

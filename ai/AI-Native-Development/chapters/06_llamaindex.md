@@ -52,7 +52,7 @@ LlamaIndex 围绕 "数据如何被索引、如何被查询" 组织抽象：
 | **Node** | 切分后的最小检索单元（Document 会被切成多个 Node） | chunk |
 | **Index** | 索引结构，决定 "怎么存、怎么找" | VectorStore + Retriever |
 | **Retriever** | 从索引里按 query 取相关 Node | retriever |
-| **NodePostprocessor** | 检索结果的后处理（过滤、Rerank 精排） | `ContextualCompressionRetriever` |
+| **BaseNodePostprocessor** | 检索结果的后处理（过滤、Rerank 精排） | `ContextualCompressionRetriever` |
 | **ResponseSynthesizer** | 把检索到的 Node 拼成 Prompt 生成回答 | 组装 prompt 的 chain |
 | **QueryEngine** | 一站式问答入口（检索 + 合成） | RAG chain |
 | **ChatEngine** | 带对话记忆的多轮 QueryEngine | 带 Memory 的 chain |
@@ -75,7 +75,7 @@ Document → 切分(Node) → Embedding → 存进 Index
 
 **阶段二：查询（Querying）** —— 实时
 ```
-Query → Retriever 召回 → NodePostprocessor 精排 → ResponseSynthesizer 生成
+Query → Retriever 召回 → BaseNodePostprocessor 精排 → ResponseSynthesizer 生成
 ```
 
 全局配置用 `Settings`，类比 Spring 的全局 Bean，配置一次处处生效：
@@ -180,7 +180,10 @@ print(str(resp))
 ### 能力 2：Rerank 重排序（自定义 Postprocessor）
 
 ```python
-class CrossEncoderRerank(NodePostprocessor):
+# llama-index>=0.12 起，后处理器基类从 NodePostprocessor 更名为 BaseNodePostprocessor
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
+
+class CrossEncoderRerank(BaseNodePostprocessor):
     def __init__(self, model_name="BAAI/bge-reranker-base", top_n=3):
         super().__init__()
         self._model = CrossEncoder(model_name)
@@ -202,7 +205,7 @@ engine = RetrieverQueryEngine(retriever=retriever, node_postprocessors=[rerank])
 ```
 
 **精讲**：
-- `NodePostprocessor` 是 LlamaIndex 的后处理器接口，在 "检索之后、生成之前" 统一精排，类比 Java 的拦截器。
+- `BaseNodePostprocessor` 是 LlamaIndex 的后处理器基类接口，在 "检索之后、生成之前" 统一精排，类比 Java 的拦截器。
 - `_postprocess_nodes` 拿到 `(nodes, query)`，交叉编码器对每对 `(query, doc)` 打分，按分排序取 `top_n`。**这就是 Rerank 的完整原理**，十几行代码讲透了第 5 章说的 "交叉编码器精排"。
 - LlamaIndex 也内置 `SentenceTransformerRerank`，效果一样；手写一版是为了让学员看清内部逻辑。
 
@@ -264,7 +267,9 @@ $ python examples/05_llamaindex_demo.py
 一个问题同时走多路，结果融合排序。典型是 **向量 + BM25** 混合，用 RRF 融合：
 
 ```python
-from llama_index.core.retrievers import QueryFusionRetriever, BM25Retriever, VectorIndexRetriever
+from llama_index.core.retrievers import VectorIndexRetriever
+from llama_index.core.retrievers.fusion_retriever import QueryFusionRetriever
+from llama_index.retrievers.bm25 import BM25Retriever  # 稀疏路需 pip install llama-index-retrievers-bm25
 
 vector = VectorIndexRetriever(index=index, similarity_top_k=10)     # 稠密路
 bm25 = BM25Retriever.from_defaults(nodes=nodes, similarity_top_k=10) # 稀疏路（需 pip install llama-index-retrievers-bm25）
@@ -362,10 +367,10 @@ LlamaIndex 的 QueryEngine 可以挂到 LangChain Agent 当工具，两个框架
 ## 6.11 小结
 
 - LlamaIndex 是 RAG 专用框架，与 LangChain **分工不同、可互补**：编排选 LangChain，纯 RAG 精细控制选 LlamaIndex。
-- 核心抽象：**Document → Node → Index → Retriever → NodePostprocessor → ResponseSynthesizer → QueryEngine**。
+- 核心抽象：**Document → Node → Index → Retriever → BaseNodePostprocessor → ResponseSynthesizer → QueryEngine**。
 - 两阶段：**索引（建库）** 与 **查询（实时）**，全局配置用 `Settings`。
 - 多路召回三种形态：**路由（Router）/ 融合（RRF）/ 子问题分解（Sub-question）**。
-- Rerank 重排序 = 交叉编码器精排，`NodePostprocessor` 十几行就能实现，生产几乎必加。
+- Rerank 重排序 = 交叉编码器精排，`BaseNodePostprocessor` 十几行就能实现，生产几乎必加。
 - 检索增强技术栈全景已整理，按需补课即可。
 
 下一章进入工程化阶段——MCP，解决 "怎么把工具标准化地暴露给 Agent"。

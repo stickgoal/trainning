@@ -12,3 +12,6 @@ __pycache__/
 
 # Project memory / local config (not source)
 .workbuddy/
+
+# Node dependencies (heavy, reproducible via package manager)
+node_modules/

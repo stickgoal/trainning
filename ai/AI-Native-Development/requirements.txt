@@ -28,6 +28,7 @@ sentence-transformers>=3.0.0
 llama-index>=0.12,<0.13
 llama-index-embeddings-huggingface>=0.3
 llama-index-llms-openai-like>=0.3
+llama-index-retrievers-bm25>=0.5.0,<0.6.0   # BM25Retriever（稀疏召回路，第6章多路召回用）；锁定 0.5.x 以兼容 llama-index-core 0.12（0.6+ 要求 core>=0.13）
 
 # --- 多路召回 / Rerank 辅助（第5章）---
 rank-bm25>=0.2.2        # BM25 关键词检索（稀疏路）
@@ -41,15 +42,21 @@ pypdf>=4.0.0
 unstructured>=0.14.0
 
 # --- RAG 评估（第5章 5.4.3）---
+# ⚠️ ragas 0.4.x 在 import 时就无条件 `from langchain_community.chat_models.vertexai import ChatVertexAI`，
+#    但该模块在 langchain-community >=0.3 已被移除，导致裸 `import ragas` 直接崩溃。
+#    安装后必须执行一次 ragas 兼容补丁（写占位 ChatVertexAI）：
+#        python _apply_ragas_shim.py
+#    重装 venv 后需重新执行。
 ragas>=0.1.9
 deepeval>=0.21.0
 
 # --- 可观测与护栏（第9章 9.8）---
 langsmith>=0.1.0          # LangChain 官方观测/评估平台（云端 SaaS，有免费额度）
 langfuse>=2.0.0           # 开源可观测，可自托管（数据不出内网）
-opik>=1.0.0               # Comet 开源 LLM 评估，与 RAGAS 集成好
-guardrails-ai>=0.5.0      # 输出结构/内容护栏，防注入、锁格式
+# ⚠️ opik / guardrails-ai / crewai 依赖 litellm（要求 openai>=2.x），
+#    与 llama-index 0.12（要求 openai<2.0）存在版本冲突，无法共用一个 venv。
+#    如需使用这三个工具，请按 requirements-optional.txt 在【独立 venv】中安装。
 
 # --- 多 Agent 框架（第11章）---
-crewai>=0.30.0            # 角色化多 Agent 协作（需 API Key 才能真跑）
+# 见 requirements-optional.txt（crewai 依赖 litellm，与 llama-index 冲突，须独立 venv）
 

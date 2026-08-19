@@ -6,7 +6,7 @@
 
 演示三个能力：
  1. 基础 RAG（VectorStoreIndex + QueryEngine）
- 2. Rerank 重排序（自定义交叉编码器 NodePostprocessor）
+ 2. Rerank 重排序（自定义交叉编码器 BaseNodePostprocessor）
  3. 多路召回（RouterQueryEngine 路由到不同索引）
 
 【运行流程】
@@ -20,7 +20,7 @@
 【Python 特殊语法提示】
  - LlamaIndex 的 Document(text=...) 等价于 LangChain 的 Document(page_content=...)
  - Settings 是全局配置对象，类比 Spring 的全局 Bean，配置一次处处生效
- - NodePostprocessor 类比 Java 的拦截器/后置处理器：检索结果在进 LLM 前统一精排
+ - BaseNodePostprocessor 类比 Java 的拦截器/后置处理器：检索结果在进 LLM 前统一精排
 """
 
 import os
@@ -28,9 +28,10 @@ import os
 from llama_index.core import Settings, Document, VectorStoreIndex
 from llama_index.core.query_engine import RetrieverQueryEngine, RouterQueryEngine
 from llama_index.core.retrievers import VectorIndexRetriever
-from llama_index.core.postprocessor import NodePostprocessor
+# llama-index>=0.12 起，后处理器基类从 NodePostprocessor 更名为 BaseNodePostprocessor
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import QueryBundle
-from llama_index.core.tools import QueryEngineTool, ToolMetadata
+from llama_index.core.tools import QueryEngineTool
 from llama_index.core.selectors import LLMSingleSelector
 from llama_index.llms.openai_like import OpenAILike
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
@@ -76,7 +77,7 @@ REIMBURSE_TEXTS = [
 # =================================================================
 # 能力 2 需要：自定义 Rerank 后处理器（交叉编码器精排）
 # =================================================================
-class CrossEncoderRerank(NodePostprocessor):
+class CrossEncoderRerank(BaseNodePostprocessor):
     """
     用 sentence-transformers 的交叉编码器对召回结果精排。
     原理：把 (query, 文档) 拼成一对喂进模型，模型输出相关分，按分排序取 Top-N。
@@ -149,19 +150,17 @@ def demo_multi_path():
     leave_index = VectorStoreIndex.from_documents([Document(text=t) for t in LEAVE_TEXTS])
     reimburse_index = VectorStoreIndex.from_documents([Document(text=t) for t in REIMBURSE_TEXTS])
 
+    # llama-index>=0.12：QueryEngineTool.from_defaults 直接用 name/description，
+    # 不再接受 metadata=ToolMetadata(...)（旧版写法在 0.12+ 报错）
     leave_tool = QueryEngineTool.from_defaults(
         query_engine=leave_index.as_query_engine(similarity_top_k=3),
-        metadata=ToolMetadata(
-            name="leave_policy",
-            description="查询公司请假制度（年假、病假、婚假、产假、审批流程）",
-        ),
+        name="leave_policy",
+        description="查询公司请假制度（年假、病假、婚假、产假、审批流程）",
     )
     reimburse_tool = QueryEngineTool.from_defaults(
         query_engine=reimburse_index.as_query_engine(similarity_top_k=3),
-        metadata=ToolMetadata(
-            name="reimburse_policy",
-            description="查询公司报销制度（差旅、住宿、餐补、审批额度）",
-        ),
+        name="reimburse_policy",
+        description="查询公司报销制度（差旅、住宿、餐补、审批额度）",
     )
 
     # Router 用 LLM 判断问题属于哪条路，再路由到对应索引

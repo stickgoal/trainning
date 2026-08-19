@@ -48,6 +48,7 @@ docs = WebBaseLoader("https://...").load()       # 网页
 ### 步骤 2：Chunk（切分）
 
 **关键步骤**。文档太长塞不进 LLM 上下文，要切成小块。切分有讲究：
+
 - 切太大：塞不下，且检索不准（一个块包含太多主题）；
 - 切太小：丢失上下文，语义断裂。
 
@@ -63,6 +64,40 @@ chunks = splitter.split_documents(docs)
 ```
 
 **为什么要 `chunk_overlap`**：避免把一句话切成两半，重叠区保证语义连续。常见配置：chunk_size 500-1000，overlap 10-20%。
+
+**LangChain 主要提供的切分算法**
+
+| 切分器 | 切分依据 | 适用场景 |
+| --- | --- | --- |
+| **RecursiveCharacterTextSplitter** | 递归字符分隔符 | 通用文本（首选） |
+| CharacterTextSplitter | 固定字符数 | 最朴素，块之间可能切断句子 |
+| TokenTextSplitter | token 数（如 cl100k_base） | 需要精确控制 token 预算（配合 LLM 上下文窗口） |
+| SentenceTransformersTokenTextSplitter | sentence-transformers 的 tokenizer | 与 embedding 模型对齐 |
+| NLTKTextSplitter / SpacyTextSplitter | 自然语言句子边界 | 按句切分，保语义 |
+| **MarkdownHeaderTextSplitter** | Markdown 标题层级 | 文档结构清晰的 Markdown |
+| HTMLHeaderTextSplitter / HTMLSectionSplitter | HTML 标题 / 区块 | 网页抓取内容 |
+| **CodeTextSplitter** | 编程语言语法（AST/缩进） | Python、JS、Java 等代码文件 |
+| LatexTextSplitter | LaTeX 结构 | 论文等 LaTeX 文档 |
+| **SemanticChunker** | embedding 语义相似度 | 追求语义完整、能接受额外计算成本 |
+| ParentDocumentSplitter | 组合式（大块检索 + 小块嵌入） | RAG 精度与上下文平衡 |
+
+**建议怎么选**
+
+**通用场景（推荐优先级）：**
+
+1. **RecursiveCharacterTextSplitter** —— 默认首选，参数好调（`chunk_size` + `chunk_overlap`），绝大多数文本用它就行
+2. **SemanticChunker** —— 内容语义关联性强、对切分质量要求高时用（代价是每块要算 embedding，慢且费钱）
+3. **TokenTextSplitter** —— 当你的 LLM 按 token 计费/有严格上下文限制时，用它精确控预算
+
+**按内容类型：**
+
+- 代码 → `CodeTextSplitter`
+- 结构化 Markdown/HTML → `MarkdownHeaderTextSplitter` / `HTMLHeaderSplitter`（先按结构切，保留标题上下文）
+- 英文长文、要句子级切分 → `SpacyTextSplitter`（中文切句效果一般，中文建议还是用 Recursive 加中文分隔符）
+
+**小提示**：现在的 `langchain-text-splitters` 已从 langchain 核心拆成独立包，可以直接单独安装使用；另外如果你的文档有明确结构，**先按结构切（如 Markdown 标题），再对块做 Recursive 二次切分**，是实践中效果很好的组合。
+
+一句话：**没特殊需求就用 RecursiveCharacterTextSplitter**，它覆盖 80% 的场景，剩下 20% 按内容类型选对应专用切分器。
 
 ### 步骤 3：Embedding（向量化）
 
@@ -84,7 +119,7 @@ embeddings = SentenceTransformerEmbeddings(model_name="BAAI/bge-small-zh-v1.5")
 把向量存进向量数据库，支持**近邻搜索**（找最相似的 K 个）。
 
 | 向量库 | 定位 | 何时选 |
-|---|---|---|
+| --- | --- | --- |
 | **Chroma** | 轻量嵌入式 | 教程、原型、百万级以下 |
 | **FAISS** | Meta 出的本地库 | 单机、高性能、不想装服务 |
 | **Milvus** | 分布式 | 千万级以上、要集群 |
@@ -104,7 +139,7 @@ retriever = vector_db.as_retriever(search_kwargs={"k": 3})  # 取 Top3
 docs = retriever.invoke("年假几天？")  # 返回 3 个最相关片段
 ```
 
-> 基础版 `k=3` 直接喂 LLM 够用；但若要做多路召回 + Rerank（5.4 节），这里应把 `k` 调大到 20~50，给后续精排留空间。
+> 基础版 `k=3` 直接喂 LLM 够用；但若要做多路召回 + Rerank（5.4 节），这里应把 `k` 调大到 20\~50，给后续精排留空间。
 
 ### 步骤 6：LLM（生成）
 
@@ -167,7 +202,8 @@ LangChain 里最省事的是 `EnsembleRetriever`（内置 RRF 或加权）：
 
 ```python
 from langchain_community.retrievers import BM25Retriever
-from langchain.retrievers import EnsembleRetriever
+# langchain>=0.3 起从 langchain.retrievers 迁到 langchain_classic.retrievers
+from langchain_classic.retrievers import EnsembleRetriever
 
 # 路 1：向量检索（第 5.3 步的 retriever）
 vector_retriever = vector_db.as_retriever(search_kwargs={"k": 20})
@@ -182,7 +218,7 @@ hybrid = EnsembleRetriever(
 docs = hybrid.invoke("OrderService 怎么部署？")
 ```
 
-> `EnsembleRetriever` 来自 `langchain.retrievers`；`BM25Retriever` 来自 `langchain_community.retrievers`，依赖 `rank-bm25` 包。
+> `EnsembleRetriever` 来自 `langchain_classic.retrievers`（langchain>=0.3 前叫 `langchain.retrievers`）；`BM25Retriever` 来自 `langchain_community.retrievers`，依赖 `rank-bm25` 包。
 
 ### 5.4.2 Rerank 重排序
 
@@ -210,8 +246,8 @@ docs = hybrid.invoke("OrderService 怎么部署？")
 **LangChain 实现**：用 `ContextualCompressionRetriever` 把 Rerank 包在检索器外面，一条链搞定 "粗召回 → 精排"：
 
 ```python
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain.retrievers.document_compressors import CrossEncoderReranker
+from langchain_classic.retrievers import ContextualCompressionRetriever
+from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 
 # 1) 交叉编码器（bge-reranker 即交叉编码器）
