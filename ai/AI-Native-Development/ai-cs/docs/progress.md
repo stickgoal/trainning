@@ -68,3 +68,26 @@ python -m pytest tests/test_rag_offline.py -s
 
 **遗留问题**
 - 无。P0 纯向量命中率已达 1.00；M3 hybrid 预期维持/提升（尤其单号/专有名词类 query）。
+
+---
+
+## M4 · 工具 + Agent 组装 ✅ 2026-08-19
+
+**做了什么**
+- `src/tools/langchain_tools.py`：三个 @tool（search_policy 包 retriever 返回内联来源行 / query_employee_db / query_ticket_status），docstring 精确描述触发条件，工具内 try/except 返回友好错误；
+- `src/agents/customer_service.py`：create_agent（LangChain 1.x 入口）+ ChatDeepSeek(temperature=0.1) + SYSTEM_PROMPT 工具边界声明（架构文档 3.4）；
+- `tests/test_scenarios.py`：S1~S5 场景测试，断言 answer 含 gold 关键词 + tool_calls 与 expect_tool 一致；S4 防幻觉单独一票否决用例；无 Key 自动 skip。
+
+**验收结果**
+```bash
+python -m pytest tests/test_scenarios.py -s
+# 6 passed in 44.76s ✓
+# S1 出差住宿 → search_policy ✓
+# S2 年假档位 → search_policy ✓（满5年=10天，档位推理正确）
+# S3 查 E001 → query_employee_db ✓（张三/研发部/高级工程师）
+# S4 食堂 → "知识库中未找到" ✓（防幻觉一票否决通过，无需调优）
+# S5 查 RB2024001 → query_ticket_status ✓（审批中）
+```
+
+**遗留问题**
+- 无。工具选择首次即全部正确（T4.4 调优未触发）。
