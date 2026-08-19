@@ -38,7 +38,9 @@ class Config:
     # ---------- 运行开关 ----------
     # TOOLS_MODE: inprocess(默认) | mcp（M7 独立进程形态）
     TOOLS_MODE = os.getenv("TOOLS_MODE", "inprocess")
-    # RETRIEVER_MODE: basic | hybrid（M3 起切换对比）
+    # RETRIEVER_MODE: basic | hybrid
+    # 默认 basic：reranker 体积大，在磁盘/页面文件受限环境可能加载崩溃（见 retriever.py）。
+    # 环境充足时可设 RETRIEVER_MODE=hybrid 启用多路召回+Rerank。
     RETRIEVER_MODE = os.getenv("RETRIEVER_MODE", "basic")
 
     # ---------- 服务 ----------

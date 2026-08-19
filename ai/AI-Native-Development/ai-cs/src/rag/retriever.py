@@ -2,14 +2,22 @@
 
 按 Config.RETRIEVER_MODE 分派：
 - basic:  向量检索 k=3（P0）
-- hybrid: 向量 + BM25 双路召回 → Rerank 精排 top4（M3 实现）
+- hybrid: 向量 + BM25 双路召回 → Rerank 精排 top4（M3）
+
+⚠️ 降级保护：reranker 体积约 1.1GB，在内存/页面文件受限环境（如 Windows
+C 盘空间不足）加载可能失败（os error 1455）。失败时自动降级为
+"向量+BM25 融合（不精排）"，仍优于纯向量，保证链路可跑。
 """
+
+import logging
 
 from langchain_core.vectorstores import VectorStoreRetriever
 
 from src.core.config import Config
 from src.rag.loader import load_and_split
 from src.rag.vectorstore import load_vectorstore
+
+logger = logging.getLogger("ai-cs.retriever")
 
 
 def _basic_retriever() -> VectorStoreRetriever:
@@ -23,7 +31,10 @@ def _basic_retriever() -> VectorStoreRetriever:
 
 
 def _hybrid_retriever(chunks=None):
-    """M3 完整链路：Ensemble(向量, BM25) → Rerank(top_n=4)。"""
+    """M3 完整链路：Ensemble(向量, BM25) → Rerank(top_n=4)。
+
+    reranker 加载失败时降级为 Ensemble（无精排），保证可用性。
+    """
     from langchain_community.cross_encoders import HuggingFaceCrossEncoder
     from langchain_community.retrievers import BM25Retriever
     from langchain_classic.retrievers import (
@@ -49,14 +60,20 @@ def _hybrid_retriever(chunks=None):
         weights=[0.5, 0.5],
     )
 
-    reranker = CrossEncoderReranker(
-        model=HuggingFaceCrossEncoder(model_name=Config.RERANK_MODEL),
-        top_n=Config.RERANK_TOP_N,
-    )
-    return ContextualCompressionRetriever(
-        base_compressor=reranker,
-        base_retriever=ensemble,
-    )
+    try:
+        reranker = CrossEncoderReranker(
+            model=HuggingFaceCrossEncoder(model_name=Config.RERANK_MODEL),
+            top_n=Config.RERANK_TOP_N,
+        )
+        return ContextualCompressionRetriever(
+            base_compressor=reranker,
+            base_retriever=ensemble,
+        )
+    except Exception as e:
+        logger.warning(
+            "reranker 加载失败，降级为 Ensemble(向量+BM25) 无精排：%s", e
+        )
+        return ensemble
 
 
 def build_retriever(chunks=None):

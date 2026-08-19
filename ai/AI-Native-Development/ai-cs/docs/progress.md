@@ -91,3 +91,24 @@ python -m pytest tests/test_scenarios.py -s
 
 **遗留问题**
 - 无。工具选择首次即全部正确（T4.4 调优未触发）。
+
+---
+
+## M3 · 多路召回 + Rerank ⚠️ 部分验收（2026-08-19）
+
+**做了什么**
+- `src/rag/retriever.py` 补齐 `_hybrid_retriever`：BM25Retriever(k=20) + EnsembleRetriever(weights 0.5/0.5) + CrossEncoderReranker(top_n=4)；
+- `RETRIEVER_MODE=basic|hybrid` 开关（config + 分派逻辑，M2 已预置）；
+- 加降级保护：reranker 加载失败（异常可捕获时）自动降级为 Ensemble 无精排；
+- `src/__init__.py` 钳制 OMP_NUM_THREADS/TOKENIZERS_PARALLELISM（规避 Windows torch 加载大模型崩溃的诱因之一）。
+
+**验收结果**
+```bash
+# 多路召回（向量+BM25 融合，无 rerank）：
+Ensemble 命中率: 7/7 = 1.00 ≥ 0.9 ✓
+```
+
+**遗留问题（环境限制，非代码缺陷）**
+- ⚠️ **rerank 精排未在当前环境验证**：C 盘仅剩 0.21GB，Windows 页面文件无法扩展，加载 1.1GB 的 bge-reranker-base 触发 `os error 1455`（提交限制不足），且表现为**进程级崩溃**（try/except 无法捕获）。
+- 决策：默认 `RETRIEVER_MODE=basic` 保证全链路可跑（当前环境 14 项测试全过）；环境改善后（清理 C 盘 / 页面文件移 D 盘）设 `RETRIEVER_MODE=hybrid` 即可启用 rerank，无需改代码。
+- hybrid 的 BM25 路对"单号/专有名词"类 query 增益显著，但当前测试集制度类用例（均为自然语言）命中率本就 1.00，该增益待补充精确 token 类用例后体现。
