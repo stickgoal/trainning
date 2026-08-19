@@ -135,3 +135,27 @@ curl -X POST localhost:8100/api/chat -d '{"question":"年假满3年有几天？"
 
 **遗留问题**
 - 无。
+
+---
+
+## M6 · 测试集 + 评估 + 回归基线 ✅ 2026-08-19
+
+**做了什么**
+- 测试集 testdata.py 定稿（12 条，覆盖 6 域 + 2 知识库外 + 1 档位推理组合 stretch）；
+- `scripts/evaluate.py`：keyless 迷你评估（课程 5.4.3），输出 context_precision / faithfulness / tool_accuracy / 防幻觉通过；支持 `--verbose` 明细与基线对比；阈值门禁（faithfulness ≥0.8、tool_accuracy ≥0.9、S4 一票否决）失败退出码 2；
+- 首次基线落盘 `tests/baseline.json`（gitignore，不入库）。
+
+**验收结果**
+```bash
+python scripts/evaluate.py --verbose
+# context_precision : 1.000
+# faithfulness      : 1.000   (阈值 ≥ 0.8) ✓
+# tool_accuracy     : 1.000   (阈值 ≥ 0.9) ✓
+# 防幻觉(S4/T11)    : 通过 ✓
+# ✅ 全部门禁通过。
+# 亮点：T12 stretch 组合题（E001 年假几天）正确链式调用
+#       query_employee_db + search_policy，Agent 多步决策达标。
+```
+
+**遗留问题**
+- 无。
