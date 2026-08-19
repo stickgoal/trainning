@@ -1,0 +1,27 @@
+# ai-cs 依赖清单
+# 安装前提：优先复用课程根 venv（AI-Native-Development/.venv，已装全量 requirements.txt）。
+# 本文件为独立部署时的最小子集。
+
+# --- LLM（DeepSeek，OpenAI 兼容）---
+langchain>=0.2.0
+langchain-core>=0.2.0
+langchain-deepseek>=0.1.0
+
+# --- RAG ---
+langchain-community>=0.2.0
+langchain-text-splitters>=0.2.0
+chromadb>=0.5.0
+sentence-transformers>=3.0.0
+rank-bm25>=0.2.2          # BM25 多路召回（M3）
+
+# --- MCP（M7 可选：独立进程工具形态）---
+mcp>=0.1.0
+langchain-mcp-adapters>=0.0.9
+
+# --- Web 服务 ---
+fastapi>=0.110.0
+pydantic>=2.6.0
+uvicorn>=0.29.0
+
+# --- 测试 ---
+pytest>=8.0.0

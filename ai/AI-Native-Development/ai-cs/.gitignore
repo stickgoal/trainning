@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# 向量库（由 scripts/ingest.py 重建，不入库）
+chroma_db/
+
+# 日志
+logs/
+
+# 环境与密钥
+.env
+
+# 评估产物
+tests/baseline.json
