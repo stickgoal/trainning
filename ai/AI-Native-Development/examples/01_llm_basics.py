@@ -170,8 +170,8 @@ def main() -> None:
     if not os.getenv("DEEPSEEK_API_KEY"):
         print("⚠️  请先 set DEEPSEEK_API_KEY=sk-xxx")
         return
-    demo_basic_call()
-    demo_tool_calling()
+    # demo_basic_call()
+    # demo_tool_calling()
     demo_memory()
 
 

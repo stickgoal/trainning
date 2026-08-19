@@ -381,17 +381,173 @@ async function main() {
   console.log(`   共生成 ${slideContents.length} 个独立 HTML 文件 + 1 个合并文件`);
 }
 
-// 生成合并后的 HTML 文件（使用 index.html 的 head 内容）
+// ===== Reveal.js 风格播放引擎（自包含，无外部依赖，随构建注入 all-slides.html）=====
+const PLAYER_CSS = `
+html,body{margin:0;padding:0;height:100%;}
+body{overflow:hidden;background:#0b1220;font-family:var(--font-body);}
+.deck{position:fixed;inset:0;overflow:hidden;background:#0b1220;}
+.deck-stage{position:absolute;inset:0;perspective:1400px;}
+.deck-slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;backface-visibility:hidden;transition:opacity .55s ease, transform .55s cubic-bezier(.26,.86,.44,.985);transform:translateX(100%);}
+.deck-slide.is-current{opacity:1;pointer-events:auto;transform:translateX(0) rotateY(0) scale(1);}
+.deck-slide.is-prev{transform:translateX(-100%) rotateY(0) scale(1);}
+.deck-slide.is-next{transform:translateX(100%) rotateY(0) scale(1);}
+.slide-fit{width:1440px;height:810px;transform:scale(var(--fit,0.8));transform-origin:center center;}
+
+/* fade */
+.deck[data-transition="fade"] .deck-slide{transform:scale(1.03);}
+.deck[data-transition="fade"] .deck-slide.is-prev,.deck[data-transition="fade"] .deck-slide.is-next{transform:scale(1.03);}
+.deck[data-transition="fade"] .deck-slide.is-current{transform:scale(1);}
+
+/* zoom */
+.deck[data-transition="zoom"] .deck-slide{transform:scale(.2);}
+.deck[data-transition="zoom"] .deck-slide.is-prev,.deck[data-transition="zoom"] .deck-slide.is-next{transform:scale(.2);}
+.deck[data-transition="zoom"] .deck-slide.is-current{transform:scale(1);}
+
+/* concave */
+.deck[data-transition="concave"] .deck-slide{transform:translateX(100%) rotateY(-90deg);transform-origin:right center;}
+.deck[data-transition="concave"] .deck-slide.is-prev{transform:translateX(-100%) rotateY(90deg);transform-origin:left center;}
+.deck[data-transition="concave"] .deck-slide.is-current{transform:translateX(0) rotateY(0);}
+
+/* convex */
+.deck[data-transition="convex"] .deck-slide{transform:translateX(100%) rotateY(90deg);transform-origin:right center;}
+.deck[data-transition="convex"] .deck-slide.is-prev{transform:translateX(-100%) rotateY(-90deg);transform-origin:left center;}
+.deck[data-transition="convex"] .deck-slide.is-current{transform:translateX(0) rotateY(0);}
+
+/* toolbar */
+.deck-bar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:999px;background:rgba(15,23,42,.82);color:#e2e8f0;font-size:14px;font-family:var(--font-body);box-shadow:0 6px 24px rgba(0,0,0,.35);z-index:50;user-select:none;backdrop-filter:blur(6px);}
+.deck-btn{appearance:none;border:none;background:rgba(255,255,255,.08);color:#e2e8f0;width:34px;height:34px;border-radius:50%;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.deck-btn:hover{background:rgba(255,255,255,.2);}
+.deck-btn.deck-text{width:auto;padding:0 12px;font-size:13px;border-radius:999px;}
+.deck-counter{font-variant-numeric:tabular-nums;min-width:64px;text-align:center;font-size:14px;}
+.deck-sep{width:1px;height:22px;background:rgba(255,255,255,.18);}
+.deck-efx{display:flex;align-items:center;gap:6px;font-size:13px;color:#cbd5e1;}
+.deck-efx select{background:rgba(255,255,255,.08);color:#e2e8f0;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:4px 6px;font-size:13px;}
+.deck-progress{position:fixed;left:0;top:0;height:4px;width:100%;background:rgba(255,255,255,.08);z-index:50;}
+.deck-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#3B82F6,#22D3EE,#8B5CF6);transition:width .4s ease;}
+
+/* overview grid */
+.deck.overview .deck-stage{display:grid;grid-template-columns:repeat(auto-fill,320px);gap:18px;padding:24px;overflow:auto;align-content:start;background:#0b1220;perspective:none;}
+.deck.overview .deck-slide{position:relative;inset:auto;width:320px;height:180px;overflow:hidden;border-radius:10px;opacity:1;pointer-events:auto;cursor:pointer;border:3px solid transparent;transform:none!important;transition:border-color .2s;}
+.deck.overview .deck-slide.is-current{border-color:#3B82F6;}
+.deck.overview .slide-fit{position:absolute;top:0;left:0;transform:scale(.2222);transform-origin:top left;}
+`;
+
+const PLAYER_JS = `
+(function(){
+  var deck=document.getElementById('deck');
+  var slides=Array.prototype.slice.call(deck.querySelectorAll('.deck-slide'));
+  var total=slides.length, idx=0;
+  var curEl=document.getElementById('cur');
+  var totalEl=document.getElementById('total');
+  var progFill=document.getElementById('progFill');
+  if(totalEl) totalEl.textContent=total;
+
+  function fit(){
+    var s=Math.min(window.innerWidth/1440, window.innerHeight/810);
+    deck.style.setProperty('--fit', s);
+  }
+  function render(){
+    for(var i=0;i<slides.length;i++){
+      slides[i].classList.remove('is-current','is-prev','is-next');
+      if(i===idx) slides[i].classList.add('is-current');
+      else if(i<idx) slides[i].classList.add('is-prev');
+      else slides[i].classList.add('is-next');
+    }
+    curEl.textContent=idx+1;
+    progFill.style.width=(total>1?(idx/(total-1)*100):100)+'%';
+  }
+  function go(n){ n=Math.max(0,Math.min(total-1,n)); idx=n; render(); }
+  function next(){ if(idx<total-1){idx++;render();} }
+  function prev(){ if(idx>0){idx--;render();} }
+
+  document.getElementById('nextBtn').onclick=next;
+  document.getElementById('prevBtn').onclick=prev;
+  document.getElementById('efx').onchange=function(e){ deck.setAttribute('data-transition',e.target.value); };
+  document.getElementById('fsBtn').onclick=function(){
+    if(!document.fullscreenElement){ (document.documentElement.requestFullscreen||function(){}).call(document.documentElement); }
+    else { (document.exitFullscreen||function(){}).call(document); }
+  };
+  document.getElementById('overviewBtn').onclick=toggleOverview;
+
+  // 点击翻页：用 window 级监听，避免被中间层吞掉；排除工具栏与进度条
+  window.addEventListener('click',function(e){
+    if(deck.classList.contains('overview')) return;
+    var t=e.target;
+    if(t && t.closest && (t.closest('.deck-bar') || t.closest('.deck-progress'))) return;
+    if(e.clientX < window.innerWidth*0.3) prev(); else next();
+  });
+
+  window.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown'||e.key===' '){ next(); e.preventDefault(); }
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){ prev(); e.preventDefault(); }
+    else if(e.key==='Home'){ go(0); }
+    else if(e.key==='End'){ go(total-1); }
+    else if(e.key==='f'||e.key==='F'){ document.getElementById('fsBtn').click(); }
+    else if(e.key==='o'||e.key==='O'){ toggleOverview(); }
+    else if(e.key==='Escape'){ if(deck.classList.contains('overview')) toggleOverview(); }
+  });
+
+  var tsx=0;
+  deck.addEventListener('touchstart',function(e){ tsx=e.touches[0].clientX; },{passive:true});
+  deck.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-tsx;
+    if(Math.abs(dx)>50){ dx<0?next():prev(); }
+  },{passive:true});
+
+  function toggleOverview(){ deck.classList.toggle('overview'); }
+  slides.forEach(function(sl,i){
+    sl.addEventListener('click',function(e){
+      if(deck.classList.contains('overview')){ e.stopPropagation(); go(i); deck.classList.remove('overview'); }
+    });
+  });
+
+  window.addEventListener('resize',fit);
+  fit(); render();
+})();
+`;
+
+// 生成合并后的 HTML 文件（使用 index.html 的 head 内容）+ 注入播放引擎
 function generateMergedHtml(bodyContents, headInfo) {
+  const sections = bodyContents
+    .map((b, i) => `  <section class="deck-slide" data-index="${i}">\n    <div class="slide-fit">\n${b}\n    </div>\n  </section>`)
+    .join('\n');
+
   return `<!DOCTYPE html>
 <html>
 <head>
 ${headInfo.headContent}
+<style>${PLAYER_CSS}</style>
 </head>
 <body>
 
-${bodyContents.join('\n\n')}
+<div class="deck" id="deck" data-transition="slide">
+  <div class="deck-stage" id="deckStage">
+${sections}
+  </div>
+</div>
 
+<div class="deck-bar" id="deckBar">
+  <button class="deck-btn" id="prevBtn" title="上一页 (←)">&#8249;</button>
+  <span class="deck-counter"><span id="cur">1</span> / <span id="total">${bodyContents.length}</span></span>
+  <button class="deck-btn" id="nextBtn" title="下一页 (→ / 空格)">&#8250;</button>
+  <span class="deck-sep"></span>
+  <label class="deck-efx">效果
+    <select id="efx">
+      <option value="slide">滑动 Slide</option>
+      <option value="fade">淡入 Fade</option>
+      <option value="zoom">缩放 Zoom</option>
+      <option value="concave">凹面 Concave</option>
+      <option value="convex">凸面 Convex</option>
+    </select>
+  </label>
+  <button class="deck-btn deck-text" id="overviewBtn" title="概览 (O)">概览</button>
+  <button class="deck-btn deck-text" id="fsBtn" title="全屏 (F)">全屏</button>
+</div>
+<div class="deck-progress"><div class="deck-progress-fill" id="progFill"></div></div>
+
+<script>
+${PLAYER_JS}
+</script>
 </body>
 </html>`;
 }

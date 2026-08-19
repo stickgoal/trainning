@@ -107,11 +107,13 @@ def demo_4_agent_with_tool() -> None:
     @tool
     def add(a: int, b: int) -> int:
         """两个整数相加。当用户要做加法时调用。"""
+        print("调用计算 加法")
         return a + b
 
     @tool
     def multiply(a: int, b: int) -> int:
         """两个整数相乘。当用户要做乘法时调用。"""
+        print(f"调用计算 乘法:{a} {b}")
         return a * b
 
     model = ChatDeepSeek(
@@ -136,9 +138,9 @@ def main() -> None:
     if not os.getenv("DEEPSEEK_API_KEY"):
         print("⚠️  请先 set DEEPSEEK_API_KEY=sk-xxx")
         return
-    demo_1_chat_model()
-    demo_2_prompt_template()
-    demo_3_lcel_chain()
+    # demo_1_chat_model()
+    # demo_2_prompt_template()
+    # demo_3_lcel_chain()
     demo_4_agent_with_tool()
 
 

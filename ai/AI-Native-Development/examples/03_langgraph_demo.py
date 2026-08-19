@@ -200,6 +200,7 @@ def main() -> None:
     result = app.invoke(initial_state, config={"recursion_limit": 10})
 
     print("\n" + "=" * 55)
+    print(f"{result}")
     print(f"最终步数: {result['step']}")
     print(f"消息轮数: {len(result['messages'])}")
     print("工作流执行完毕（含循环 + 工具调用 + 人工介入）")
