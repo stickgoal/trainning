@@ -153,6 +153,30 @@ curl -X POST localhost:8100/api/chat -d '{"question":"年假满3年有几天？"
 
 ---
 
+## 测试完善 ✅ 2026-08-20
+
+**做了什么**
+- 新增 `tests/conftest.py`（统一 sys.path，任意 cwd 可跑）；
+- 新增 6 个离线单元测试文件，覆盖之前未测的纯逻辑层：
+  - `test_core.py`（8 项）：Config 路径/默认值/中文分隔符/**环境变量覆盖（subprocess 验证，避免 reload 污染 pytest 进程）**/日志落盘×2；
+  - `test_rag_loader.py`（6 项）：文档计数/metadata 注入/domain 推断/切分边界/域覆盖/向量库缺失；
+  - `test_rag_retriever.py`（9 项）：format_docs 来源格式/未知来源兜底/防幻觉 Prompt/retriever 分派（basic/hybrid/**rerank 降级**/非法模式）/向量库 roundtrip；
+  - `test_tools.py`（9 项）：工具组装/返回类型/search_policy 内联来源/检索异常友好/员工/工单/非法输入/触发词 docstring；
+  - `test_api.py`（9 项）：schemas 校验（空/超长）/**`_parse_result` 解析去重**/`/health`/无 Key 503/假 agent 成功路径；
+  - `test_evaluate_utils.py`（8 项）：`_aggregate` 指标聚合/排除 out_of_scope/防幻觉判定/测试集口径一致性。
+
+**验收结果**
+```bash
+python -m pytest tests/ -v
+# 64 passed in 106.80s ✓（此前 14 项 → 64 项）
+# 其中 test_scenarios 6 项为需 Key 的真实场景测试（无 Key 自动 skip）
+```
+
+**遗留问题**
+- 无。hybrid rerank 的端到端验证仍受 C 盘空间限制（见 M3），降级路径已用假模型类覆盖。
+
+---
+
 ## M6 · 测试集 + 评估 + 回归基线 ✅ 2026-08-19
 
 **做了什么**
