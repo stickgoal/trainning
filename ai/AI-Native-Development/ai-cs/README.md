@@ -12,7 +12,7 @@
 - ✅ M0 环境与骨架：config / logging / 目录结构
 - ✅ M1 语料与模拟数据：6 份制度文档 + mock_data + 测试集 12 条
 - ✅ M2 RAG 基础管线：Chroma 建库 + LCEL 问答链（离线检索命中率 1.00）
-- ✅ M3 多路召回 + Rerank：BM25 + Ensemble + Rerank（当前环境 rerank 受磁盘空间限制，自动降级为多路融合，见 [docs/progress.md](docs/progress.md)）
+- ✅ M3 多路召回 + Rerank：BM25 + Ensemble + Rerank（完整精排链路实测命中率 1.00，默认启用）
 - ✅ M4 工具 + Agent 组装：三个工具 + create_agent，S1~S5 场景测试全过
 - ✅ M5 FastAPI 服务 + Web 聊天页
 - ✅ M6 评估基线：faithfulness/tool_accuracy 1.00，防幻觉一票否决通过

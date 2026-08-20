@@ -39,9 +39,10 @@ class Config:
     # TOOLS_MODE: inprocess(默认) | mcp（M7 独立进程形态）
     TOOLS_MODE = os.getenv("TOOLS_MODE", "inprocess")
     # RETRIEVER_MODE: basic | hybrid
-    # 默认 basic：reranker 体积大，在磁盘/页面文件受限环境可能加载崩溃（见 retriever.py）。
-    # 环境充足时可设 RETRIEVER_MODE=hybrid 启用多路召回+Rerank。
-    RETRIEVER_MODE = os.getenv("RETRIEVER_MODE", "basic")
+    # RETRIEVER_MODE: basic | hybrid（默认 hybrid：多路召回 + Rerank）
+    # 若在磁盘/页面文件受限环境加载 reranker 崩溃（os error 1455），
+    # 可临时设 RETRIEVER_MODE=basic 回退纯向量；详见 retriever.py 降级说明。
+    RETRIEVER_MODE = os.getenv("RETRIEVER_MODE", "hybrid")
 
     # ---------- 服务 ----------
     API_HOST = os.getenv("API_HOST", "0.0.0.0")

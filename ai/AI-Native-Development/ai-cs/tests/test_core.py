@@ -86,7 +86,7 @@ def test_config_env_defaults_when_unset():
         {},
         "assert Config.LLM_MODEL == 'deepseek-chat'\n"
         "assert Config.TOOLS_MODE == 'inprocess'\n"
-        "assert Config.RETRIEVER_MODE == 'basic'",
+        "assert Config.RETRIEVER_MODE == 'hybrid'",
     )
     assert "OK" in out
 
