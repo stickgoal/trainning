@@ -6,6 +6,9 @@ __pycache__/
 # 向量库（由 scripts/ingest.py 重建，不入库）
 chroma_db/
 
+# 运行时数据（SQLite 业务库 + KB 上传文件，由程序自举生成，不入库）
+data/
+
 # 日志
 logs/
 

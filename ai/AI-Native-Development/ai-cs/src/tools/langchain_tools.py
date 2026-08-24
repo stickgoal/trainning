@@ -2,16 +2,16 @@
 
 三个工具，docstring 是 LLM 选工具的唯一依据，措辞按架构文档 3.3：
 - search_policy：制度/政策/标准 → RAG 检索（返回片段 + 内联来源行）
-- query_employee_db：员工信息（工号）→ 模拟 HR DB
-- query_ticket_status：工单/报销单状态（单号）→ 模拟工单 DB
+- query_employee_db：员工信息（工号）→ 业务数据库（SQLite，见 src/db/engine.py）
+- query_ticket_status：工单/报销单状态（单号）→ 业务数据库
 
 工具内 try/except 返回友好错误文本，不抛异常打断 Agent 循环（实施注意 4.2）。
 """
 
 from langchain_core.tools import tool
 
+from src.db import engine as business_db
 from src.rag.chain import format_docs_with_sources
-from src.tools import mock_data
 
 
 def build_tools(retriever) -> list:
@@ -34,13 +34,13 @@ def build_tools(retriever) -> list:
     @tool
     def query_employee_db(emp_id: str) -> str:
         """查询员工信息（姓名/部门/职位/入职日期）。参数 emp_id: 员工工号，如 E001。
-当用户提到具体工号或查某位员工时调用。"""
-        return mock_data.query_employee(emp_id)
+当用户提到具体工号或查某位员工时调用。数据直接读取业务数据库。"""
+        return business_db.query_employee(emp_id)
 
     @tool
     def query_ticket_status(ticket_id: str) -> str:
         """查询报销单/工单的处理状态。参数 ticket_id: 单号，如 RB2024001。
-当用户询问报销单或工单当前状态时调用。"""
-        return mock_data.query_ticket(ticket_id)
+当用户询问报销单或工单当前状态时调用。数据直接读取业务数据库。"""
+        return business_db.query_ticket(ticket_id)
 
     return [search_policy, query_employee_db, query_ticket_status]

@@ -6,10 +6,14 @@
 
 from pathlib import Path
 
+import chromadb
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.vectorstores import Chroma
 
 from src.core.config import Config
+
+# Chroma 默认集合名（Chroma.from_documents 在未指定时使用 "langchain"）。
+_DEFAULT_COLLECTION = "langchain"
 
 
 def _embeddings() -> SentenceTransformerEmbeddings:
@@ -18,12 +22,24 @@ def _embeddings() -> SentenceTransformerEmbeddings:
 
 
 def build_vectorstore(chunks) -> Chroma:
-    """全量重建向量库并持久化到 chroma_db/。返回 Chroma 实例。"""
+    """全量重建向量库并持久化到 chroma_db/。返回 Chroma 实例。
+
+    注意：Chroma.from_documents 对「已存在的集合」是**追加**而非替换，
+    若直接调用会导致每次 /api/rebuild、每次上传都累积重复 chunk。
+    这里先清空旧集合再写入，保证幂等、无重复。
+    """
     Config.CHROMA_DIR.mkdir(parents=True, exist_ok=True)
+    client = chromadb.PersistentClient(path=str(Config.CHROMA_DIR))
+    try:
+        # 已存在则清掉重建；不存在时忽略
+        client.delete_collection(_DEFAULT_COLLECTION)
+    except Exception:
+        pass
     return Chroma.from_documents(
         chunks,
         _embeddings(),
         persist_directory=str(Config.CHROMA_DIR),
+        collection_name=_DEFAULT_COLLECTION,
     )
 
 

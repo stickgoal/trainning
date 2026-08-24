@@ -1,8 +1,9 @@
-"""M1 数据层测试：语料可读性 + mock_data 一致性。
+"""M1 数据层测试：语料可读性 + 业务库一致性。
 
 验收标准（03_开发计划.md M1）：
 - 6 份语料可被 TextLoader(encoding="utf-8") 读出且非空；
-- mock_data 与测试集 testdata.py 口径一致（T9/T10 关键词能命中）。
+- 业务库（src.db.engine，替代旧 mock_data）与测试集 testdata.py 口径一致
+  （T9/T10 关键词能命中）。
 
 本测试不调 LLM、不耗 API 额度，可高频回归。
 """
@@ -12,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from src.core.config import Config
-from src.tools.mock_data import EMPLOYEES, TICKETS, query_employee, query_ticket
+from src.db import engine as business_db
 
 # 语料目录期望结构：knowledge_docs/{hr,finance,admin}/*.txt，共 6 份
 EXPECTED_DOCS = [
@@ -53,30 +54,32 @@ def test_knowledge_docs_structured_sections():
 
 def test_employee_lookup_t9_consistency():
     """T9：查 E001 应返回张三 / 研发部 / 高级工程师。"""
-    out = query_employee("E001")
+    out = business_db.query_employee("E001")
     assert "张三" in out and "研发部" in out and "高级工程师" in out
     assert "入职日期" in out          # T12 档位推理依赖入职日期
 
 
 def test_ticket_lookup_t10_consistency():
     """T10：查 RB2024001 应为审批中。"""
-    out = query_ticket("RB2024001")
+    out = business_db.query_ticket("RB2024001")
     assert "审批中" in out
 
 
-def test_mock_data_coverage():
-    """M1 验收：EMPLOYEES ≥ 5 人（含入职日期），TICKETS ≥ 3 单。"""
-    assert len(EMPLOYEES) >= 5
-    assert all("hire_date" in v for v in EMPLOYEES.values())
-    assert len(TICKETS) >= 3
-    statuses = {v["status"] for v in TICKETS.values()}
+def test_business_db_coverage():
+    """M1 验收：员工 ≥ 5 人（含入职日期），工单 ≥ 3 单且覆盖不同状态。"""
+    employees = {e["id"]: e for e in business_db.list_employees()}
+    tickets = {t["id"]: t for t in business_db.list_tickets()}
+    assert len(employees) >= 5
+    assert all("hire_date" in v for v in employees.values())
+    assert len(tickets) >= 3
+    statuses = {v["status"] for v in tickets.values()}
     assert len(statuses) >= 2, "工单应覆盖不同状态"
 
 
 def test_lookup_invalid_id_returns_friendly_text():
     """工号/单号不存在时返回友好错误文本，不抛异常（实施注意 4.2）。"""
-    assert "不存在" in query_employee("E999")
-    assert "不存在" in query_ticket("RB9999999")
+    assert "不存在" in business_db.query_employee("E999")
+    assert "不存在" in business_db.query_ticket("RB9999999")
 
 
 if __name__ == "__main__":

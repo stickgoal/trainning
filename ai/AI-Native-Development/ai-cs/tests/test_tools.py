@@ -1,11 +1,11 @@
 """tools 模块单元测试：build_tools 组装 + 各工具返回格式。
 
-离线；search_policy 用假 retriever（不加载向量库），业务工具直连 mock_data。
+离线；search_policy 用假 retriever（不加载向量库），业务工具直连业务库（src.db.engine）。
 """
 
 from langchain_core.documents import Document
 
-from src.tools import mock_data
+from src.db import engine as business_db
 from src.tools.langchain_tools import build_tools
 
 _TOOL_NAMES = {"search_policy", "query_employee_db", "query_ticket_status"}
@@ -68,7 +68,7 @@ def test_query_employee_db_via_tool():
 
 
 def test_query_employee_db_invalid_id_friendly():
-    out = mock_data.query_employee("E999")
+    out = business_db.query_employee("E999")
     assert "不存在" in out
 
 
@@ -79,7 +79,7 @@ def test_query_ticket_status_via_tool():
 
 
 def test_query_ticket_invalid_id_friendly():
-    out = mock_data.query_ticket("RB9999999")
+    out = business_db.query_ticket("RB9999999")
     assert "不存在" in out
 
 

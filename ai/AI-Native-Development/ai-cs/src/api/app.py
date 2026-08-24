@@ -17,12 +17,28 @@ from fastapi.staticfiles import StaticFiles
 
 from src.core.config import Config
 from src.core.logging import get_chat_logger, get_logger
-from src.api.schemas import ChatRequest, ChatResponse
+from src.api.schemas import (
+    ChatRequest,
+    ChatResponse,
+    DBEmployee,
+    DBTicket,
+)
+from src.api.kb_routes import router as kb_router
+from src.db import engine as business_db
+from src.kb import service as kb_service
 
 logger = get_logger("api")
 chat_log = get_chat_logger()
 
 app = FastAPI(title="ai-cs 企业智能客服", version="1.0.0")
+app.include_router(kb_router)
+
+
+@app.on_event("startup")
+def _startup():
+    """进程启动时初始化业务库与知识库注册表（幂等）。"""
+    business_db.init_db()
+    kb_service.init_db()
 
 _rebuild_lock = threading.Lock()
 _SOURCE_RE = re.compile(r"\[来源:\s*([^\]]+)\]")
@@ -80,20 +96,29 @@ def chat(req: ChatRequest) -> ChatResponse:
 
 @app.post("/api/rebuild")
 def rebuild() -> dict:
-    """重建向量索引（内部调 ingest 逻辑，串行加锁）。"""
+    """重建向量索引（静态语料 + 上传文档合并，串行加锁）。"""
     with _rebuild_lock:
-        from src.rag.loader import load_and_split
-        from src.rag.vectorstore import build_vectorstore
-
-        chunks = load_and_split()
-        build_vectorstore(chunks)
+        chunks = kb_service.reindex()
         _get_agent.cache_clear()       # 重建后失效旧 retriever 缓存
-        return {"status": "ok", "chunks": len(chunks)}
+        return {"status": "ok", "chunks": chunks}
 
 
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
+
+
+# ---------- 业务库查询接口（员工 / 工单，直接走 SQLite）----------
+@app.get("/api/db/employees", response_model=list[DBEmployee])
+def db_employees() -> list[DBEmployee]:
+    """列出全部员工（管理视角，数据来自业务库 employees 表）。"""
+    return [DBEmployee(**r) for r in business_db.list_employees()]
+
+
+@app.get("/api/db/tickets", response_model=list[DBTicket])
+def db_tickets() -> list[DBTicket]:
+    """列出全部工单 / 报销单（管理视角，数据来自业务库 tickets 表）。"""
+    return [DBTicket(**r) for r in business_db.list_tickets()]
 
 
 def _agent_ready() -> bool:

@@ -6,8 +6,17 @@
 <title>企业智能客服</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; height: 100vh; display: flex; flex-direction: column; }
-  header { background: #2563eb; color: #fff; padding: 14px 20px; font-size: 16px; font-weight: 600; }
+  body { font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; height: 100vh; display: flex; flex-direction: column; color: #1e293b; }
+  header { background: #2563eb; color: #fff; padding: 12px 20px; display: flex; align-items: center; gap: 18px; }
+  header h1 { font-size: 16px; font-weight: 600; }
+  .tabs { display: flex; gap: 6px; margin-left: auto; }
+  .tab { padding: 7px 16px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 14px; background: rgba(255,255,255,.15); color: #fff; border: none; }
+  .tab.active { background: #fff; color: #2563eb; font-weight: 600; }
+  .view { flex: 1; overflow: hidden; display: none; }
+  .view.active { display: flex; }
+
+  /* 聊天 */
+  #chat-view { flex-direction: column; }
   main { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
   .msg { max-width: 72%; padding: 10px 14px; border-radius: 12px; line-height: 1.6; font-size: 14px; white-space: pre-wrap; word-break: break-word; }
   .user { align-self: flex-end; background: #2563eb; color: #fff; }
@@ -15,21 +24,96 @@
   .sources { font-size: 12px; color: #94a3b8; margin-top: 6px; }
   .sources b { color: #64748b; }
   footer { display: flex; gap: 10px; padding: 14px 20px; background: #fff; border-top: 1px solid #e2e8f0; }
-  input { flex: 1; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
-  input:focus { border-color: #2563eb; }
+  input[type=text] { flex: 1; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
+  input[type=text]:focus { border-color: #2563eb; }
   button { padding: 10px 22px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
-  button:disabled { background: #94a3b8; }
+  button:disabled { background: #94a3b8; cursor: not-allowed; }
+
+  /* 知识库 */
+  #kb-view { flex-direction: column; padding: 20px; gap: 16px; overflow-y: auto; }
+  .kb-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #fff; padding: 14px 16px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .kb-bar label { font-size: 13px; color: #64748b; }
+  .kb-bar input[type=text] { flex: 0 1 220px; }
+  .hint { font-size: 12px; color: #94a3b8; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  th, td { padding: 11px 14px; text-align: left; font-size: 13px; border-bottom: 1px solid #eef2f7; }
+  th { background: #f1f5f9; color: #475569; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; }
+  .badge.indexed, .badge.parsed { background: #dcfce7; color: #15803d; }
+  .badge.error { background: #fee2e2; color: #b91c1c; }
+  .del { background: #ef4444; padding: 5px 12px; font-size: 12px; }
+  .del:hover { background: #dc2626; }
+  .empty { text-align: center; color: #94a3b8; padding: 30px; font-size: 13px; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .sec-title { font-size: 14px; font-weight: 600; color: #334155; margin-bottom: -4px; }
 </style>
 </head>
 <body>
-<header>🏢 企业智能客服（制度问答 + 员工/工单查询）</header>
-<main id="chat"></main>
-<footer>
-  <input id="q" placeholder="例如：年假满 3 年有几天？ / 查一下 E001 / RB2024001 什么状态？" />
-  <button id="send">发送</button>
-</footer>
+<header>
+  <h1>🏢 企业智能客服</h1>
+  <div class="tabs">
+    <button class="tab active" data-view="chat-view">智能问答</button>
+    <button class="tab" data-view="kb-view">知识库管理</button>
+  </div>
+</header>
+
+<!-- 智能问答 -->
+<div id="chat-view" class="view active">
+  <main id="chat"></main>
+  <footer>
+    <input id="q" type="text" placeholder="例如：年假满 3 年有几天？ / 查一下 E001 / RB2024001 什么状态？" />
+    <button id="send">发送</button>
+  </footer>
+</div>
+
+<!-- 知识库管理 -->
+<div id="kb-view" class="view">
+  <div class="kb-bar">
+    <label>上传文档</label>
+    <input id="file" type="file" multiple />
+    <label>领域</label>
+    <input id="domain" type="text" placeholder="可选，如 财务/HR" />
+    <button id="upload">上传并入库</button>
+    <span class="hint">支持 txt / md / pdf / docx / csv / xlsx</span>
+  </div>
+  <div class="kb-bar">
+    <button id="rebuild">重建向量索引</button>
+    <button id="refresh">刷新列表</button>
+    <span class="hint" id="kb-stat"></span>
+  </div>
+  <div class="sec-title">已管理文档</div>
+  <table>
+    <thead>
+      <tr><th>ID</th><th>文件名</th><th>类型</th><th>大小</th><th>领域</th><th>分块</th><th>状态</th><th>操作</th></tr>
+    </thead>
+    <tbody id="kb-list"></tbody>
+  </table>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
+// ---------- Tab 切换 ----------
+const tabs = document.querySelectorAll(".tab");
+const views = document.querySelectorAll(".view");
+tabs.forEach(t => t.onclick = () => {
+  tabs.forEach(x => x.classList.remove("active"));
+  views.forEach(x => x.classList.remove("active"));
+  t.classList.add("active");
+  document.getElementById(t.dataset.view).classList.add("active");
+  if (t.dataset.view === "kb-view") loadDocs();
+});
+
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+// ---------- 智能问答 ----------
 const chatEl = document.getElementById("chat");
 const input = document.getElementById("q");
 const sendBtn = document.getElementById("send");
@@ -49,7 +133,6 @@ async function send() {
   append(q, "user");
   input.value = "";
   sendBtn.disabled = true;
-
   try {
     const resp = await fetch("/api/chat", {
       method: "POST",
@@ -61,7 +144,7 @@ async function send() {
     if (data.sources?.length) {
       extra = `<div class="sources"><b>来源：</b>${data.sources.join("、")}</div>`;
     }
-    append(data.answer, "bot", extra);
+    append(data.answer || "（无回答）", "bot", extra);
   } catch (e) {
     append("请求失败：" + e, "bot");
   } finally {
@@ -69,9 +152,106 @@ async function send() {
     input.focus();
   }
 }
-
 sendBtn.onclick = send;
 input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+
+// ---------- 知识库管理 ----------
+const fileInput = document.getElementById("file");
+const domainInput = document.getElementById("domain");
+const uploadBtn = document.getElementById("upload");
+const rebuildBtn = document.getElementById("rebuild");
+const refreshBtn = document.getElementById("refresh");
+const kbList = document.getElementById("kb-list");
+const kbStat = document.getElementById("kb-stat");
+
+function fmtSize(n) {
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+  return (n / 1024 / 1024).toFixed(1) + " MB";
+}
+
+async function loadDocs() {
+  try {
+    const resp = await fetch("/api/kb/documents");
+    const data = await resp.json();
+    kbList.innerHTML = "";
+    if (!data.documents.length) {
+      kbList.innerHTML = `<tr><td colspan="8" class="empty">暂无文档，请上传文件入库</td></tr>`;
+    } else {
+      for (const d of data.documents) {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          `<td>${d.id}</td>` +
+          `<td>${d.filename}</td>` +
+          `<td>${d.ext}</td>` +
+          `<td>${fmtSize(d.size)}</td>` +
+          `<td>${d.domain || "-"}</td>` +
+          `<td>${d.chunks}</td>` +
+          `<td><span class="badge ${d.status}">${d.status}</span></td>` +
+          `<td><button class="del" data-id="${d.id}">删除</button></td>`;
+        kbList.appendChild(tr);
+      }
+      kbList.querySelectorAll(".del").forEach(b => {
+        b.onclick = () => delDoc(b.dataset.id);
+      });
+    }
+    kbStat.textContent = `共 ${data.count} 篇文档`;
+  } catch (e) {
+    toast("加载文档失败：" + e);
+  }
+}
+
+async function uploadFiles() {
+  const files = fileInput.files;
+  if (!files.length) { toast("请选择文件"); return; }
+  const domain = domainInput.value.trim();
+  uploadBtn.disabled = true;
+  let ok = 0, fail = 0;
+  for (const f of files) {
+    const fd = new FormData();
+    fd.append("file", f);
+    try {
+      const resp = await fetch("/api/kb/upload?domain=" + encodeURIComponent(domain), {
+        method: "POST",
+        body: fd,
+      });
+      if (resp.ok) ok++;
+      else { fail++; const j = await resp.json().catch(() => ({})); toast(`「${f.name}」失败：${j.detail || resp.status}`); }
+    } catch (e) { fail++; toast(`「${f.name}」异常：${e}`); }
+  }
+  uploadBtn.disabled = false;
+  toast(`上传完成：成功 ${ok}，失败 ${fail}`);
+  fileInput.value = "";
+  loadDocs();
+}
+
+async function delDoc(id) {
+  if (!confirm("确认删除该文档及其索引？")) return;
+  const resp = await fetch("/api/kb/documents/" + id, { method: "DELETE" });
+  if (resp.ok) toast("已删除");
+  else toast("删除失败：" + resp.status);
+  loadDocs();
+}
+
+async function rebuild() {
+  rebuildBtn.disabled = true;
+  rebuildBtn.textContent = "重建中…";
+  try {
+    const resp = await fetch("/api/rebuild", { method: "POST" });
+    const data = await resp.json();
+    toast(data.status === "ok" ? `索引重建完成，分块数 ${data.chunks}` : "重建失败");
+  } catch (e) {
+    toast("重建异常：" + e);
+  } finally {
+    rebuildBtn.disabled = false;
+    rebuildBtn.textContent = "重建向量索引";
+    loadDocs();
+  }
+}
+
+uploadBtn.onclick = uploadFiles;
+rebuildBtn.onclick = rebuild;
+refreshBtn.onclick = loadDocs;
 </script>
 </body>
 </html>

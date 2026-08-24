@@ -17,6 +17,12 @@ class Config:
     CHAT_LOG = LOG_DIR / "chat.log"
     WEB_DIR = ROOT / "web"
 
+    # ---------- 运行时数据目录（SQLite 业务库 + KB 上传）----------
+    DATA_DIR = ROOT / "data"
+    BUSINESS_DB = DATA_DIR / "business.db"              # 员工/工单库（替代 mock_data）
+    KB_DB = DATA_DIR / "kb.db"                          # 知识库文件注册表
+    UPLOAD_DIR = DATA_DIR / "uploads"                   # 上传文件落盘
+
     # ---------- 模型（环境变量优先，默认与课程一致）----------
     LLM_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     EMBED_MODEL = os.getenv("EMBED_MODEL", "BAAI/bge-small-zh-v1.5")

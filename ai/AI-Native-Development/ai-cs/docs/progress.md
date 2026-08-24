@@ -200,3 +200,75 @@ python scripts/evaluate.py --verbose
 
 **遗留问题**
 - 无。
+
+---
+
+## 功能分支 kb-management · 知识库管理 + 业务库直连 ✅ 2026-08-21
+
+> 需求：新起分支，支持知识库管理（文件在线上传与解析）；`query_employee_db` /
+> `query_ticket_status` 直接走数据库（替代 M1 的内存 `mock_data.py`）。
+
+### 总览
+
+| 阶段 | 提交 | 内容 | 验收 |
+|---|---|---|---|
+| A 业务库 | `1a5ce64` | 新增 `src/db/engine.py`（employees/tickets 两表 + 种子 + 懒初始化守卫），工具改读 SQLite | test_db 9/9；全量 100 passed |
+| B 解析器 | `e5a0c5b` | `src/kb/parsers.py` 多格式解析（txt/md/pdf/docx/csv/xlsx） | test_parsers 10/10 |
+| C 注册+重建 | `ae1750e` | `src/kb/db.py`（注册表）+ `src/kb/service.py`（入库/reindex，静态+上传合并） | test_kb 6/6 |
+| D API+Web | `26aacd0` | `kb_routes.py`（上传/列表/删除）+ `/api/db/*` + 知识库管理 Web Tab | test_kb_api 11/11；全量 100 passed |
+| E 清理 | `efdaeaf` | 删除 `mock_data.py`，测试改直连 `src.db.engine` | test_db/m1/tools 24 passed；全量 100 passed |
+| F 修正 | `36bbcf7` | `build_vectorstore` 先清空集合再写入（修复重复累积） | 全量 100 passed |
+
+### 关键设计
+
+- **业务库直连**：`query_employee_db`/`query_ticket_status` 改调 `src.db.engine`；种子数据与旧 `mock_data.py` 口径一致（E001~E005 / RB2024001 / RB2024002 / IT20240011），保证 `test_scenarios` 的 T9/T10/T12 契约不变。`engine.query_*` 内置 `_ensure()` 懒初始化守卫，工具未显式启动也可安全查询。
+- **上传即入库**：`kb.add_file` 解析字节 → 落盘 `data/uploads/` → 注册 `kb.db.documents` → 触发 `reindex()`，与静态 `knowledge_docs` 共用一个 Chroma 索引（合并切分）。
+- **错误码**：不支持的扩展名 → `UnsupportedFormatError` → 400；解析损坏 → `ParseError` → 422。
+- **业务库查询接口**：`GET /api/db/employees`、`GET /api/db/tickets` 复用 `DBEmployee`/`DBTicket` schema，管理视角直读 SQLite。
+- **Web**：`web/index.html` 新增「知识库管理」Tab——文件选择/领域/上传、文档列表（类型·大小·分块·状态徽标）、删除、重建索引；原有「智能问答」Tab 保留。
+
+### 验证
+
+```bash
+python -m pytest            # 100 passed（含 11 个 KB API 离线用例）
+```
+
+### 遗留问题
+
+- `mock_data.py` 已删除（见 E），工具与测试均改直连 `src.db.engine`。
+- 上传文档的 `reindex()` 每次全量重建（数据量小，可接受）；超大库可改为**增量 upsert**（见 F 备注）。
+- 本功能分支在本地 git 重建后命名为扁平 `kb-management`（该环境 git 不支持含 `/` 的分支名）；另存 `refs/heads/feat/kb-management` 仅作语义标注。
+
+---
+
+## 功能分支 kb-management · 收尾 E/F ✅ 2026-08-22
+
+### E · 删除 mock_data，测试改直连 engine（提交 `efdaeaf`）
+
+- 删除 `src/tools/mock_data.py`（已被 `src.db.engine` 取代，工具层在 A 阶段已切到 engine）。
+- `tests/test_m1_data.py`、`tests/test_tools.py` 的 `mock_data` 引用改到 `src.db.engine`；
+  业务库口径不变（E001 张三/研发部/高级工程师、RB2024001 审批中等契约保留）。
+- 验收：`tests/test_db.py + test_m1_data.py + test_tools.py` → 24 passed；全量 100 passed。
+
+### F · 修复 reindex 重复累积（提交 `36bbcf7`）
+
+- **问题**：`Chroma.from_documents` 对「已存在的集合」是**追加**而非替换，导致每次
+  `/api/rebuild`、每次上传文档都累积重复 chunk（检索命中仍对，但索引膨胀、embedding 重复开销）。
+- **修复**：`build_vectorstore` 改为先 `chromadb.PersistentClient.delete_collection("langchain")`
+  再 `from_documents`，保证幂等、无重复；默认集合名锁定为 `"langchain"`，与 `load_vectorstore` 一致。
+- 备注：当前 `reindex()` 仍是「全量重建」（数据量小可接受）。若要做到「增量 upsert」
+  （仅重嵌变动的 KB 文档、静态语料常驻），需给 chunk 赋稳定 id 并在 add_file/delete_document
+  中按 id upsert/delete，同时上传/删除后清掉 agent 缓存（避免缓存检索器读到旧索引）。属后续优化。
+
+### 验收
+
+```bash
+python -m pytest            # 100 passed（3m45s，后台运行）
+```
+
+### 环境注意（重要）
+
+- 本工作区出现**临时文件莫名消失**的异常：曾两次发现 `ai-cs/src/**` 整批从工作树被删
+  （git 仍保留，可 `git restore ai-cs/src/` 找回）。pytest 产生的 `*.log` 也常被环境清理。
+  对策：**改动及时 commit**，长测试务必后台运行并把日志写到 `ai-cs/` 之外（如工作区根目录），
+  避免依赖临时日志文件。
