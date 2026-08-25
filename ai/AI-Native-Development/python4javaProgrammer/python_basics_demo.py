@@ -3,7 +3,7 @@
 python_basics_demo.py — 面向 Java 工程师的 Python 语法演示
 ============================================================
 
-本文件覆盖《Python 入门教程（面向 Java 程序员）》里讲到的几乎所有语法点，
+本文件覆盖《Python + AI 开发实战教程》第一章（Python 语法）里讲到的几乎所有语法点，
 并且 **纯标准库、零第三方依赖**，你装好 Python 后直接就能跑：
 
     python python_basics_demo.py
@@ -494,7 +494,7 @@ def main() -> None:
     asyncio.run(demo_async())
     demo_stdlib()
     print("\n########## 全部语法点演示完毕 ##########")
-    print("下一步：读 python_for_java_engineers.md，把每条和示例对上号。\n")
+    print("下一步：读 chapters/01_python_syntax.md，把每条和示例对上号。\n")
 
 
 if __name__ == "__main__":
