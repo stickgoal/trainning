@@ -1,7 +1,6 @@
 # 第一章：Python 语法（精要速览 + 完整语法体系）
 
-> 写给能读懂 Java、但还没正经写过 Python 的工程师。
-> 目标：让你能无障碍阅读并改写本仓库 `examples/` 下那 15 个 AI 示例，并具备独立编写 Python 脚本的能力。
+> 写给能读懂 Java、但还没正经写过 Python 的工程师。 目标：让你能无障碍阅读并改写本仓库 `examples/` 下那 15 个 AI 示例，并具备独立编写 Python 脚本的能力。
 
 ---
 
@@ -16,6 +15,7 @@
 ### 配套文件
 
 - `python4javaProgrammer/python_basics_demo.py`：**纯标准库、零依赖、可直接跑**的语法演示，覆盖本章全部语法点。
+
   ```bash
   python python4javaProgrammer/python_basics_demo.py
   ```
@@ -28,13 +28,12 @@
 3. **学完语法，下一步该对接哪条 Python 技术栈？** → 1.9 节（主流技术科普）
 
 ---
+
 ## 1.0 环境与工具链搭建（第零章已覆盖）
 
-> 环境搭建（Python 解释器安装、venv 虚拟环境、pip/uv 国内镜像、LLM API Key 配置）见**第零章**，
-> 本章直接从语法开始。若你已能 `python xxx.py` 跑脚本、`pip install` 装包，即可跳过本节。
+> 环境搭建（Python 解释器安装、venv 虚拟环境、pip/uv 国内镜像、LLM API Key 配置）见**第零章**， 本章直接从语法开始。若你已能 `python xxx.py` 跑脚本、`pip install` 装包，即可跳过本节。
 >
-> 一句话回忆：Python 的"环境" ≈ JDK + Maven/Gradle + 本地仓库，但更轻、更散；核心动作是
-> **装对解释器 + 每个项目一个虚拟环境**（`python -m venv .venv` + 激活）。
+> 一句话回忆：Python 的"环境" ≈ JDK + Maven/Gradle + 本地仓库，但更轻、更散；核心动作是 **装对解释器 + 每个项目一个虚拟环境**（`python -m venv .venv` + 激活）。
 
 ## 1.1 从 Java 到 Python：先换脑子
 
@@ -42,8 +41,8 @@
 
 ### 1.1.1 五个最反直觉的差别
 
-| # | 差别 | Java 习惯 | Python 现实 |
-|---|---|---|---|
+| \# | 差别 | Java 习惯 | Python 现实 |
+| --- | --- | --- | --- |
 | 1 | **缩进即语法** | 大括号 `{}` 管作用域 | 缩进（4 个空格）管作用域，少/多一个空格就报错 |
 | 2 | **动态类型 + 可选类型提示** | `String s = "x";` 必须声明 | `s = "x"` 也能跑；但建议写 `s: str = "x"` |
 | 3 | **一切皆对象** | 基本类型 `int` 不是对象 | 连 `int`、`function` 都是对象，可以当变量传来传去 |
@@ -70,7 +69,9 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 ```
+
 `if __name__ == "__main__":` 是 Python 的固定 idiom：
+
 - 直接 `python xxx.py` 运行时，`__name__` 等于 `"__main__"`，里面的代码执行；
 - 被 `import` 进别的文件时，`__name__` 是模块名，里面的代码**不执行**（避免 import 就自动跑副作用）。
 
@@ -84,6 +85,7 @@ from os import getenv             # 只导入某个名字，直接用 getenv(...
 from dataclasses import dataclass, field   # 一次导入多个
 import os as operating_system      # 起别名（长模块名常用）
 ```
+
 > 关键认知：**模块 = 一个 .py 文件；包 = 一个目录**（目录里要有 `__init__.py`，现在常可省略但概念在）。`from langchain_core.tools import tool` 就是"从 langchain_core 包的 tools 模块导入 tool"。
 
 ### 1.1.4 注释与 docstring
@@ -128,17 +130,20 @@ name: str = "张三"
 price: float = 9.9
 active: bool = True
 ```
+
 函数返回类型用 `->`：
+
 ```python
 def add(a: int, b: int) -> int:
     return a + b
 ```
+
 > Java 类比：`public int add(int a, int b)`。`x: int = 5` ≈ `int x = 5;`。Python 的类型提示**运行时不做强制检查**（除非用 mypy，见 1.9 节），但 IDE 和人是受益的。
 
 ### 1.2.2 基础类型
 
 | Python | ≈ Java | 说明 |
-|---|---|---|
+| --- | --- | --- |
 | `int` | `long` | 任意精度，不会溢出 |
 | `float` | `double` | 浮点 |
 | `str` | `String` | 不可变 |
@@ -226,6 +231,7 @@ print(unique, ordered, top3, colors["ai"])
 Python 3.5 起支持**类型注解（type hints）**，3.9/3.10 之后越来越好用。先说清一件事：
 
 > **类型注解是给"人和工具"看的，运行时默认不强制。**
+>
 > - `def f(x: int) -> str:` 里的 `int` / `str` **不会**在运行时拦截传错类型（Python 仍是动态语言）。
 > - 它的价值在于：**IDE 自动补全更准、静态检查器（mypy / pyright）能在运行前抓出类型错误、代码可读性更强**。
 > - 类比 Java：Java 的类型是"编译期强制"的；Python 的注解更像"加强版注释 + 可插拔的编译期检查"。
@@ -563,7 +569,7 @@ class Account(BaseModel):
 
 **练习 8：商品模型带校验（Annotated + Pydantic）**
 
-场景：用 Pydantic 定义商品，价格必须 > 0、库存必须 ≥ 0。用 `Annotated` 把校验规则挂到类型上。构造一个合法实例打印；再尝试 `price=-1`，用 `try/except` 捕获并打印错误类型名（`try/except` 1.3.4 正式讲，照抄）。
+场景：用 Pydantic 定义商品，价格必须 &gt; 0、库存必须 ≥ 0。用 `Annotated` 把校验规则挂到类型上。构造一个合法实例打印；再尝试 `price=-1`，用 `try/except` 捕获并打印错误类型名（`try/except` 1.3.4 正式讲，照抄）。
 
 ```python
 from typing import Annotated
@@ -633,7 +639,7 @@ print(typed["a"])
 注解写出来不跑检查器就等于注释。推荐：
 
 | 工具 | 用途 |
-|---|---|
+| --- | --- |
 | `mypy` | 老牌静态类型检查器（`pip install mypy`，然后 `mypy your_file.py`） |
 | `pyright` | 微软出品，VS Code 的 Pylance 底层，速度更快 |
 | IDE 内置 | VS Code / PyCharm 默认基于类型推断做补全和红线提示 |
@@ -653,8 +659,9 @@ print(add("1", 2))     # 故意传错类型：运行时 Python 会拼成 "12"，
 ```
 
 操作步骤：
+
 1. `pip install mypy`
-2. `mypy practice_typing.py`  →  应看到类似 `error: Argument 1 to "add" has incompatible type "str"; expected "int"`
+2. `mypy practice_typing.py` → 应看到类似 `error: Argument 1 to "add" has incompatible type "str"; expected "int"`
 3. 改正调用（如 `add(1, 2)`）后再跑 mypy，直到 `Success: no issues found`
 
 考察点：真实跑一次静态检查器，理解"注解 + 检查器"组合如何替代 Java 的编译期类型强制。
@@ -698,6 +705,7 @@ def good(x=None):
     x.append(1)
     return x
 ```
+
 这正是 `@dataclass` 里用 `field(default_factory=list)` 的原因（见 1.5 节）。
 
 ---
@@ -783,11 +791,12 @@ unique_lens = {len(w) for w in ["hi", "hello", "hi"]}
 # 生成器表达式：(...) 不立即算，按需产出，省内存
 gen = (x * x for x in nums)
 ```
+
 示例里 `04b_rag_advanced.py` 的 `[Document(page_content=t) for t in RAW_TEXTS]`、`08_harness_demo.py` 的 `sorted(nodes, key=lambda n: n.score, reverse=True)` 都是这套写法。
 
 **练习【1.3.3】推导式三连**
 
-场景：一组摄氏温度转华氏（F = C*9/5+32），只保留 ≥25°C 的；再用字典推导式做 word→长度 映射。
+场景：一组摄氏温度转华氏（F = C\*9/5+32），只保留 ≥25°C 的；再用字典推导式做 word→长度 映射。
 
 ```python
 celsius = [18, 25, 30, 22, 35]
@@ -817,6 +826,7 @@ except ValueError as e:                     # except ... as e ≈ catch (ValueEr
 finally:
     print("无论成败都执行")                 # ≈ finally
 ```
+
 示例 `01_llm_basics.py` 的 `json.loads(...)`、`08_harness_demo.py` 的 `raise PermissionError(...)` 都是这套。
 
 **练习【1.3.4】安全除法与转换**
@@ -848,6 +858,7 @@ with open("data.txt", "w", encoding="utf-8") as f:
     f.write("内容")
 # 到这里 f 已自动关闭
 ```
+
 示例 `04_rag_demo.py` 用 `with open(SAMPLE_DOC_PATH, "w", encoding="utf-8") as f:` 生成模拟文档；`06_mcp_server.py` 用 `async with stdio_client(...) as (read, write):` 是异步版（见 1.6 节）。
 
 ---
@@ -965,7 +976,7 @@ greet("王五", "Hi")           # 位置传参
 greet(name="赵六", greeting="Yo")  # 关键字传参（顺序可乱）
 ```
 
-### 1.4.2 * 与 ** 解包
+### 1.4.2 \* 与 \*\* 解包
 
 ```python
 def query(city: str, unit: str = "celsius") -> str:
@@ -974,8 +985,8 @@ def query(city: str, unit: str = "celsius") -> str:
 args = {"city": "北京", "unit": "celsius"}
 query(**args)        # **dict 把键值对展开成关键字参数，等价于 query(city="北京", unit="celsius")
 ```
-> 示例 `01_llm_basics.py` 里 `get_weather(**args)` 就是 LLM 返回的参数 dict 直接展开传给工具函数——这是 Agent 调工具的经典写法。
-> `*list` 则把列表展开成位置参数（示例 `08_harness_demo.py` 用 `[system, summary, *recent]` 摊开列表）。
+
+> 示例 `01_llm_basics.py` 里 `get_weather(**args)` 就是 LLM 返回的参数 dict 直接展开传给工具函数——这是 Agent 调工具的经典写法。 `*list` 则把列表展开成位置参数（示例 `08_harness_demo.py` 用 `[system, summary, *recent]` 摊开列表）。
 
 ### 1.4.3 lambda 匿名函数
 
@@ -983,6 +994,7 @@ query(**args)        # **dict 把键值对展开成关键字参数，等价于 q
 square = lambda x: x * x          # 单表达式，无 return 关键字
 square(5)                          # 25
 ```
+
 示例大量用作 `key`：`sorted(nodes, key=lambda n: n.score)`、`lambda docs: "\n\n".join(d.page_content for d in docs)`。
 
 ### 1.4.4 函数是一等公民
@@ -997,6 +1009,7 @@ def apply(data: list[int], fn: Callable[[int], int]) -> list[int]:
 
 apply([1, 2, 3], lambda x: x + 1)    # [2, 3, 4]
 ```
+
 这是装饰器（1.4.5、1.5.9 节）和"把工具函数注册给 LLM"的基础。
 
 ### 1.4.5 类型提示进阶
@@ -1103,7 +1116,7 @@ print(names)        # ['Bob', 'Cara']
 
 ## 1.5 面向对象与抽象
 
-### 1.5.1 类、__init__、self
+### 1.5.1 类、**init**、self
 
 ```python
 class Animal:
@@ -1114,6 +1127,7 @@ class Animal:
 
 Animal("狗").speak()
 ```
+
 > `self` 不是关键字但约定俗成，相当于 Java 的 `this`，且**必须**作为第一个参数写。
 
 ### 1.5.2 继承与多态
@@ -1140,6 +1154,7 @@ class Circle(Shape):
     def area(self) -> float:
         return 3.14
 ```
+
 示例 `07_a2a_demo.py`、`09_skill_demo.py`、`11_enterprise_arch.py` 都用 `BaseAgent(ABC)` / `Orchestrator(ABC)` 定义契约。
 
 ### 1.5.4 @property（≈ getter）
@@ -1155,6 +1170,7 @@ class User:
 
 User("张", "三").full_name         # "张三"
 ```
+
 示例 `09_skill_demo.py` 用 `@property` + `@abstractmethod` 定义 `tools` 属性。
 
 ### 1.5.5 @staticmethod / @classmethod
@@ -1168,6 +1184,7 @@ class MathUtil:
     def create(cls):                     # 第一个参数是类本身
         return cls()
 ```
+
 示例 `13_case_dev_agent.py` 的 `CodingSkill.run` 用 `@staticmethod`。
 
 ### 1.5.6 Protocol 与鸭子类型（≈ interface，但结构化）
@@ -1187,6 +1204,7 @@ def use(l: Logger) -> None:
 
 use(ConsoleLogger())             # ConsoleLogger 没继承 Logger，但"长得像"就能传
 ```
+
 示例 `11_enterprise_arch.py` 用 `LLMService(Protocol)`、`MemoryService(Protocol)` 等定义能力层接口——这是"面向接口编程"的 Python 写法。
 
 ### 1.5.7 @dataclass（示例代码绝对主力，必掌握）
@@ -1207,6 +1225,7 @@ p = Point(1, 2)          # 自动有了构造器，不用手写 def __init__
 class ChatSession:
     messages: list = field(default_factory=list)   # 可变默认值用工厂，避免共享
 ```
+
 > 示例里 `01_llm_basics.py` 的 `ChatSession`、`07_a2a_demo.py` 的 `AgentMessage`、`09_skill_demo.py` 的 `BaseSkill`、`11_enterprise_arch.py` 的 `UserRequest`、`13_case_dev_agent.py` 的 `Harness` 全是 `@dataclass`。**不会这个，等于看不懂示例。**
 
 **练习【1.5·dataclass】商品清单**
@@ -1245,6 +1264,7 @@ class AgentMessage(TypedDict):
 msg: AgentMessage = {"sender": "A", "receiver": "B", "content": "hi"}
 print(msg["content"])
 ```
+
 示例 `03_langgraph_demo.py` 的 `AgentState(TypedDict)`、`13_case_dev_agent.py` 的 `DevState(TypedDict)` 用它定义 LangGraph 在节点间传递的共享状态。
 
 ### 1.5.9 装饰器基础（@tool / @mcp.tool() 的底层）
@@ -1264,10 +1284,10 @@ def log_call(func: Callable[..., Any]) -> Callable[..., Any]:
 def add(a: int, b: int) -> int:
     return a + b
 ```
+
 > 示例里的 `@tool`（LangChain 把函数变 Tool）、`@mcp.tool()`（MCP 把函数变可调用工具）、`@contextmanager`（把生成器变上下文管理器）全是同一套机制，只是装饰器内部做的事不同。
 
 ---
-
 
 ### 1.5.10 装饰器进阶（带参数装饰器、类装饰器、堆叠）
 
@@ -1348,6 +1368,7 @@ if __name__ == "__main__":
 ```
 
 ---
+
 **练习【1.5·装饰器】带参 @retry**
 
 场景：写 `@retry(times=3)`，包装一个"可能随机失败"的函数，失败自动重试到 times 次或成功。
@@ -1538,7 +1559,7 @@ print(classify(302))   # unknown
 Java 工程师已经懂并发。对应关系：
 
 | Java | Python |
-|---|---|
+| --- | --- |
 | `Thread` / 线程池 | 不常用，GIL 下单线程更划算 |
 | `CompletableFuture` | `async`/`await`（协程） |
 | Spring WebFlux / Reactor | `asyncio` 事件循环 |
@@ -1593,6 +1614,7 @@ async with some_async_resource() as r:
 async for item in some_async_iterable():
     ...
 ```
+
 示例 `06_mcp_server.py` 的 `async with stdio_client(server_params) as (read, write):` 和 `await session.list_tools()` 就是 MCP 客户端连接——因为跨进程通信是 IO，天然异步。
 
 ### 1.6.4 何时用
@@ -1763,6 +1785,7 @@ my_project/
 │       └── utils.py      # 模块
 └── tests/
 ```
+
 `import mylib.core` 就是从 `mylib` 包的 `core.py` 导入。运行项目推荐 **src layout**（代码放 `src/` 下），避免测试时误 import 到源码目录。
 
 ### 1.7.2 绝对导入 vs 相对导入
@@ -1776,7 +1799,7 @@ from ..core import Foo                # .. 表示上一级包
 ### 1.7.3 常用标准库速览
 
 | 模块 | 用途 | Java 类比 |
-|---|---|---|
+| --- | --- | --- |
 | `os` | 环境变量、路径、进程 | `System.getenv` / `java.io.File` |
 | `sys` | 解释器参数、退出 | — |
 | `json` | JSON 序列化 | Jackson / Gson |
@@ -1852,6 +1875,7 @@ def should_continue(state: AgentState) -> str:
 def summarize(msgs: list) -> str:
     return "\n".join(f"- {m}" for m in msgs)     # ⑩ 生成器表达式，按需产出
 ```
+
 逐条对应：① TypedDict（1.5.8 节）→ ② Annotated/operator.add（1.4.5 节）→ ③ @dataclass（1.5.7 节）→ ④ field（1.5.7 节）→ ⑤ def+类型提示（1.2.1/1.4.1 节）→ ⑥ 容器取值（1.2.4 节）→ ⑦ hasattr（标准库）→ ⑧ 字符串返回（控制流）→ ⑨ f-string（1.2.3 节）→ ⑩ 推导式（1.3.3 节）。
 
 > 建议练习：打开 `examples/01_llm_basics.py`，只看 `@dataclass ChatSession` 和 `demo_tool_calling` 两段，确认你能说出每一行的语法点。卡住就回看对应章节。
@@ -1860,15 +1884,14 @@ def summarize(msgs: list) -> str:
 
 ## 1.9 当前主流技术科普
 
-> 对应需求：介绍 Python 生态中主流技术方向，便于读者后续对接主流技术栈。
-> 定位：生态地图，不是教学。每条说清"是什么 / 解决什么 / Java 类比 / 代表库 / 何时学"。
+> 对应需求：介绍 Python 生态中主流技术方向，便于读者后续对接主流技术栈。 定位：生态地图，不是教学。每条说清"是什么 / 解决什么 / Java 类比 / 代表库 / 何时学"。
 
 Python 生态比 Java 更"碎片化"——没有一家独大的 Spring，而是按领域各分天下。下面按"你会接到哪类需求"来科普。
 
 ### 1.9.1 Web 开发（写后端服务）
 
 | 项 | 内容 |
-|---|---|
+| --- | --- |
 | 是什么 | 用 Python 写 HTTP 服务 / API |
 | 代表库 | **FastAPI**（异步、类型提示驱动，最主流）、Flask（轻量微框架）、Django（全家桶 MVC） |
 | Java 类比 | FastAPI ≈ Spring Boot（且自带 OpenAPI 文档）；Django ≈ Spring + Hibernate 一体 |
@@ -1890,7 +1913,7 @@ def hi(req: Req):
 ### 1.9.2 数据科学（分析、清洗、可视化）
 
 | 项 | 内容 |
-|---|---|
+| --- | --- |
 | 是什么 | 表格数据处理、统计、画图 |
 | 代表库 | **NumPy**（多维数组/向量运算）、**Pandas**（DataFrame，≈ Java 没有对标，最接近 Excel/SQL 表）、Matplotlib/Seaborn（画图）、scikit-learn（传统机器学习） |
 | Java 类比 | Pandas DataFrame ≈ 一张数据库表 + 类 SQL 操作；NumPy ≈ 高性能数组 |
@@ -1899,7 +1922,7 @@ def hi(req: Req):
 ### 1.9.3 深度学习（训练/调用神经网络）
 
 | 项 | 内容 |
-|---|---|
+| --- | --- |
 | 是什么 | 构建和训练神经网络 |
 | 代表库 | **PyTorch**（研究/生产首选，动态图）、TensorFlow（工业部署老牌）、JAX（Google 高性能） |
 | Java 类比 | 无直接对标；类比深度学习版的"应用服务器" |
@@ -1908,7 +1931,7 @@ def hi(req: Req):
 ### 1.9.4 LLM 应用框架（本课程核心）
 
 | 项 | 内容 |
-|---|---|
+| --- | --- |
 | 是什么 | 把 LLM、检索、记忆、工具拼成应用 |
 | 代表库 | **LangChain**（组件化编排）、**LangGraph**（有状态/循环的 Agent 工作流）、**LlamaIndex**（RAG 专用） |
 | Java 类比 | 编排层 ≈ Spring Integration / Camunda；RAG ≈ 带向量的 Elasticsearch 管道 |
@@ -1917,7 +1940,7 @@ def hi(req: Req):
 ### 1.9.5 Agent 协议与多 Agent 协作
 
 | 项 | 内容 |
-|---|---|
+| --- | --- |
 | 是什么 | 标准化"Agent ↔ 工具"、"Agent ↔ Agent"的通信 |
 | 代表库/规范 | **MCP**（Model Context Protocol，工具协议，≈ gRPC）、**A2A**（Agent To Agent，多 Agent 协作） |
 | Java 类比 | MCP ≈ RPC/gRPC；A2A ≈ 微服务间通信（多 Agent 是"微服务化在 Agent 层的重演"） |
@@ -1926,7 +1949,7 @@ def hi(req: Req):
 ### 1.9.6 向量数据库与 RAG 工具链
 
 | 项 | 内容 |
-|---|---|
+| --- | --- |
 | 是什么 | 存向量、做语义检索，是 RAG 的"记忆底座" |
 | 代表库 | **Chroma**（轻量本地）、**Milvus**（大规模）、**FAISS**（Meta 向量引擎）、**pgvector**（PostgreSQL 插件）、Qdrant |
 | Java 类比 | 带向量索引的 Elasticsearch |
@@ -1936,7 +1959,7 @@ def hi(req: Req):
 ### 1.9.7 异步与并发
 
 | 项 | 内容 |
-|---|---|
+| --- | --- |
 | 是什么 | IO 密集型并发（调 LLM/DB/HTTP） |
 | 代表库 | **asyncio**（标准库事件循环）、httpx（异步 HTTP 客户端，≈ 异步版 OkHttp） |
 | Java 类比 | WebFlux / Reactor / CompletableFuture |
@@ -1945,7 +1968,7 @@ def hi(req: Req):
 ### 1.9.8 类型与工程化（写出靠谱的 Python）
 
 | 项 | 内容 |
-|---|---|
+| --- | --- |
 | 是什么 | 静态检查、数据校验、代码格式化 |
 | 代表库 | **mypy**（类型检查，≈ 编译期类型校验）、**ruff**（超快 lint+格式化，≈ Checkstyle+Spotless）、**pydantic**（运行时校验） |
 | Java 类比 | mypy ≈ `javac` 类型检查；ruff ≈ Spotless/Checkstyle；pydantic ≈ Bean Validation |
@@ -1954,7 +1977,7 @@ def hi(req: Req):
 ### 1.9.9 测试
 
 | 项 | 内容 |
-|---|---|
+| --- | --- |
 | 是什么 | 单元测试 / 集成测试 |
 | 代表库 | **pytest**（事实标准，写法极简）、unittest（标准库，≈ JUnit） |
 | Java 类比 | pytest ≈ JUnit 5；`assert x == y` 直接写，不用 `assertEquals` |
@@ -1971,7 +1994,7 @@ def test_add():
 ### 1.9.10 打包与部署
 
 | 项 | 内容 |
-|---|---|
+| --- | --- |
 | 是什么 | 把 Python 项目打包、容器化、发到生产 |
 | 代表工具 | **uv / poetry**（依赖与打包）、**Docker**（容器化，Python 官方有 slim 镜像）、**conda**（科学计算环境） |
 | Java 类比 | poetry/uv ≈ Gradle；Docker 用法完全一致 |
@@ -1980,7 +2003,7 @@ def test_add():
 ### 1.9.11 大数据 / 分布式
 
 | 项 | 内容 |
-|---|---|
+| --- | --- |
 | 是什么 | 海量数据批处理 |
 | 代表库 | **PySpark**（Spark 的 Python API）、Dask（轻量并行） |
 | Java 类比 | PySpark ≈ 用 Python 写 Spark（底层还是 JVM） |
@@ -1989,7 +2012,7 @@ def test_add():
 ### 1.9.12 科学计算 / Notebook
 
 | 项 | 内容 |
-|---|---|
+| --- | --- |
 | 是什么 | 交互式、可逐步执行的文档 |
 | 代表工具 | **Jupyter Notebook / JupyterLab**、JupyterLab |
 | Java 类比 | 无直接对标；≈ 带 Markdown 的可执行实验笔记 |
@@ -1998,7 +2021,7 @@ def test_add():
 ### 1.9.13 一张选型速查表
 
 | 你的需求 | 首选技术 | 类比 |
-|---|---|---|
+| --- | --- | --- |
 | 写 AI 能力的 HTTP 接口 | FastAPI + Pydantic | Spring Boot |
 | 拼装 LLM 应用 | LangChain / LangGraph | Spring Integration |
 | 知识库问答 | LlamaIndex + Chroma + Rerank | ES + 向量 |
@@ -2012,11 +2035,10 @@ def test_add():
 
 ---
 
-
 ## 1.10 语法特性速查表（精要版）
 
 | 特性 | Python | Java类比 | 核心差异 |
-|------|--------|---------|---------|
+| --- | --- | --- | --- |
 | 动态类型 | 运行时绑定 | 编译时声明 | Python更灵活但需自律 |
 | 推导式 | `[x for x in ...]` | Stream API | Python语法更简洁 |
 | 装饰器 | `@decorator` | `@Around` (AOP) | Python用函数实现 |
@@ -2027,14 +2049,12 @@ def test_add():
 | dataclass | `@dataclass` | `record` | 自动生成样板代码 |
 | 模式匹配 | `match/case` | `switch` (JDK 21+) | Python支持结构解构 |
 
-
-
 ## 附录 A · 语法点覆盖对照表
 
 下表逐条核对：每个语法点 → 在本文哪章讲 → 出现在哪些 `examples/` 示例文件。用于自查"示例里出现的语法点本文是否都覆盖"。
 
 | 语法点 | 本文章节 | 出现于示例（代表性） |
-|---|---|---|
+| --- | --- | --- |
 | `if __name__ == "__main__"` | 1.1.2 | 全部 15 个 |
 | `import` / `from ... import` | 1.1.3 | 全部 |
 | 函数定义 `def` + 类型提示 `->` | 1.2.1 / 1.4.1 | 全部 |
@@ -2079,7 +2099,7 @@ def test_add():
 ## 附录 B · Java ↔ Python 速查表
 
 | Java | Python |
-|---|---|
+| --- | --- |
 | `public static void main` | `if __name__ == "__main__":` |
 | `String s = "x";` | `s: str = "x"` |
 | `List<String>` | `list[str]` |
