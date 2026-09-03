@@ -26,6 +26,7 @@
 |------|------|------|
 | 第一章 | `python_basics_demo.py` | 纯标准库可运行，覆盖示例里出现的全部语法点 |
 | 第四章 | [`taskflow/`](taskflow/) | FastAPI 工程化骨架：分层架构 + DI + 中间件 + 85 个测试（覆盖率 97%） |
+| 第五章 | [`ai_demo/`](ai_demo/) | LangChain/LangGraph/LlamaIndex 串联示例，**零 API Key 可跑**（离线假模型） |
 
 `taskflow` 是**为第四章服务的教学项目**，不是产品。运行方式：
 
@@ -34,5 +35,14 @@ cd taskflow
 PYTHONPATH=src uvicorn taskflow.main:app --reload     # 启动
 pytest -q                                             # 跑测试
 ```
+
+`ai_demo` 是**为第五章服务的教学项目**。所有示例零 Key 可跑——靠 `llm_factory.py` 切换离线假模型；配好 `DEEPSEEK_API_KEY` 后业务代码一行不改即切真模型。运行方式：
+
+```bash
+cd ai_demo
+../../.venv/Scripts/python.exe 01_langchain_basics.py    # 逐个跑 01~04
+```
+
+> 注意：第五章示例复用根目录 `.venv`（已装 langchain / langgraph / llama-index 等）。
 
 ---
