@@ -19,3 +19,20 @@
 - [附录：Java程序员Python常见困惑FAQ](chapters/06_complete_project.md#64附录java程序员python常见困惑faq)
 
 ---
+
+## 配套代码
+
+| 章节 | 项目 | 说明 |
+|------|------|------|
+| 第一章 | `python_basics_demo.py` | 纯标准库可运行，覆盖示例里出现的全部语法点 |
+| 第四章 | [`taskflow/`](taskflow/) | FastAPI 工程化骨架：分层架构 + DI + 中间件 + 85 个测试（覆盖率 97%） |
+
+`taskflow` 是**为第四章服务的教学项目**，不是产品。运行方式：
+
+```bash
+cd taskflow
+PYTHONPATH=src uvicorn taskflow.main:app --reload     # 启动
+pytest -q                                             # 跑测试
+```
+
+---
